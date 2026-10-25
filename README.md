@@ -36,7 +36,7 @@ Test it in a new Claude session: "Using airwallex-dev, list my global accounts a
 - [x] Sandbox account and API key; `npm run check` passes
 - [x] Platform access requested from devhelp@airwallex.com (2026-10-25)
 - [ ] Airwallex confirms Connected Accounts + Platform Payments
-- [ ] `airwallex-dev` MCP signed in
+- [x] `airwallex-dev` MCP signed in
 - [ ] `ANTHROPIC_API_KEY` in `.env`
 - [ ] Webhook subscription + `AWX_WEBHOOK_SECRET` in `.env` (when the webhook receiver is built)
 
