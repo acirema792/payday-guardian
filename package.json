@@ -1,0 +1,20 @@
+{
+  "name": "payday-guardian",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Multi-employer payroll agent on Airwallex (Agentic Banking Hackathon, Kit 6)",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "check": "node --env-file=.env scripts/check-sandbox.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.7"
+  }
+}

@@ -1,0 +1,69 @@
+<p><strong>Track:</strong> Multi-Tenant Platforms — Starter Kit 06, Multi-Employer Payroll Executor. Also entering Founder's Choice / Judges' Choice, plus an optional Metal Award add-on (instant stablecoin fallback rail).</p>
+
+<p><strong>One line:</strong> An AI payroll agent for global contractor and EOR platforms. It funds, converts and routes every payout so it lands before the local payday cut-off. It never pays one employer's contractors with another employer's money, it holds payouts after suspicious bank-detail changes, and it escalates only the exceptions a human must decide.</p>
+
+<h3>Problem</h3>
+<p>Contractor and EOR platforms pay thousands of people in dozens of countries for many employer clients. Every payday the ops team makes the same high-stakes decisions under time pressure, in spreadsheets and Slack, often at 11 pm:</p>
+<ul>
+<li><strong>Short or late funding.</strong> Employer funding arrives late, partially, or into the wrong place. Who gets paid now, and from whose money? Paying Employer A's contractors with Employer B's funds is a compliance breach and the classic pooled-ledger bug. Summing balances across tenants reports "enough money" for a batch the short employer cannot fund.</li>
+<li><strong>Rails and cut-offs.</strong> Every country has its own rail, fee and cut-off. Pick SWIFT where LOCAL exists and the contractor pays a fee. Miss a cut-off and wages arrive late, which damages trust and in many jurisdictions carries penalties.</li>
+<li><strong>FX and fees.</strong> Convert too little (forgetting per-payout SWIFT fees) and the last contractor's payout fails. Convert too much and you waste spread.</li>
+<li><strong>Payroll diversion fraud.</strong> "Hi, it's Maria, please send my pay to this new account today, urgent." This is one of the most common payroll scams.</li>
+</ul>
+
+<h3>Solution: the decisions the agent makes</h3>
+<p>For each employer (one Airwallex <strong>connected account</strong> per employer = hard tenant isolation) and each payroll run, Payday Guardian builds a plan and re-decides when new information arrives:</p>
+<ol>
+<li><strong>Fund.</strong> Read each employer's own balances with <em>x-on-behalf-of</em>. Never borrow across tenants. On a shortfall, pay priority wages first (by contractor due date and jurisdiction rules), hold the rest, and escalate an exact funding request to the employer.</li>
+<li><strong>Price.</strong> Compute payroll + per-payout SWIFT fees + the platform fee <em>before</em> converting, so no payout fails on insufficient funds.</li>
+<li><strong>Convert.</strong> Net same-currency balances already held in the employer's Global Accounts against obligations. Convert only the gap, at a locked single-use FX quote, on the employer's account, within an auto-approve limit. Read balances back to confirm where it landed.</li>
+<li><strong>Route.</strong> Per contractor, validate the beneficiary against the country schema and set LOCAL vs SWIFT explicitly from fee and a per-country cut-off table. If a cut-off is about to be missed, re-route or escalate.</li>
+<li><strong>Protect.</strong> A bank-detail change within N days of payday, or an instruction that arrives by email or chat, holds that single payout and triggers out-of-band verification. The rest of payroll proceeds.</li>
+<li><strong>Recover.</strong> A returned transfer (CANCELLED with a bank-return failure_type) triggers re-verification and a re-pay with a new request_id under a duplicate lock, so nobody is paid twice and the original is reconciled.</li>
+<li><strong>Collect.</strong> Charge the platform fee from each employer with charges/create, only after that employer's payroll has settled.</li>
+<li><strong>Fallback (Metal add-on).</strong> Contractors who opted in can receive an instant USDZ payout on Metal testnet, under a spending-limited agent mandate, when every fiat rail would miss payday.</li>
+</ol>
+
+<h3>Safety by design: the model reads, the code decides, the API moves the money</h3>
+<ul>
+<li>The LLM (Claude, typed tool calls only) reads unstructured inputs: employer emails ("funds coming Thursday"), bank return notices and contractor messages. It proposes a plan and explains exceptions in plain language.</li>
+<li>Deterministic, unit-tested policy code decides every amount, priority, limit, tenant check, cut-off and fraud hold. The model never chooses an amount and never sees credentials. Instructions found inside emails are treated as data, so the diversion email doubles as a prompt-injection test.</li>
+<li>Every human approval is bound to a hash of the exact amount, currency, beneficiary, employer account and evidence. Any change invalidates it.</li>
+<li>Idempotent request_ids on every mutating call, ambiguous responses are reconciled before any retry, and sandbox simulations sit behind one interface.</li>
+</ul>
+
+<h3>Demo (under 5 minutes, all sandbox, synthetic data)</h3>
+<p>The demo follows Goal → Plan → New information → Revised decision → Result. A platform pays 3 employers × 12 contractors in the US, UK, DE, MX, PH and IN on Friday.</p>
+<ol>
+<li><strong>Plan.</strong> A world map of paydays. Live balances per employer, net FX gap incl. fees, and a rail per contractor.</li>
+<li><strong>New info #1: short funding.</strong> Employer B is funded at 60%, and a deposit lands mid-run in Employer C's wallet. A naive agent would "see enough money". Payday Guardian pays B's priority wages, holds the rest, drafts B's funding request, and never touches A's or C's money.</li>
+<li><strong>New info #2: diversion email.</strong> "Please send my pay to this new account today, urgent." Only Maria's payout is held and flagged as social engineering. The other 35 go out.</li>
+<li><strong>New info #3: return.</strong> One MXN transfer goes SENT → FAILED (bank return). The agent re-verifies and re-pays once, without a duplicate.</li>
+<li><strong>New info #4: cut-off risk.</strong> The PHP cut-off is at risk. The agent re-routes, or for an opted-in contractor pays instantly on Metal.</li>
+<li><strong>Result.</strong> Final balances read back from Airwallex, platform fees collected, and a payday report: on-time %, FX/fees saved by netting, fraud held, escalations, and a full audit log of every API call.</li>
+</ol>
+
+<h3>Airwallex APIs used</h3>
+<p>Authentication · Connected Accounts (create/submit/activate, one per employer) · x-on-behalf-of on every employer call · Global Accounts + deposit simulation · Balances · FX rates, quotes & conversions · Beneficiary schema / validate / create · Transfers (LOCAL & SWIFT) + transfer status simulation · charges/create (platform fee) · connected_account_transfers (only with explicit approval, never as a silent cross-tenant bridge) · Webhooks (HMAC-verified) · Platform reports for reconciliation. Optional: Metal testnet mandates and direct payouts. Build tooling: Airwallex Docs and Developer MCP servers.</p>
+
+<h3>Why it matters / why Airwallex</h3>
+<p>Paying people across borders on time is where Airwallex's local payout rails in 150+ countries, multi-currency Global Accounts and FX matter most, and it is a core Airwallex use case (EOR / payroll aggregator payouts). Payday Guardian turns that infrastructure into an autonomous, auditable payroll operator for any payroll, EOR or gig platform. It is tenant-isolated, approval-bound, fraud-aware and idempotent by construction.</p>
+
+<h3>Tech stack</h3>
+<p>TypeScript/Node, Airwallex sandbox REST API (MCP for docs and payload assembly), Claude for document reading and explanations (typed tools only), policy engine as pure tested functions, a small web console (Goal → Plan → New information → Revised decision → Result) with a payday map, and a SQLite audit log.</p>
+
+<h3>Build plan (Oct 27 – Nov 13)</h3>
+<ul>
+<li><strong>Before Oct 27:</strong> request platform access (connected accounts + platform payments) from Airwallex devhelp. Kit 1–4 sandbox calls (balances, FX, beneficiaries, transfers) start on the platform's own wallet while access is enabled.</li>
+<li><strong>Week 1:</strong> sandbox auth, 3 employer connected accounts with EIN, funding simulation, balances, fee-inclusive pricing, FX quotes/conversions on behalf of employers, policy engine + tests.</li>
+<li><strong>Week 2:</strong> beneficiary schema/validation per corridor, transfers, cut-off routing, returns and idempotency, fraud hold, approval binding, fee collection.</li>
+<li><strong>Week 3:</strong> LLM document reader, console UI and payday map, Metal fallback, reconciliation report, 5-minute video, README with setup steps.</li>
+</ul>
+
+<h3>Loop engineering log (4 iterations)</h3>
+<ul>
+<li><strong>Loop 1: generate and screen.</strong> We considered 7 directions: treasury controller, intent-bound SaaS purchase, dispute agent, FX-netting AR/AP, x402 inference sourcing, zero-day close, and multi-employer payroll. We scored each on originality, Airwallex fit, demo drama, safety story, buildability, and sponsor-award reach. Public GitHub showed Kits 1, 2 and 4 already crowded with clones, while payroll (Kit 6) was under-served. Its platform-access requirement deters casual entrants.</li>
+<li><strong>Loop 2: critique the top 3.</strong> FX-netting had strong Airwallex fit but read as a Kit 1 clone. x402 sourcing had a sponsor angle but is trendy and likely crowded. Payroll scored highest on business pain, on showcasing Airwallex's moat (local rails, cut-offs, FX) and on emotional demo value ("everyone gets paid"). Weakness: a plain "pay contractors" flow is a thin decision.</li>
+<li><strong>Loop 3: harden the winner.</strong> We made it a real multi-decision agent: tenant isolation, cut-off-aware routing, net FX, partial-funding priority and returns recovery. We added an adversarial moment (payroll-diversion email that doubles as a prompt-injection test), the "model reads / code decides / API moves money" rule, hash-bound approvals, and a Metal fallback rail for the Metal Award.</li>
+<li><strong>Loop 4: red-team against the official Kit 6 guide.</strong> We checked every step against the builder guide's sandbox constraints and added what judges will look for. Fees are priced before converting. The mid-run deposit lands in the wrong tenant (the cross-tenant summing trap). x-on-behalf-of is on every employer call, with read-back confirmation. Rails are set explicitly. Returns are modelled as SENT → FAILED with a failure_type. The platform fee is collected via charges/create. Platform access is requested up front. Result: same idea, fewer demo-day failure points.</li>
+</ul>
