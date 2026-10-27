@@ -72,12 +72,26 @@ function fundable(need: Need, input: PlanInput): boolean {
   return need.fundingNeedMinor <= available(input.balances, input.employer.fundingCurrency);
 }
 
-// Statutory wages first, then smaller payouts first (pays the most people when cash is short),
-// then id so the plan is deterministic.
-function byPriority(a: Candidate, b: Candidate): number {
-  if (a.contractor.priority !== b.contractor.priority) return a.contractor.priority === "statutory" ? -1 : 1;
-  if (a.contractor.amountMinor !== b.contractor.amountMinor) return a.contractor.amountMinor < b.contractor.amountMinor ? -1 : 1;
-  return a.contractor.id.localeCompare(b.contractor.id);
+// What a candidate costs in the employer's funding currency, fee included, for ordering only.
+function fundingCost(c: Candidate, input: PlanInput): bigint {
+  const funding = input.employer.fundingCurrency;
+  const owed = c.contractor.amountMinor + c.feeMinor;
+  if (c.contractor.currency === funding) return owed;
+  const rate = input.rates[c.contractor.currency];
+  if (!rate) throw new Error(`No ${funding}/${c.contractor.currency} rate supplied`);
+  return sellAmountFor(owed, c.contractor.currency, funding, rate);
+}
+
+// Statutory wages first, then the cheapest payouts in funding currency (pays the most people when
+// cash is short), then id so the plan is deterministic.
+function byPriority(input: PlanInput) {
+  return (a: Candidate, b: Candidate): number => {
+    if (a.contractor.priority !== b.contractor.priority) return a.contractor.priority === "statutory" ? -1 : 1;
+    const costA = fundingCost(a, input);
+    const costB = fundingCost(b, input);
+    if (costA !== costB) return costA < costB ? -1 : 1;
+    return a.contractor.id.localeCompare(b.contractor.id);
+  };
 }
 
 export function planEmployerPayroll(input: PlanInput): EmployerPlan {
@@ -108,7 +122,7 @@ export function planEmployerPayroll(input: PlanInput): EmployerPlan {
     candidates.push({ contractor, method: routed.method, feeMinor: routed.feeMinor });
   }
 
-  candidates.sort(byPriority);
+  candidates.sort(byPriority(input));
   const selected: Candidate[] = [];
   for (const candidate of candidates) {
     if (fundable(computeNeed([...selected, candidate], false, input), input)) {
@@ -131,8 +145,10 @@ export function planEmployerPayroll(input: PlanInput): EmployerPlan {
     }
   }
 
-  // The platform fee never displaces wages: collect it only if it fits after payroll.
-  const collectFee = config.platformFeeMinor > 0n && fundable(computeNeed(selected, true, input), input);
+  // The platform fee never displaces wages: collect it only when nobody is waiting for funds
+  // and it still fits after payroll.
+  const anyoneShort = selected.length < candidates.length;
+  const collectFee = config.platformFeeMinor > 0n && !anyoneShort && fundable(computeNeed(selected, true, input), input);
   const finalNeed = computeNeed(selected, collectFee, input);
 
   const conversions: ConversionDecision[] = [...finalNeed.gaps].map(([currency, gap]) => {

@@ -51,4 +51,11 @@ Built so far:
 - Seed scenario: 3 employers x 12 contractors in the US, UK, Germany, Mexico, the Philippines and India
 - Money movement on the Airwallex sandbox: quote-locked FX with a slippage guard, approval-gated conversions, beneficiaries validated then created once, transfers with explicit LOCAL/SWIFT rails, payout-linked FX for PHP and INR, recovery from lost responses by request_id, returned-transfer repay that never pays twice, platform fee, and an audit log of every API call. `npm run smoke` runs it live
 
-Next: the demo runner (new information #1–#4), the Claude reader and the console. See [docs/strategy.md](docs/strategy.md).
+- Demo runner (`npm run demo`): Goal → Plan → four pieces of new information → revised decisions → payday report, on a deterministic offline bank that mirrors the sandbox's measured behaviour:
+  1. A deposit lands in Fabrikam's wallet while Contoso is short; a pooled ledger would pay Contoso with other employers' money, Payday Guardian does not
+  2. "Please send my pay to this new account today, urgent": only Maria's payout is held, the account number in the email is never used
+  3. An MXN payout comes back from the bank: re-verified and re-paid exactly once
+  4. Contoso's top-up lands after the Philippine cut-offs: the rest are paid, the two PH payouts are escalated to a person
+  Result: 33/36 paid on payday, every one from its own employer's wallet, with an audit log of every API call
+
+Next: the Claude reader, the console, and the live three-employer run once employer accounts exist. See [docs/strategy.md](docs/strategy.md).

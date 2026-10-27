@@ -1,6 +1,6 @@
 import { type Currency, exponent, toMinor } from "../policy/money.ts";
 import type { TransferMethod } from "../policy/types.ts";
-import { AirwallexError, type AirwallexClient } from "./client.ts";
+import { AirwallexError, type AirwallexClient, type ApiCallListener } from "./client.ts";
 
 // Minimal surface the money-movement code needs. TenantClient implements it for one employer.
 export interface Api {
@@ -13,6 +13,27 @@ export function platformApi(client: AirwallexClient): Api {
   return {
     get: (path, query) => client.get(path, { query }),
     post: (path, body) => client.post(path, body),
+  };
+}
+
+// Reports every call on an Api to the audit log (AirwallexClient does this itself via onCall).
+export function withAudit(api: Api, account: string, listener: ApiCallListener): Api {
+  const wrap = async <T>(method: string, path: string, requestId: string | undefined, run: () => Promise<T>): Promise<T> => {
+    const started = Date.now();
+    const report = (status: number, errorCode?: string) =>
+      listener({ at: new Date(started), method, path, account, requestId, status, errorCode, ms: Date.now() - started });
+    try {
+      const result = await run();
+      report(200);
+      return result;
+    } catch (err) {
+      report(err instanceof AirwallexError ? err.status : 0, err instanceof AirwallexError ? err.code : "network_error");
+      throw err;
+    }
+  };
+  return {
+    get: (path, query) => wrap("GET", path, undefined, () => api.get(path, query)),
+    post: (path, body) => wrap("POST", path, (body as { request_id?: string } | undefined)?.request_id, () => api.post(path, body)),
   };
 }
 

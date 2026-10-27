@@ -11,7 +11,8 @@
     "check": "node --env-file=.env scripts/check-sandbox.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "smoke": "node --env-file=.env scripts/smoke-live.ts"
+    "smoke": "node --env-file=.env scripts/smoke-live.ts",
+    "demo": "node scripts/demo.ts"
   },
   "devDependencies": {
     "@types/node": "^24.19.2",

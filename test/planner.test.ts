@@ -118,6 +118,19 @@ describe("shortfall priority", () => {
   });
 });
 
+describe("shortfall ordering across currencies", () => {
+  it("compares payouts by cost in the funding currency, not by raw amount", () => {
+    // 30,000 MXN is a bigger number than 2,000 USD but costs only 1,650 USD at 0.055
+    const mxRails = { ...config.rails, MX: { localCurrency: "MXN", localAvailable: true, localCutoffUtc: "23:00", swiftCutoffUtc: "20:00" } };
+    const people = [
+      contractor({ id: "usd", employerId: employerA.employerId, amountMinor: usd("2000") }),
+      contractor({ id: "mxn", employerId: employerA.employerId, country: "MX", currency: "MXN", amountMinor: toMinor("30000", "MXN") }),
+    ];
+    const plan = planEmployerPayroll(input(employerA, people, { USD: usd("2000") }, { rates: { MXN: "0.055" }, config: { ...config, rails: mxRails } }));
+    expect(statusOf(plan)).toEqual({ usd: "hold", mxn: "pay" });
+  });
+});
+
 describe("holds that are not about money", () => {
   it("holds only the contractor whose bank details changed by email; everyone else is paid", () => {
     const people = [
@@ -155,6 +168,17 @@ describe("platform fee", () => {
     expect(statusOf(plan)).toEqual({ x: "pay" });
     expect(plan.platformFee.status).toBe("defer");
     expect(plan.fundingRequestMinor).toBe(usd("25"));
+  });
+
+  it("is deferred while any contractor is held for funds, even if the leftover could cover it", () => {
+    const two = [
+      contractor({ id: "x", employerId: employerA.employerId, amountMinor: usd("1000") }),
+      contractor({ id: "y", employerId: employerA.employerId, amountMinor: usd("1000") }),
+    ];
+    // 1,500 pays x; the 500 left would cover the 25 fee, but y is still unpaid
+    const plan = planEmployerPayroll(input(employerA, two, { USD: usd("1500") }, { config: withFee }));
+    expect(statusOf(plan)).toEqual({ x: "pay", y: "hold" });
+    expect(plan.platformFee.status).toBe("defer");
   });
 
   it("is collected when payroll and fee both fit", () => {

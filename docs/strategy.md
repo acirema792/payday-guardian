@@ -43,3 +43,5 @@ Shortlisted for the Build Phase (Oct 27 – Nov 13). Judging criteria from the s
 - [ ] Add two sandbox businesses named "New Business Sandbox" and a scoped key covering all three accounts (Mode B)
 - [x] Build the tenant adapter and policy engine with tests (39 tests, 2026-10-27)
 - [x] Seed scenario and money-movement layer; live smoke test green on the sandbox (62 tests, 2026-10-27). "One employer paid end to end in the sandbox" gate met early
+- [x] Demo runner with the four new-information moments on the offline bank (71 tests, 2026-10-27). Fixed on the way: cross-currency shortfall ordering, and the platform fee being charged while wages were still short
+- [ ] Kit 6 platform access: still blocked on 2026-10-27 evening (no reply on Slack or devhelp). Nudge on 2026-10-28 if still silent; meanwhile set up Mode B (two "New Business Sandbox" accounts) for the live three-employer run

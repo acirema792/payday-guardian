@@ -42,6 +42,9 @@ The model reads, the code decides, the API moves the money.
 - `src/airwallex/api.ts`: typed wrappers (balances, beneficiaries, quotes, conversions, transfers, charges) over the `Api` interface that `TenantClient` implements
 - `src/executor/`: `execute.ts` turns an `EmployerPlan` into API calls (quote-locked FX with a slippage guard, approval gate, beneficiary once per employer, transfers with explicit rails, ambiguous-response recovery by request_id, returned-transfer repay, platform fee). `store.ts` is node:sqlite: operation key -> request_id/result (idempotency) and the audit log of every API call
 - `src/sandbox/simulator.ts`: the only place sandbox simulation endpoints are called
+- `src/sandbox/offline-bank.ts`: deterministic in-memory multi-account bank mirroring measured sandbox behaviour, for rehearsing and recording the demo without provisioned employer accounts
+- `src/agent/messages.ts`: `InboundMessage` -> typed `Interpretation` (`Interpreter` interface; `ruleInterpreter` is the fallback, a Claude interpreter plugs in with the same schema). `matchByName` matches people by code and refuses to guess
+- `src/demo/`: `runner.ts` is the demo script as code (goal, plan, new information #1 pooled-deposit trap, #2 diversion email, #3 bank return, #4 late top-up after PH cut-off, result); `environment.ts` builds the offline environment. Executions use one runId per batch (`:b1`, `:b2`) so a later batch can convert again
 - `src/scenario/`: `corridors.ts` (beneficiary shapes validated live for US, GB, DE, MX MXN/USD, PH, IN) and `seed.ts` (3 employers x 12 contractors, policy config)
 - `test/`: vitest. `fixtures.ts` holds the shared policy config and employers; `fake-airwallex.ts` is the in-memory API used by executor tests
 
@@ -61,4 +64,5 @@ Remind the user of unchecked items in the README "Setup checklist" (Airwallex pl
 
 - `npm run check`: read-only sandbox readiness check (login, global accounts, balances, connected-account access)
 - `npm run smoke`: live money-movement smoke test on the sandbox (small amounts; writes `data/smoke.db`)
+- `npm run demo`: the full demo on the offline bank; prints the timeline and writes `data/demo-run.json` for the console
 - `npm run typecheck`, `npm test`
