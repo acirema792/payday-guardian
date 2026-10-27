@@ -46,6 +46,9 @@ export interface PolicyConfig {
   fraudWindowDays: number; // bank-detail changes this close to payday are held
   autoApproveConversionMinor: bigint; // in funding currency; above this a person approves
   rails: Record<string, CountryRails>;
+  // Restricted currencies (e.g. PHP, INR) cannot be converted inside the wallet; each payout is
+  // funded from the funding currency at a locked quote instead. Wallet balances in them are not netted.
+  payoutLinkedFx: Currency[];
 }
 
 export type HoldReason =
@@ -63,6 +66,7 @@ export interface PayoutDecision {
 }
 
 export interface ConversionDecision {
+  mode: "wallet" | "payout_linked";
   buyCurrency: Currency;
   buyMinor: bigint;
   sellCurrency: Currency;

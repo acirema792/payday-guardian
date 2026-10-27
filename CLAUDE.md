@@ -39,7 +39,19 @@ The model reads, the code decides, the API moves the money.
 - `src/airwallex/client.ts`: REST client (token per account; `asAccount(id)` logs in with `x-login-as`)
 - `src/tenant/adapter.ts`: `TenantClient` / `TenantRegistry`. Every employer-scoped call goes through it. Mode `connected` uses `x-on-behalf-of`; mode `org-entity` (fallback while connected accounts are not enabled) is a separate business account in the same organisation, reached via `x-login-as`
 - `src/policy/`: pure decision code, no I/O. Money is bigint minor units (`money.ts`); `toMajor` only at the API boundary. `planner.ts` builds one employer's plan (tenant guard, fraud holds, cut-off routing, fee-inclusive pricing, net FX gap, shortfall priority, platform fee, funding request). `approval.ts` binds approvals to a hash of what is executed
-- `test/`: vitest. `fixtures.ts` holds the shared policy config and employers
+- `src/airwallex/api.ts`: typed wrappers (balances, beneficiaries, quotes, conversions, transfers, charges) over the `Api` interface that `TenantClient` implements
+- `src/executor/`: `execute.ts` turns an `EmployerPlan` into API calls (quote-locked FX with a slippage guard, approval gate, beneficiary once per employer, transfers with explicit rails, ambiguous-response recovery by request_id, returned-transfer repay, platform fee). `store.ts` is node:sqlite: operation key -> request_id/result (idempotency) and the audit log of every API call
+- `src/sandbox/simulator.ts`: the only place sandbox simulation endpoints are called
+- `src/scenario/`: `corridors.ts` (beneficiary shapes validated live for US, GB, DE, MX MXN/USD, PH, IN) and `seed.ts` (3 employers x 12 contractors, policy config)
+- `test/`: vitest. `fixtures.ts` holds the shared policy config and employers; `fake-airwallex.ts` is the in-memory API used by executor tests
+
+## Sandbox facts measured live (2026-10-27)
+
+- SWIFT USD fee is 15 USD per payout (`amount_payer_pays` 45 for a 30 USD transfer)
+- PHP and INR wallet conversions fail with `unable_to_resolve_valid_value_date`; fund those payouts from USD with `source_currency` + `quote_id` (payout-linked FX, `policyConfig.payoutLinkedFx`). MXN, GBP and EUR wallet conversions work
+- Beneficiary routing: MX MXN puts the CLABE in `account_number` with no routing type; IN uses `account_routing_type1: "bank_code"` with the IFSC; PH needs `swift_code`; DE EUR validates for both LOCAL (SEPA) and SWIFT
+- A transfer moved to FAILED reads back as CANCELLED with its `failure_type`
+- `npm run smoke` runs the executor live on your own account as a single employer (org-entity mode)
 
 ## Open setup items
 
@@ -48,4 +60,5 @@ Remind the user of unchecked items in the README "Setup checklist" (Airwallex pl
 ## Commands
 
 - `npm run check`: read-only sandbox readiness check (login, global accounts, balances, connected-account access)
+- `npm run smoke`: live money-movement smoke test on the sandbox (small amounts; writes `data/smoke.db`)
 - `npm run typecheck`, `npm test`

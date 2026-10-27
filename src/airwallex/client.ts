@@ -24,6 +24,20 @@ interface RequestOptions {
   query?: Record<string, string | number | undefined>;
 }
 
+// One record per API call, for the audit log. status 0 means no response (network error or timeout).
+export interface ApiCallEvent {
+  at: Date;
+  method: string;
+  path: string;
+  account: string | undefined; // x-on-behalf-of or x-login-as, whichever scoped the call
+  requestId: string | undefined;
+  status: number;
+  errorCode: string | undefined;
+  ms: number;
+}
+
+export type ApiCallListener = (event: ApiCallEvent) => void;
+
 export class AirwallexClient {
   private readonly clientId: string;
   private readonly apiKey: string;
@@ -33,19 +47,32 @@ export class AirwallexClient {
   private token: string | undefined;
   private tokenExpiresAt = 0;
   private readonly accountClients = new Map<string, AirwallexClient>();
+  private readonly listeners: ApiCallListener[];
 
-  constructor(clientId: string, apiKey: string, baseUrl = "https://api.sandbox.airwallex.com", loginAs?: string) {
+  constructor(
+    clientId: string,
+    apiKey: string,
+    baseUrl = "https://api.sandbox.airwallex.com",
+    loginAs?: string,
+    listeners: ApiCallListener[] = [],
+  ) {
     this.clientId = clientId;
     this.apiKey = apiKey;
     this.baseUrl = baseUrl;
     this.loginAs = loginAs;
+    this.listeners = listeners;
+  }
+
+  // Every call made through this client or its per-account clients is reported here.
+  onCall(listener: ApiCallListener): void {
+    this.listeners.push(listener);
   }
 
   // Client whose token is issued for one account (x-login-as). Each account keeps its own token.
   asAccount(accountId: string): AirwallexClient {
     let client = this.accountClients.get(accountId);
     if (!client) {
-      client = new AirwallexClient(this.clientId, this.apiKey, this.baseUrl, accountId);
+      client = new AirwallexClient(this.clientId, this.apiKey, this.baseUrl, accountId, this.listeners);
       this.accountClients.set(accountId, client);
     }
     return client;
@@ -89,13 +116,40 @@ export class AirwallexClient {
     if (opts.body !== undefined) headers["Content-Type"] = "application/json";
     if (opts.onBehalfOf) headers["x-on-behalf-of"] = opts.onBehalfOf;
 
-    const res = await fetch(url, {
-      method,
-      headers,
-      body: opts.body === undefined ? undefined : JSON.stringify(opts.body),
-    });
+    const started = Date.now();
+    const report = (status: number, errorCode?: string) => {
+      const event: ApiCallEvent = {
+        at: new Date(started),
+        method,
+        path,
+        account: opts.onBehalfOf ?? this.loginAs,
+        requestId: (opts.body as { request_id?: string } | undefined)?.request_id,
+        status,
+        errorCode,
+        ms: Date.now() - started,
+      };
+      for (const listener of this.listeners) listener(event);
+    };
+
+    let res: Response;
+    try {
+      res = await fetch(url, {
+        method,
+        headers,
+        body: opts.body === undefined ? undefined : JSON.stringify(opts.body),
+      });
+    } catch (err) {
+      report(0, "network_error");
+      throw err;
+    }
     const text = await res.text();
-    const body = text ? JSON.parse(text) : undefined;
+    let body: any;
+    try {
+      body = text ? JSON.parse(text) : undefined;
+    } catch {
+      body = { raw: text.slice(0, 500) };
+    }
+    report(res.status, res.ok ? undefined : body?.code);
     if (!res.ok) throw new AirwallexError(res.status, body?.code, body, path);
     return body as T;
   }

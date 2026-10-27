@@ -15,6 +15,7 @@ export const config: PolicyConfig = {
     DE: { localCurrency: "EUR", localAvailable: false, swiftCutoffUtc: "14:00" },
     PH: { localCurrency: "PHP", localAvailable: true, localCutoffUtc: "06:00", swiftCutoffUtc: "05:00" },
   },
+  payoutLinkedFx: [],
 };
 
 export const employerA: Employer = { employerId: "emp_a", name: "Northwind Labs", accountId: "acct_A", fundingCurrency: "USD" };

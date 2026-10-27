@@ -42,3 +42,4 @@ Shortlisted for the Build Phase (Oct 27 – Nov 13). Judging criteria from the s
 - [x] Post the platform-access request in #platforms-kits-5-6-7-and-8 (posted 2026-10-27 11:54, tagging Cyrus and Dan Kim of Airwallex)
 - [ ] Add two sandbox businesses named "New Business Sandbox" and a scoped key covering all three accounts (Mode B)
 - [x] Build the tenant adapter and policy engine with tests (39 tests, 2026-10-27)
+- [x] Seed scenario and money-movement layer; live smoke test green on the sandbox (62 tests, 2026-10-27). "One employer paid end to end in the sandbox" gate met early

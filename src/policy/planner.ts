@@ -55,7 +55,8 @@ function computeNeed(selected: Candidate[], includeFee: boolean, input: PlanInpu
   let fundingNeedMinor = obligations.get(funding) ?? 0n;
   for (const [currency, owed] of obligations) {
     if (currency === funding) continue;
-    const gap = owed - available(input.balances, currency);
+    const linked = input.config.payoutLinkedFx.includes(currency);
+    const gap = owed - (linked ? 0n : available(input.balances, currency));
     if (gap <= 0n) continue;
     const rate = input.rates[currency];
     if (!rate) throw new Error(`No ${funding}/${currency} rate supplied`);
@@ -137,6 +138,7 @@ export function planEmployerPayroll(input: PlanInput): EmployerPlan {
   const conversions: ConversionDecision[] = [...finalNeed.gaps].map(([currency, gap]) => {
     const sellMinor = finalNeed.sellMinor.get(currency) ?? 0n;
     return {
+      mode: config.payoutLinkedFx.includes(currency) ? "payout_linked" : "wallet",
       buyCurrency: currency,
       buyMinor: gap,
       sellCurrency: employer.fundingCurrency,

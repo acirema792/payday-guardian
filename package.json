@@ -10,7 +10,8 @@
   "scripts": {
     "check": "node --env-file=.env scripts/check-sandbox.ts",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "smoke": "node --env-file=.env scripts/smoke-live.ts"
   },
   "devDependencies": {
     "@types/node": "^24.19.2",

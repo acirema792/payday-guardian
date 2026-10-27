@@ -53,7 +53,7 @@ describe("pricing and funding", () => {
     const plan = planEmployerPayroll(input(employerA, [de("de1"), de("de2")], { USD: usd("2228.27") }));
     expect(statusOf(plan)).toEqual({ de1: "pay", de2: "pay" });
     expect(plan.conversions).toEqual([
-      { buyCurrency: "EUR", buyMinor: eur("2025.70"), sellCurrency: "USD", sellMinor: usd("2228.27"), rate: "1.10", needsApproval: false },
+      { mode: "wallet", buyCurrency: "EUR", buyMinor: eur("2025.70"), sellCurrency: "USD", sellMinor: usd("2228.27"), rate: "1.10", needsApproval: false },
     ]);
     expect(plan.payouts.every((p) => p.method === "SWIFT" && p.feeMinor === eur("12.85"))).toBe(true);
   });
@@ -76,6 +76,18 @@ describe("pricing and funding", () => {
     const plan = planEmployerPayroll(input(employerA, [de("de1")], { USD: 0n, EUR: eur("2000") }));
     expect(statusOf(plan)).toEqual({ de1: "pay" });
     expect(plan.conversions).toEqual([]);
+  });
+
+  it("does not net wallet balances in payout-linked currencies", () => {
+    const ph = contractor({ id: "ph", employerId: employerA.employerId, country: "PH", currency: "PHP", amountMinor: toMinor("10000", "PHP") });
+    const plan = planEmployerPayroll(
+      input(employerA, [ph], { USD: usd("1000"), PHP: toMinor("50000", "PHP") }, {
+        rates: { PHP: "0.0175" },
+        now: new Date("2026-11-06T04:00:00Z"),
+        config: { ...config, payoutLinkedFx: ["PHP"] },
+      }),
+    );
+    expect(plan.conversions).toMatchObject([{ mode: "payout_linked", buyMinor: toMinor("10000", "PHP"), sellMinor: usd("175") }]);
   });
 
   it("requires a person to approve a conversion above the auto-approve limit", () => {

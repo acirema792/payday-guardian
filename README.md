@@ -48,4 +48,7 @@ Built so far:
 - Tenant adapter: each employer is its own Airwallex account and wallet, reached through connected accounts (`x-on-behalf-of`) or, as a fallback, separate business accounts in one organisation (`x-login-as`)
 - Policy engine (pure, unit-tested with `npm test`): tenant isolation, fraud holds for recent or emailed bank-detail changes, cut-off-aware rail choice, fee-inclusive pricing, net FX gap, statutory-first shortfall allocation, platform fee that never displaces wages, exact funding request, and hash-bound approvals
 
-Next: money movement against the sandbox, the Claude reader and the demo console. See [docs/strategy.md](docs/strategy.md).
+- Seed scenario: 3 employers x 12 contractors in the US, UK, Germany, Mexico, the Philippines and India
+- Money movement on the Airwallex sandbox: quote-locked FX with a slippage guard, approval-gated conversions, beneficiaries validated then created once, transfers with explicit LOCAL/SWIFT rails, payout-linked FX for PHP and INR, recovery from lost responses by request_id, returned-transfer repay that never pays twice, platform fee, and an audit log of every API call. `npm run smoke` runs it live
+
+Next: the demo runner (new information #1–#4), the Claude reader and the console. See [docs/strategy.md](docs/strategy.md).
