@@ -28,13 +28,27 @@ export class AirwallexClient {
   private readonly clientId: string;
   private readonly apiKey: string;
   private readonly baseUrl: string;
+  // Account the token is scoped to, for a scoped key linked to several accounts in one organisation.
+  readonly loginAs: string | undefined;
   private token: string | undefined;
   private tokenExpiresAt = 0;
+  private readonly accountClients = new Map<string, AirwallexClient>();
 
-  constructor(clientId: string, apiKey: string, baseUrl = "https://api.sandbox.airwallex.com") {
+  constructor(clientId: string, apiKey: string, baseUrl = "https://api.sandbox.airwallex.com", loginAs?: string) {
     this.clientId = clientId;
     this.apiKey = apiKey;
     this.baseUrl = baseUrl;
+    this.loginAs = loginAs;
+  }
+
+  // Client whose token is issued for one account (x-login-as). Each account keeps its own token.
+  asAccount(accountId: string): AirwallexClient {
+    let client = this.accountClients.get(accountId);
+    if (!client) {
+      client = new AirwallexClient(this.clientId, this.apiKey, this.baseUrl, accountId);
+      this.accountClients.set(accountId, client);
+    }
+    return client;
   }
 
   static fromEnv(): AirwallexClient {
@@ -53,10 +67,9 @@ export class AirwallexClient {
   private async login(): Promise<string> {
     // Tokens last 30 minutes; refresh a minute early.
     if (this.token && Date.now() < this.tokenExpiresAt - 60_000) return this.token;
-    const res = await fetch(`${this.baseUrl}/api/v1/authentication/login`, {
-      method: "POST",
-      headers: { "x-client-id": this.clientId, "x-api-key": this.apiKey },
-    });
+    const headers: Record<string, string> = { "x-client-id": this.clientId, "x-api-key": this.apiKey };
+    if (this.loginAs) headers["x-login-as"] = this.loginAs;
+    const res = await fetch(`${this.baseUrl}/api/v1/authentication/login`, { method: "POST", headers });
     const body = (await res.json().catch(() => ({}))) as { token?: string; code?: string };
     if (!res.ok || !body.token) {
       throw new AirwallexError(res.status, body.code, body, "/api/v1/authentication/login");

@@ -1,0 +1,39 @@
+import { createHash } from "node:crypto";
+import type { Currency } from "./money.ts";
+
+// What a person actually saw when approving. Any change to these fields invalidates the approval.
+export interface ApprovalSubject {
+  action: "conversion" | "payout" | "release_hold" | "platform_fee";
+  employerAccountId: string;
+  amountMinor: bigint;
+  currency: Currency;
+  counterparty: string; // beneficiary id, or the currency bought for a conversion
+  evidence: string[]; // ids or hashes of the documents shown
+}
+
+export interface Approval {
+  subjectHash: string;
+  approvedBy: string;
+  approvedAt: Date;
+}
+
+export function subjectHash(subject: ApprovalSubject): string {
+  const canonical = JSON.stringify([
+    subject.action,
+    subject.employerAccountId,
+    subject.amountMinor.toString(),
+    subject.currency,
+    subject.counterparty,
+    [...subject.evidence].sort(),
+  ]);
+  return createHash("sha256").update(canonical).digest("hex");
+}
+
+export function approve(subject: ApprovalSubject, approvedBy: string, approvedAt = new Date()): Approval {
+  return { subjectHash: subjectHash(subject), approvedBy, approvedAt };
+}
+
+// Execution checks the approval against what is about to happen, not against what was proposed.
+export function isApproved(approval: Approval | undefined, executing: ApprovalSubject): boolean {
+  return approval !== undefined && approval.subjectHash === subjectHash(executing);
+}

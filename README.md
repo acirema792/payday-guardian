@@ -42,4 +42,10 @@ Test it in a new Claude session: "Using airwallex-dev, list my global accounts a
 
 ## Status
 
-Scaffold only: an Airwallex REST client and a sandbox readiness check. The policy engine, payroll executor, LLM reader and console come next (see the build plan in the idea submission, [submission.html](submission.html)).
+Built so far:
+
+- Airwallex REST client and a read-only sandbox readiness check (`npm run check`)
+- Tenant adapter: each employer is its own Airwallex account and wallet, reached through connected accounts (`x-on-behalf-of`) or, as a fallback, separate business accounts in one organisation (`x-login-as`)
+- Policy engine (pure, unit-tested with `npm test`): tenant isolation, fraud holds for recent or emailed bank-detail changes, cut-off-aware rail choice, fee-inclusive pricing, net FX gap, statutory-first shortfall allocation, platform fee that never displaces wages, exact funding request, and hash-bound approvals
+
+Next: money movement against the sandbox, the Claude reader and the demo console. See [docs/strategy.md](docs/strategy.md).

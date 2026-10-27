@@ -34,6 +34,13 @@ The model reads, the code decides, the API moves the money.
 - Insufficient funds codes differ: `balance_insufficient` (transfers), `insufficient_fund` (charges), `insufficient...` (fx).
 - Webhooks: verify HMAC-SHA256 over `x-timestamp` + raw body; dedupe on event id.
 
+## Code layout
+
+- `src/airwallex/client.ts`: REST client (token per account; `asAccount(id)` logs in with `x-login-as`)
+- `src/tenant/adapter.ts`: `TenantClient` / `TenantRegistry`. Every employer-scoped call goes through it. Mode `connected` uses `x-on-behalf-of`; mode `org-entity` (fallback while connected accounts are not enabled) is a separate business account in the same organisation, reached via `x-login-as`
+- `src/policy/`: pure decision code, no I/O. Money is bigint minor units (`money.ts`); `toMajor` only at the API boundary. `planner.ts` builds one employer's plan (tenant guard, fraud holds, cut-off routing, fee-inclusive pricing, net FX gap, shortfall priority, platform fee, funding request). `approval.ts` binds approvals to a hash of what is executed
+- `test/`: vitest. `fixtures.ts` holds the shared policy config and employers
+
 ## Open setup items
 
 Remind the user of unchecked items in the README "Setup checklist" (Airwallex platform-access reply, `airwallex-dev` sign-in, `ANTHROPIC_API_KEY`, webhook secret), especially before starting work that needs them.
