@@ -4,6 +4,7 @@
 //      npm run demo:live -- --reader claude (Airwallex sandbox, Kit 6 connected accounts from npm run provision)
 import { mkdirSync, writeFileSync } from "node:fs";
 import { claudeInterpreter, type Reading } from "../src/agent/claude-interpreter.ts";
+import { claudeExplainer } from "../src/agent/explainer.ts";
 import { type DemoEnvironment, offlineEnvironment } from "../src/demo/environment.ts";
 import { liveEnvironment } from "../src/demo/live-environment.ts";
 import { type DemoEvent, runDemo } from "../src/demo/runner.ts";
@@ -15,6 +16,7 @@ const readerOptions = (
   useClaude
     ? {
         interpreter: claudeInterpreter({ onReading: (m, reading, note) => readings.set(m.id, { reading, note }) }),
+        explainer: claudeExplainer(),
         readingNotes: (id) => {
           const r = readings.get(id);
           if (!r) return [];
@@ -34,6 +36,7 @@ const label: Record<DemoEvent["phase"], string> = {
   plan: "PLAN",
   new_info: "NEW INFORMATION",
   decision: "REVISED DECISION",
+  approval: "APPROVAL",
   action: "ACTION",
   result: "RESULT",
 };

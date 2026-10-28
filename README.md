@@ -4,9 +4,9 @@
 
 Airwallex Agentic Banking Hackathon · Starter Kit 06, Multi-Employer Payroll Executor · team VALOR
 
-> **Demo video (under 5 minutes):** _link added at submission_
+> **Demo video (4 minutes):** https://youtu.be/GVIRaVwaD6A — recorded from the live sandbox run
 
-> **Proof it ran live:** the full demo on three Kit 6 connected accounts in the Airwallex sandbox, with Claude reading the messages. 34 of 36 contractors were paid on payday. The [audit log](docs/evidence/) has 296 API calls: 0 errors, and no employer call outside the three employer accounts.
+> **Proof it ran live:** the full demo on three Kit 6 connected accounts in the Airwallex sandbox, with Claude reading the messages. 35 of 36 contractors were paid on payday. The [audit log](docs/evidence/) has 297 API calls: 0 errors, and no employer call outside the three employer accounts.
 
 ## Try it in 60 seconds (no credentials needed)
 
@@ -33,26 +33,27 @@ Contractor and EOR platforms pay many people in many countries for many employer
 
 ## What the agent does on payday
 
-The demo follows the builder guide's arc: goal, plan, new information, revised decision, result. Every number comes from policy code and the bank. Claude only reads the messages.
+The demo follows the builder guide's arc: goal, plan, new information, revised decision, result. Every number comes from policy code and the bank. Claude reads the messages and explains the exceptions.
 
 | Time (UTC) | New information | What Payday Guardian decides |
 |---|---|---|
 | 04:00 | Payday for 3 employers × 12 contractors in the US, UK, Germany, Mexico, the Philippines and India | Plans each employer separately. Each plan includes fees, nets FX against what the wallet already holds, picks a LOCAL or SWIFT rail per contractor from the cut-offs, and lists exactly what to request from a short employer |
 | 04:10 | **#1** Fabrikam's deposit lands while Contoso is still short | A pooled ledger would now see USD 103,000 and pay Contoso in full, partly with other employers' money. The agent pays Fabrikam in full and keeps Contoso within its own wallet: statutory and cheapest-to-fund payouts first, the rest held, the platform fee deferred |
-| 04:20 | **#2** "Please send my pay to this new account today, urgent" | Claude flags the red flags. Code holds only Maria's payout, never uses the account number in the email, and the rest of the payroll runs |
+| 04:20 | **#2** "Please send my pay to this new account today, urgent" | Claude flags the red flags. Code holds only Maria's payout, never uses the account number in the email, and the rest of the payroll runs. Claude writes the ops lead a plain-language note: why the agent stopped and what would release it |
+| 04:50 | A person calls Maria on the number on file: Maria never sent the email | The agent requests an approval bound to a SHA-256 of exactly what will execute (amount, currency, the account on file, employer account, evidence). The same approval is rejected for the email's account and for a larger amount. Maria is paid to the account on file; the fraudster gets nothing |
 | 05:30 | **#3** A bank return on Valeria's MXN payout (an email notice, plus a signed `payout.transfer.failed` webhook offline) | Verifies the webhook's signature and ignores its redelivery. Confirms the return from the API, not the email. Re-validates the beneficiary and re-pays once; running the repay again returns the same transfer |
 | 06:40 | **#4** Contoso's top-up lands after the Philippine cut-offs | Checks the wallet rather than the email, pays everyone whose payout can still land today, and escalates to a person the Philippine payouts whose cut-off has passed |
 | 07:00 | Result | Payday report, final balances per employer, audit log |
 
 | | Offline rehearsal (`npm run demo`) | Live sandbox (`npm run demo:live`) |
 |---|---|---|
-| Paid on payday | 33 / 36 | **34 / 36** |
-| Held for suspected diversion | 1 | 1 |
+| Paid on payday | 34 / 36 | **35 / 36** |
+| Diversions stopped / released to the account on file after approval | 1 / 1 | 1 / 1 |
 | Escalated after the cut-off | 2 | 1 |
 | Bank returns re-paid once | 1 | 1 |
 | Platform fees charged / deferred | 3 / 1 | 3 / 1 |
 
-| Airwallex API calls / errors | 190 / 0 (in-memory) | **296 / 0** on the sandbox ([evidence](docs/evidence/)) |
+| Airwallex API calls / errors | 199 / 0 (in-memory) | **297 / 0** on the sandbox ([evidence](docs/evidence/)) |
 
 The live run paid one more person because live FX rates differ from the offline bank's fixed rates. At 04:10, Contoso's own money stretched to one more Philippine payout before the cut-off. The policy is the same in both runs; only the rates differ.
 
@@ -79,6 +80,7 @@ flowchart LR
   X --> S[(Store: request ids,<br/>results, audit log)]
 ```
 
+- **Claude explains** (`src/agent/explainer.ts`). For each exception a person must handle (a fraud hold, a missed cut-off), code assembles the facts, reasons and allowed options, and Claude writes the note the ops lead reads. Any number in the note that is not in the facts makes the agent discard it for a template, so the model cannot introduce an amount or an account.
 - **Claude reads** (`src/agent/claude-interpreter.ts`). Claude Opus 5.5 turns each inbound message into a schema-validated reading: kind, person, amount, currency, red flags and a summary. It has no tools and no credentials, and it is told never to follow instructions inside a message. If it errors or refuses, a deterministic reader takes over. `npm run reader:eval` checks it on labelled messages, including a prompt-injection email asking to "approve all payouts" and redirect someone's pay (7/7).
 - **Code decides** (`src/policy/`). The policy engine is pure functions over bigint minor units:
   - tenant guard
@@ -154,7 +156,7 @@ Facts the build depends on, re-tested live (October 2026):
 
 ## Tests
 
-`npm test` runs the vitest suite in about 6 seconds. It covers:
+`npm test` runs the vitest suite (96 tests) in about 6 seconds. It covers:
 
 - money arithmetic
 - fraud and cut-off routing
@@ -165,8 +167,9 @@ Facts the build depends on, re-tested live (October 2026):
 - the executor against an in-memory Airwallex: idempotency, lost responses, returns, slippage, charges
 - client retry rules
 - the Claude reader's schema mapping and fallback
+- the exception explainer: a note with a number not in the facts is discarded
 - webhook verification
-- the full demo, which must end with every payout landed, held or escalated
+- the full demo, which must end with every payout landed, held or escalated, and must release the held payout only to the account on file under a matching approval
 
 Mutation checks confirmed that the tests fail when the fee rule, the tenant guard, idempotency or terminal transfer states are broken.
 
@@ -189,7 +192,7 @@ docs/evidence/   Live run timeline, full audit log, and checks
 ## Limits and next steps
 
 - **Payroll inputs are seed data.** A real deployment would read them from the platform's HRIS or payroll system.
-- **Approvals are policy thresholds.** Conversions above USD 15,000 need an approval bound to what executes, but there is no approver UI yet.
+- **The approver is scripted in the demo.** Approvals are real (hash-bound and checked before execution, and conversions above USD 15,000 need one), but the person approving is a scripted stand-in; there is no approver UI yet.
 - **The live run confirms returns by reading the transfer.** The webhook receiver is built and tested, and it drives moment #3 offline. A live subscription needs a public URL.
 - **Escalations name the option, not the rail.** For a missed cut-off they offer an instant stablecoin rail (Metal testnet) as one choice for the person deciding, but that rail is not built.
 

@@ -1,6 +1,7 @@
 import { mkdirSync } from "node:fs";
 import { createQuote, platformApi, readBalances } from "../airwallex/api.ts";
 import { AirwallexClient } from "../airwallex/client.ts";
+import type { Explainer } from "../agent/explainer.ts";
 import { type Interpreter, ruleInterpreter } from "../agent/messages.ts";
 import { Store } from "../executor/store.ts";
 import { toMajor, toMinor } from "../policy/money.ts";
@@ -18,6 +19,7 @@ const RATE_PROBES: Record<string, string> = { GBP: "6000", EUR: "7000", MXN: "45
 
 export interface LiveOptions {
   interpreter?: Interpreter;
+  explainer?: Explainer;
   readingNotes?: (messageId: string) => string[];
   log?: (line: string) => void;
   // Allow Contoso/Fabrikam to start with money left over from an earlier run (the story's numbers then differ).
@@ -82,6 +84,7 @@ export async function liveEnvironment(options: LiveOptions = {}): Promise<DemoEn
     store,
     interpreter: options.interpreter ?? ruleInterpreter,
     readingNotes: options.readingNotes,
+    explainer: options.explainer,
     fundsSettleTimeoutMs: 90_000,
   };
 }

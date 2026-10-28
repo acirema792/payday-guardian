@@ -1,4 +1,5 @@
 import { type Api, withAudit } from "../airwallex/api.ts";
+import type { Explainer } from "../agent/explainer.ts";
 import { type Interpreter, ruleInterpreter } from "../agent/messages.ts";
 import { Store } from "../executor/store.ts";
 import type { Employer } from "../policy/types.ts";
@@ -24,12 +25,14 @@ export interface DemoEnvironment {
   // How long to wait for a deposit to clear into the wallet. On the sandbox, deposits into connected
   // accounts become available a few seconds after the simulation call returns.
   fundsSettleTimeoutMs?: number;
+  // Writes the note a person reads for each exception (default: template).
+  explainer?: Explainer;
   // Verified Airwallex webhooks, when a subscription delivers to this run (offline: always).
   webhooks?: WebhookReceiver;
 }
 
 export async function offlineEnvironment(
-  options: { interpreter?: Interpreter; readingNotes?: (messageId: string) => string[]; storePath?: string } = {},
+  options: { interpreter?: Interpreter; explainer?: Explainer; readingNotes?: (messageId: string) => string[]; storePath?: string } = {},
 ): Promise<DemoEnvironment> {
   const store = new Store(options.storePath);
   const employerByAccount = new Map(seedEmployers.map((e) => [`acct_${e.employerId}`, e.employerId]));
@@ -69,6 +72,7 @@ export async function offlineEnvironment(
     store,
     interpreter: options.interpreter ?? ruleInterpreter,
     readingNotes: options.readingNotes,
+    explainer: options.explainer,
     webhooks,
   };
 }

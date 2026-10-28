@@ -35,7 +35,7 @@
   nav .time { color: var(--muted); font-variant-numeric: tabular-nums; font-size: 12px; }
   .phase { display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: 1px 6px; border-radius: 4px; margin-left: 6px; color: #fff; }
   .phase.goal { background: #475569; } .phase.plan { background: #3b82f6; } .phase.new_info { background: #ea580c; }
-  .phase.decision { background: var(--accent); } .phase.action { background: #16a34a; } .phase.result { background: #0d9488; }
+  .phase.decision { background: var(--accent); } .phase.approval { background: #db2777; } .phase.action { background: #16a34a; } .phase.result { background: #0d9488; }
   nav .title { display: block; font-size: 13px; margin-top: 2px; }
   section.content { padding: 20px 24px; overflow-y: auto; }
   .step { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; }
@@ -44,6 +44,8 @@
   .step .lines li { padding: 3px 0; color: var(--ink); white-space: pre-wrap; }
   .step .lines li.indent { color: var(--muted); padding-left: 16px; }
   .step .lines li.flag { color: var(--fraud); }
+  .step .lines li.note { margin: 6px 0; padding: 8px 12px; border-left: 3px solid var(--accent); background: var(--chip-bg); border-radius: 6px; }
+  .step .lines li.ok { color: var(--paid); }
   .board { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 18px; }
   .employer { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px; }
   .employer h3 { margin: 0; font-size: 15px; }
@@ -115,6 +117,8 @@
   function lineClass(line) {
     if (/^Read by /.test(line)) return "code";
     if (/^Red flags|^Hold /.test(line)) return "flag";
+    if (/Note for the ops lead/.test(line)) return "note";
+    if (/: rejected|^Approved by|paid to the account/.test(line)) return "ok";
     if (/^\s/.test(line)) return "indent";
     return "";
   }
@@ -127,7 +131,7 @@
       const s = e.data;
       stats = `<div class="stats">
         <div class="stat"><div class="n">${s.paidOnPayday}/${s.contractors}</div><div class="l">paid on payday, each from its own employer</div></div>
-        <div class="stat"><div class="n">${s.heldForFraud}</div><div class="l">held as suspected payroll diversion</div></div>
+        <div class="stat"><div class="n">${s.heldForFraud}</div><div class="l">${s.releasedAfterApproval ? "diversion stopped; paid to the account on file after approval" : "held as suspected payroll diversion"}</div></div>
         <div class="stat"><div class="n">${s.escalatedCutoff}</div><div class="l">escalated: cut-off already passed</div></div>
         <div class="stat"><div class="n">${s.returnsRepaid}</div><div class="l">bank return re-paid exactly once</div></div>
         <div class="stat"><div class="n">${s.walletConversions + s.payoutLinkedFx}</div><div class="l">FX at locked quotes (net gap only)</div></div>

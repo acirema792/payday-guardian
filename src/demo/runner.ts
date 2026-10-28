@@ -1,6 +1,8 @@
 import { readBalances } from "../airwallex/api.ts";
+import { type ExceptionFacts, templateExplainer } from "../agent/explainer.ts";
 import { type InboundMessage, matchByName } from "../agent/messages.ts";
 import { collectPlatformFee, executeEmployerPlan, type ExecuteInput, type PayoutOutcome, repayReturnedTransfer } from "../executor/execute.ts";
+import { approve, type ApprovalSubject, isApproved, subjectHash } from "../policy/approval.ts";
 import { sum, toMajor, toMinor } from "../policy/money.ts";
 import { planEmployerPayroll } from "../policy/planner.ts";
 import type { EmployerPlan, HoldReason } from "../policy/types.ts";
@@ -11,7 +13,7 @@ import type { DemoEnvironment } from "./environment.ts";
 // Every number shown comes from the policy engine and the bank; the narration is templated here
 // (a model can rephrase it, but never changes it).
 
-export type Phase = "goal" | "plan" | "new_info" | "decision" | "action" | "result";
+export type Phase = "goal" | "plan" | "new_info" | "decision" | "approval" | "action" | "result";
 
 export type ContractorStatus = "pending" | "planned" | "short" | "held_fraud" | "sent" | "paid" | "returned" | "repaid" | "escalated" | "blocked";
 
@@ -38,6 +40,7 @@ export interface DemoSummary {
   contractors: number;
   paidOnPayday: number;
   heldForFraud: number;
+  releasedAfterApproval: number;
   escalatedCutoff: number;
   returnsRepaid: number;
   walletConversions: number;
@@ -78,6 +81,15 @@ export const inbox = {
   },
 } satisfies Record<string, InboundMessage>;
 
+// Out-of-band verification a person records before approving a release: evidence, not an instruction.
+export const callLog = {
+  id: "call_maria_0445",
+  by: "Ops lead",
+  note: "Called Maria Garcia at 04:45 on the phone number on file. Maria did not send the email, and the bank account on file is unchanged.",
+};
+// Scripted stand-in for the person who approves in this demo.
+const DEMO_APPROVER = "ops-lead@platform.example (scripted approver)";
+
 function holdText(reason: HoldReason): string {
   switch (reason.code) {
     case "insufficient_funds":
@@ -106,6 +118,7 @@ function describePlan(name: string, plan: EmployerPlan): string[] {
 
 export async function runDemo(env: DemoEnvironment, emit: (e: DemoEvent) => void): Promise<DemoSummary> {
   const changeRequests = new Map<string, { at: Date; channel: "email" | "chat" }>();
+  let heldForRelease: ContractorProfile | undefined;
   const sent = new Map<string, { runId: string; outcome: Extract<PayoutOutcome, { status: "sent" }> }>();
   const escalations: string[] = [];
   let heldForFraud = 0;
@@ -199,14 +212,19 @@ export async function runDemo(env: DemoEnvironment, emit: (e: DemoEvent) => void
     });
   }
 
-  async function execute(employerId: string, time: string, runId: string): Promise<string[]> {
-    const p = await plan(employerId, time);
+  async function execute(employerId: string, time: string, runId: string, options: { only?: string; fee?: boolean } = {}): Promise<string[]> {
+    const full = await plan(employerId, time);
+    // A release batch pays only the released payout; the employer's fee was already settled.
+    const p = options.only ? { ...full, payouts: full.payouts.filter((d) => d.contractor.id === options.only) } : full;
     const input: ExecuteInput = { runId, plan: p, profiles, api: env.apiFor(employerId), store: env.store };
     const report = await executeEmployerPlan(input);
-    const fee = await collectPlatformFee(env.platform, p, env.store, runId, env.tenantMode);
+    const fee =
+      options.fee === false
+        ? ({ status: "deferred", detail: "fee already handled for this employer" } as const)
+        : await collectPlatformFee(env.platform, p, env.store, runId, env.tenantMode);
     if (fee.status === "charged" || fee.status === "accrued") feesCollected += 1;
     if (fee.status === "pending" || fee.status === "failed") feeIssues.push(`${env.employers.find((e) => e.employerId === employerId)!.name}: ${fee.detail}`);
-    if (fee.status === "deferred") feesDeferred += 1;
+    if (fee.status === "deferred" && options.fee !== false) feesDeferred += 1;
     walletConversions += report.conversions.filter((c) => c.status === "converted").length;
 
     for (const o of report.payouts) {
@@ -224,9 +242,14 @@ export async function runDemo(env: DemoEnvironment, emit: (e: DemoEvent) => void
     const methods = report.payouts.flatMap((o) => (o.status === "sent" ? [o.method] : []));
     return [
       `${employer(employerId).name}: ${count("sent")} sent (${methods.filter((m) => m === "LOCAL").length} LOCAL, ${methods.filter((m) => m === "SWIFT").length} SWIFT), ${count("held")} held, ${count("blocked") + count("awaiting_approval")} blocked`,
-      `  platform fee: ${fee.status}`,
+      ...(options.fee === false ? [] : [`  platform fee: ${fee.status}`]),
     ];
   }
+
+  const explainer = env.explainer ?? templateExplainer;
+  const money = (minor: bigint, currency: string) => `${currency} ${Number(toMajor(minor, currency)).toLocaleString("en-US", { minimumFractionDigits: 2 })}`;
+  const accountOnFile = (c: ContractorProfile) => `${c.corridor.bankDetails.account_number ? `account ending ${String(c.corridor.bankDetails.account_number).slice(-4)}` : "account"} on file`;
+  let releasedAfterApproval = 0;
 
   // Goal
   await say("04:00", "goal", "Pay 36 contractors for 3 employers in 6 countries today", [
@@ -279,6 +302,21 @@ export async function runDemo(env: DemoEnvironment, emit: (e: DemoEvent) => void
         `Everyone else at ${employer(match.employerId).name} is still paid (${revised.payouts.filter((p) => p.status === "pay").length} payouts).`,
         `Verification request goes to the contact on file, not to ${inbox.diversion.from}.`,
       );
+      const facts: ExceptionFacts = {
+        kind: "fraud_hold",
+        person: match.name,
+        employer: employer(match.employerId).name,
+        amount: money(match.amountMinor, match.currency),
+        reasons: held.holdReasons.map(holdText),
+        evidence: [`email from ${inbox.diversion.from} at 04:20 asking to pay a new account today`],
+        options: [
+          `call ${match.name} on the phone number on file`,
+          `if the account is unchanged, approve paying the ${accountOnFile(match)}`,
+          "never pay the account in the email",
+        ],
+      };
+      decisionLines.push(`Note for the ops lead, by ${explainer.name}: ${await explainer.explain(facts)}`);
+      heldForRelease = match;
     } else {
       decisionLines.push(`No unique contractor matches "${reading.personName}": escalate to a person.`);
     }
@@ -291,6 +329,41 @@ export async function runDemo(env: DemoEnvironment, emit: (e: DemoEvent) => void
   for (const e of env.employers) executed.push(...(await execute(e.employerId, "04:30", batch1)));
   await say("04:30", "action", "Payroll batch executed on Airwallex", executed);
 
+  // A person verifies out of band and approves the release. The approval is bound to what executes.
+  if (heldForRelease) {
+    const c = heldForRelease;
+    const e = employer(c.employerId);
+    const evidence = [inbox.diversion.id, callLog.id];
+    const releaseSubject = (counterparty: string): ApprovalSubject => ({
+      action: "release_hold", employerAccountId: e.accountId, amountMinor: c.amountMinor, currency: c.currency, counterparty, evidence,
+    });
+    const onFile = `${c.id}:${accountOnFile(c)}`;
+    const requested = releaseSubject(onFile);
+    const approval = approve(requested, DEMO_APPROVER, at("04:50"));
+    const emailAccount = /CLABE\s+(\d+)/.exec(inbox.diversion.body)?.[1] ?? "unknown";
+    const lines = [
+      `${callLog.by}: ${callLog.note}`,
+      `Approval requested: release ${money(c.amountMinor, c.currency)} from ${e.name} to ${c.name}'s ${accountOnFile(c)}. Evidence: the email and the call log. Bound to SHA-256 ${subjectHash(requested).slice(0, 12)}…`,
+      `Approved by ${DEMO_APPROVER}.`,
+      `The same approval checked against the account in the email (ending ${emailAccount.slice(-4)}): ${isApproved(approval, releaseSubject(`${c.id}:account ending ${emailAccount.slice(-4)}`)) ? "ACCEPTED (CHECK)" : "rejected, the hash does not match"}.`,
+      `The same approval checked against a larger amount: ${isApproved(approval, { ...requested, amountMinor: requested.amountMinor + 1n }) ? "ACCEPTED (CHECK)" : "rejected"}.`,
+    ];
+    // Release only if the approval matches exactly what is about to execute.
+    if (isApproved(approval, releaseSubject(onFile))) {
+      changeRequests.delete(c.id);
+      lines.push(...(await execute(c.employerId, "04:50", `payday-${PAYDAY}:r1`, { only: c.id, fee: false })));
+      const s = sent.get(c.id);
+      if (s) {
+        await env.simulator.transitionTransfer(env.apiFor(c.employerId), s.outcome.transferId, "SENT");
+        await env.simulator.transitionTransfer(env.apiFor(c.employerId), s.outcome.transferId, "PAID");
+        setStatus(c.id, "paid", `released after call-back; paid to the ${accountOnFile(c)}`);
+        releasedAfterApproval += 1;
+        lines.push(`${c.name} paid to the ${accountOnFile(c)}. The account in the email never received anything.`);
+      }
+    }
+    await say("04:50", "approval", `Approval: release ${c.name}'s pay to the account on file`, lines);
+  }
+
   // New information #3: a returned MXN transfer
   const returnedName = "Valeria Flores";
   const returned = [...sent.entries()].find(([id]) => profiles.get(id)!.name === returnedName);
@@ -302,6 +375,7 @@ export async function runDemo(env: DemoEnvironment, emit: (e: DemoEvent) => void
     await env.simulator.transitionTransfer(api, transferId, "PAID");
   };
   for (const [id, s] of sent) {
+    if (s.runId !== batch1) continue;
     const api = env.apiFor(profiles.get(id)!.employerId);
     if (id !== returned?.[0]) {
       await land(id, s.outcome.transferId);
@@ -378,7 +452,16 @@ export async function runDemo(env: DemoEnvironment, emit: (e: DemoEvent) => void
   if (lateSent.length) lateLines.push(`${lateSent.length} late transfers reached PAID before their local cut-offs.`);
   for (const id of escalations) {
     const c = profiles.get(id)!;
-    lateLines.push(`Escalate ${c.name}: Philippine cut-offs passed (LOCAL 06:30, SWIFT 06:00 UTC). A person chooses: next PH window, or the instant stablecoin rail if the contractor opted in.`);
+    const note = await explainer.explain({
+      kind: "cutoff_escalation",
+      person: c.name,
+      employer: employer(c.employerId).name,
+      amount: money(c.amountMinor, c.currency),
+      reasons: ["the employer's funds cleared at 06:40 UTC", "the Philippine cut-offs passed (LOCAL 06:30 UTC, SWIFT 06:00 UTC)"],
+      evidence: ["top-up email at 06:40 UTC", "wallet balance read at 06:40 UTC"],
+      options: ["pay in the next Philippine window and tell the contractor now", "use an instant rail if the contractor has opted in"],
+    });
+    lateLines.push(`Escalate ${c.name}. Note for the ops lead, by ${explainer.name}: ${note}`);
   }
   await say("06:40", "decision", "Revised: pay what can still land today, escalate what cannot", lateLines);
 
@@ -393,6 +476,7 @@ export async function runDemo(env: DemoEnvironment, emit: (e: DemoEvent) => void
     contractors: total,
     paidOnPayday: [...status.values()].filter((v) => v.status === "paid" || v.status === "repaid").length,
     heldForFraud,
+    releasedAfterApproval,
     escalatedCutoff: escalations.length,
     returnsRepaid,
     walletConversions,
@@ -404,7 +488,7 @@ export async function runDemo(env: DemoEnvironment, emit: (e: DemoEvent) => void
   };
   await say("07:00", "result", "Payday report", [
     `${summary.paidOnPayday}/${total} contractors paid on payday (${((summary.paidOnPayday / total) * 100).toFixed(1)}%), every one from their own employer's wallet.`,
-    `${heldForFraud} payout held for a suspected diversion; ${escalations.length} escalated because their cut-off had passed; ${returnsRepaid} bank return re-paid once.`,
+    `${heldForFraud} suspected diversion stopped${releasedAfterApproval ? `, then released to the account on file after a person approved` : ""}; ${escalations.length} escalated because their cut-off had passed; ${returnsRepaid} bank return re-paid once.`,
     `${walletConversions} wallet conversions (net gap only) and ${payoutLinkedFx} payout-linked FX payouts at locked quotes.`,
     `Platform fees: ${feesCollected} collected (charges read back SETTLED), ${feesDeferred} deferred until that employer's wages were covered.`,
     ...feeIssues.map((f) => `Fee not confirmed, ${f}`),

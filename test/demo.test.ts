@@ -10,12 +10,13 @@ describe("demo runner (offline bank)", () => {
     const summary = await runDemo(env, (e) => events.push(e));
 
     expect(events.map((e) => e.phase)).toEqual([
-      "goal", "plan", "new_info", "decision", "new_info", "decision", "action", "new_info", "decision", "new_info", "decision", "result",
+      "goal", "plan", "new_info", "decision", "new_info", "decision", "action", "approval", "new_info", "decision", "new_info", "decision", "result",
     ]);
     expect(summary).toMatchObject({
       contractors: 36,
-      paidOnPayday: 33,
+      paidOnPayday: 34,
       heldForFraud: 1,
+      releasedAfterApproval: 1, // Maria, to her account on file, after a person approved
       escalatedCutoff: 2,
       returnsRepaid: 1,
       feesCollected: 3, // Northwind, Fabrikam, and Contoso only after its top-up
@@ -28,7 +29,7 @@ describe("demo runner (offline bank)", () => {
     expect(summary.apiCalls).toBeGreaterThan(100);
     // No payout is left in flight: each one landed, was held, or was escalated to a person.
     const finalStatuses = events.at(-1)!.snapshot!.employers.flatMap((e) => e.contractors.map((c) => c.status));
-    expect(new Set(finalStatuses)).toEqual(new Set(["paid", "repaid", "held_fraud", "escalated"]));
+    expect(new Set(finalStatuses)).toEqual(new Set(["paid", "repaid", "escalated"]));
     expect(finalStatuses.filter((s) => s === "paid" || s === "repaid")).toHaveLength(summary.paidOnPayday);
     // Every transfer the bank received reached a terminal status.
     expect(env.webhooks!.received.filter((r) => r.transfer?.status === "PROCESSING")).toHaveLength(0);
@@ -43,6 +44,19 @@ describe("demo runner (offline bank)", () => {
     expect(bankReturn.lines.join("\n")).toMatch(/payout\.transfer\.failed for Valeria Flores: CANCELLED, BENEFICIARY_BANK_RETURNED, on \w+ \w+'s account/);
     const processed = env.webhooks!.received.filter((r) => r.outcome === "processed").length;
     expect(env.webhooks!.received.filter((r) => r.outcome === "duplicate")).toHaveLength(processed);
+    env.store.close();
+  });
+
+  it("releases the held payout only to the account on file, under an approval bound to it", async () => {
+    const env = await offlineEnvironment();
+    const events: DemoEvent[] = [];
+    await runDemo(env, (e) => events.push(e));
+    const approval = events.find((e) => e.phase === "approval")!.lines.join("\n");
+    expect(approval).toMatch(/account in the email \(ending 7891\): rejected/);
+    expect(approval).toMatch(/larger amount: rejected/);
+    expect(approval).toMatch(/Maria Garcia paid to the account ending 7771 on file/);
+    // The release batch charged no second platform fee.
+    expect(env.store.auditLog().filter((c) => c.path === "/charges/create")).toHaveLength(3);
     env.store.close();
   });
 

@@ -1,63 +1,64 @@
-# Demo video script (target 4:30, hard limit 5:00)
+# Demo video
 
-Record from the **live** run in the console (`npm run console`, http://localhost:4321/?run=live) at 1440×900, browser zoom 100%, with a terminal beside it for two short cuts. Speak the narration; on-screen text is what the viewer should be looking at. Each beat lists its end time.
+**Watch:** https://youtu.be/GVIRaVwaD6A (4:03, Unlisted). Recorded from the live sandbox run in [docs/evidence](evidence/).
 
-Judges score relevance, impact, innovation, complexity and implementation, and product integration. Each beat names the one it serves.
+Frames are the real console (`npm run console`, `?run=live`) and five title cards, rendered at 1920×1080 with headless Chrome. The narration is macOS text-to-speech (Samantha), captioned on screen, and assembled with ffmpeg. The narration numbers are read from the committed evidence, so they match the data.
 
-## 0:00–0:25 · Hook (impact, relevance)
+## Shot list and narration
 
-**Screen:** console title, then the three employer boards with 36 grey chips.
+1. **Title card**
+   > This is Payday Guardian: a payroll agent for contractor platforms, built on Airwallex for Starter Kit six.
 
-> "Every payday, contractor platforms pay hundreds of people in dozens of countries, for many employers at once. When one employer's money is late, the classic bug is a pooled ledger that quietly pays them with someone else's money. This is Payday Guardian, an agent on Airwallex that never does that, and it ran live on three Kit 6 connected accounts in the Airwallex sandbox."
+2. **Title card**
+   > Contractor platforms pay people in many countries, for many employers at once. Every payday, someone has to decide whose money pays whom, which rail lands before the cut-off, whether a bank-detail change is real, and whether a returned payment was already sent again. Get it wrong, and someone is paid late, paid twice, paid to a fraudster, or paid with another employer's money.
 
-## 0:25–0:55 · Goal and plan (relevance, complexity)
+3. **Console: 04:00 UTC, Initial plan from live balances**
+   > Everything you'll see ran live on the Airwallex sandbox: three employers, each its own connected account, and thirty-six contractors in six countries. At four a.m., the agent plans each employer separately, from that employer's own wallet.
 
-**Screen:** step "Goal", then "Plan". Point at each employer's own wallet balance and the plan lines (convert, fund at payout, LOCAL/SWIFT, funding request).
+4. **Console: 04:00 UTC, Initial plan from live balances (highlighting: funding request)**
+   > Policy code prices payroll including SWIFT fees, converts only the net gap at a locked quote, and picks a local or SWIFT rail from each country's cut-off. Contoso is short, so it gets an exact funding request.
 
-> "Three employers, twelve contractors each, in six countries. For each employer separately, the agent prices payroll including SWIFT fees, converts only the net gap at a locked quote, picks a local or SWIFT rail from each country's cut-off, and asks Contoso, which is short, for an exact amount. The numbers come from pure, unit-tested policy code, not from the model."
+5. **Console: 04:10 UTC, #1 Fabrikam's funding lands; Contoso is still short (highlighting: pooled ledger)**
+   > New information: Fabrikam's deposit lands, while Contoso is still short. Add up all the wallets, and there's over a hundred thousand dollars. Enough to pay Contoso in full, with other employers' money.
 
-## 0:55–1:40 · New information #1: the pooled-deposit trap (relevance, innovation)
+6. **Console: 04:10 UTC, Revised: Fabrikam pays everyone; Contoso stays limited to its own wallet**
+   > The agent refuses. Fabrikam pays everyone. Contoso pays only from its own wallet: statutory payments first, then the cheapest to fund. And our platform fee waits until Contoso's people are paid.
 
-**Screen:** step "#1 Fabrikam's funding lands". Highlight the line "A pooled ledger would now see USD 103,000…". Then "Revised: Fabrikam pays everyone; Contoso stays limited to its own wallet". Show Contoso's chips: some green-planned, some amber "short".
+7. **Console: 04:20 UTC, #2 Email: "please send my pay to this new account today, urgent"**
+   > Next, an email: my account was closed, send my pay to this new account today, it's urgent.
 
-> "Fabrikam's deposit lands, but Contoso is still short. Add the balances together and there's plenty of money, which is exactly the trap in this kit. The agent refuses. Fabrikam pays everyone. Contoso pays only from its own wallet: statutory payments first, then whatever its own money funds cheapest. The rest are held, and our platform fee is deferred, because we don't take our cut while their contractors are waiting."
+8. **Console: 04:20 UTC, Revised: hold one payout, not the payroll (highlighting: Red flags, Note for the ops lead)**
+   > Claude reads it, with no tools and no credentials, and lists the red flags. Code holds only Maria's payout and never uses the account in the email. Then Claude writes the ops lead a plain note: why the agent stopped, and what would release it.
 
-## 1:40–2:25 · New information #2: payroll diversion email (innovation, impact)
+9. **Console: 04:30 UTC, Payroll batch executed on Airwallex**
+   > The batch goes out on Airwallex. Beneficiaries are validated, then created once. Every payout has an explicit local or SWIFT rail. Pesos to the Philippines and rupees to India use payout-linked FX, because the sandbox can't convert those in the wallet.
 
-**Screen:** step "#2". Show the email text, Claude's reading, the red flags, then the decision: only Maria held. Maria's chip turns red "held".
+10. **Console: 04:50 UTC, Approval: release Maria Garcia's pay to the account on file (highlighting: Approval requested)**
+   > At four fifty, the ops lead calls Maria on the number on file. Maria never sent that email. The agent asks for an approval that is a hash of exactly what will execute: the amount, the currency, the account on file, the employer, and the evidence.
 
-> "Then an email: 'My account was closed, send my pay to this new account today, it's urgent.' Claude reads it with no tools and no credentials, and lists the red flags: urgency, an unverified sender, new bank details in the email itself. The code holds only Maria's payout and never uses the account number from the email. The other thirty-five people still get paid. The same email doubles as a prompt-injection test: in our reader eval, a message telling the model to 'approve all payouts' is classified as a bank-detail change and held."
+11. **Console: 04:50 UTC, Approval: release Maria Garcia's pay to the account on file (highlighting: rejected, paid to the account)**
+   > The same approval is rejected for the account in the email, and for a larger amount. Maria is paid to the account on file. The fraudster gets nothing.
 
-## 2:25–3:05 · Execution and new information #3: bank return (complexity, product integration)
+12. **Console: 05:30 UTC, #3 Bank return on Valeria Flores's MXN payout**
+   > Then Valeria's Mexican payout comes back from the bank.
 
-**Screen:** step "Payroll batch executed on Airwallex" (counts of LOCAL/SWIFT). Then "#3 Bank return" and "Revised: re-verify and re-pay once". Valeria's chip goes returned, then repaid.
+13. **Console: 05:30 UTC, Revised: re-verify and re-pay once (highlighting: no duplicate)**
+   > The agent doesn't trust the notice. It reads the transfer from Airwallex, sees a bank return, re-validates the beneficiary, and pays once. Running the repay again returns the same transfer, because every operation has its own idempotency key.
 
-> "The batch goes out on Airwallex: beneficiaries validated then created once, explicit LOCAL or SWIFT, and payout-linked FX for pesos and rupees, because the sandbox can't convert those in the wallet. Then Valeria's Mexican payout comes back from her bank. The agent doesn't trust the notice. It reads the transfer from Airwallex, sees it was cancelled as a bank return, re-validates her details and pays again. Run the repay twice and you get the same transfer back: every operation has its own idempotency key, so a retry can't pay twice."
+14. **Console: 06:40 UTC, #4 Contoso's top-up arrives at 06:40 UTC (highlighting: Checked against the wallet)**
+   > Contoso's top-up arrives at six forty, after the Philippine cut-offs. The agent checks that the money has cleared into Contoso's wallet before believing the email.
 
-## 3:05–3:45 · New information #4: late top-up after the cut-off (relevance, impact)
+15. **Console: 06:40 UTC, Revised: pay what can still land today, escalate what cannot (highlighting: Note for the ops lead)**
+   > It pays everyone whose payout can still land today, and escalates the Philippine payout to a person, with Claude's note on the options.
 
-**Screen:** step "#4". Highlight "Checked against the wallet, not the email". Then the revised decision: pay what can still land, escalate the Philippines. The PH chip turns purple "escalated".
+16. **Console: 07:00 UTC, Payday report**
+   > The result: 35 of 36 contractors paid on payday, each from their own employer's wallet. One diversion stopped, one return paid back exactly once, and one escalation. Fees were collected only after wages, and only once Airwallex reported each charge settled.
 
-> "Contoso's top-up arrives at 6:40, after the Philippine cut-offs. The agent checks that the money has cleared into Contoso's wallet before relying on the email. It pays everyone whose payout can still land today, and escalates the Philippine payout to a person with the options: the next window, or an instant rail if the contractor opted in. It doesn't pretend it can make a cut-off it has already missed."
+17. **Title card**
+   > The design rule: the model reads, the code decides, and the API moves the money. Claude reads and explains. Pure, tested policy code decides. The executor moves money with x on behalf of, on every employer call, with idempotent request IDs, verified webhooks, and an audit log of every call.
 
-## 3:45–4:20 · Result and proof (complexity, product integration)
+18. **Title card**
+   > And it's verifiable. The repository holds the live run's full audit log: 297 Airwallex calls, zero errors, and no employer call outside the three employer accounts. Plus 96 tests, and an offline demo that runs in a minute with no credentials.
 
-**Screen:** step "Payday report". Then cut to `docs/evidence/README.md` on GitHub: the account table and endpoint table. Optional: 3 seconds of the terminal running `npm test` (all green).
-
-> "The result: almost everyone paid on payday, each from their own employer's wallet. One fraud hold, one return paid back exactly once, and the late Philippine payouts escalated. Fees were collected only after wages were covered, and only once Airwallex reported the charge settled. Every API call is in an audit log, and the export checks it: zero errors, and no call outside the three employer accounts."
-
-## 4:20–4:35 · Close (all criteria)
-
-**Screen:** README hero and the mermaid diagram.
-
-> "The model reads, the code decides, the API moves the money. Payday Guardian: payroll that's on time, never cross-tenant, and safe from diversion fraud. Thank you."
-
-## Recording checklist
-
-- [ ] Re-run `npm run demo` so the offline run reflects the final code (the live evidence is already committed).
-- [ ] `npm run console`, open `?run=live`, click the first step. Close other tabs; turn off notifications (macOS Focus).
-- [ ] Use the console's Next button or arrow keys rather than Play, so the pace follows the narration.
-- [ ] Screen recorder at 1080p or higher; mic check; record each beat separately if easier and cut them together.
-- [ ] Check the final cut is under 5:00 and the numbers spoken match the screen (paid count, escalations).
-- [ ] Upload unlisted to YouTube (or Loom). Open it in a private window to confirm it plays without signing in.
-- [ ] Paste the link into the README ("Demo video") and into the HackerEarth description.
+19. **Title card**
+   > Payday Guardian. Payroll that's on time, never cross-tenant, and safe from diversion fraud. Thank you.
