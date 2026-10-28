@@ -10,7 +10,7 @@ The Build Phase needs its **own** submission. On the dashboard: Submissions > Bu
 
 ---
 
-**Demo video (4 min, recorded from the live sandbox run):** https://youtu.be/GVIRaVwaD6A
+**Demo video (4:45, recorded from the live sandbox run):** https://youtu.be/jE588gNmAYU
 **Repository:** https://github.com/acirema792/payday-guardian · **Live run evidence:** https://github.com/acirema792/payday-guardian/tree/main/docs/evidence
 
 **Track:** Multi-Tenant Platforms, Starter Kit 06 (Multi-Employer Payroll Executor).
