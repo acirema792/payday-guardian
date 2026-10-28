@@ -47,4 +47,6 @@ Shortlisted for the Build Phase (Oct 27 – Nov 13). Judging criteria from the s
 - [x] Kit 6 platform access enabled (found 2026-10-27 evening); three employers provisioned as connected accounts; on-behalf-of FX, payouts and charges verified live
 - [x] Claude reader (7/7 on labelled messages incl. prompt injection) and the demo console
 - [x] Live demo run on three Kit 6 connected accounts with the Claude reader (2026-10-28): 34/36 paid on payday, 1 fraud hold, 1 cut-off escalation, 1 return re-paid once, 272 API calls with zero errors. Found and fixed: deposits into connected accounts clear a few seconds after the simulation call
-- [ ] Video under 5 minutes; README polish; make the repo public; submit before noon Bogota on Nov 13
+- [x] Pre-submission loops (2026-10-28): rules re-read (builder guide, HackerEarth build form, Slack); added the webhook receiver, fee charges confirmed at SETTLED, every transfer simulated to a terminal state, committed live evidence, judge-facing README, video script and submission draft. Fresh live run on new employers: 34/36 paid, 296 calls, 0 errors
+- [ ] Record the video from `docs/video-script.md` and add its link to the README and the submission
+- [ ] Make the repo public; create the **Build Phase** submission on HackerEarth (it is a new submission, not an update of the idea) from `docs/submission-build.md`; submit before noon Bogota on Nov 13 (the form closes 1:29 PM)

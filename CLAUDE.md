@@ -43,6 +43,7 @@ The model reads, the code decides, the API moves the money.
 - `src/executor/`: `execute.ts` turns an `EmployerPlan` into API calls (quote-locked FX with a slippage guard, approval gate, beneficiary once per employer, transfers with explicit rails, ambiguous-response recovery by request_id, returned-transfer repay, platform fee). `store.ts` is node:sqlite: operation key -> request_id/result (idempotency) and the audit log of every API call
 - `src/sandbox/simulator.ts`: the only place sandbox simulation endpoints are called
 - `src/sandbox/offline-bank.ts`: deterministic in-memory multi-account bank mirroring measured sandbox behaviour, for rehearsing and recording the demo without provisioned employer accounts
+- `src/webhooks/airwallex.ts`: webhook receiver (HMAC-SHA256 over `x-timestamp` + raw body, 5-minute window, event-id dedupe in the store, routing by `account_id` to a known employer). The offline bank emits signed `payout.transfer.*` events (each delivered twice) and the runner shows them in moment #3; `npm run webhooks` serves a real subscription
 - `src/agent/messages.ts`: `InboundMessage` -> typed `Interpretation` (`Interpreter` interface; `ruleInterpreter` is the fallback, a Claude interpreter plugs in with the same schema). `matchByName` matches people by code and refuses to guess
 - `src/agent/claude-interpreter.ts`: Claude reader. `client.messages.parse` with a Zod schema (`ReadingSchema`), `claude-opus-5-5`, effort low, no tools. Falls back to `ruleInterpreter` on refusal or any error. `onReading` exposes red flags and the summary
 - `src/scenario/tenants.ts`: `data/tenants.json` maps each demo employer to its provisioned connected account and Global Account (sandbox-specific, not committed)
@@ -69,6 +70,9 @@ The model reads, the code decides, the API moves the money.
 Remind the user of unchecked items in the README "Setup checklist" (webhook secret), especially before starting work that needs them.
 
 ## Commands
+
+- `npm run evidence`: writes `docs/evidence` (live timeline, full audit CSV, isolation checks, fee charges read back) from the latest `data/live-*.db`
+- `npm run webhooks`: webhook receiver on port 4322 (needs `AWX_WEBHOOK_SECRET` and a tunnel)
 
 - `npm run check`: read-only sandbox readiness check (login, global accounts, balances, connected-account access)
 - `npm run smoke`: live money-movement smoke test on the sandbox (small amounts; writes `data/smoke.db`)

@@ -181,7 +181,7 @@
     run = data;
     document.getElementById("sub").textContent = `Payday ${run.events[0].at.slice(0, 10)} · ${run.environment} · reader: ${run.reader ?? "rules"}`;
     render();
-  }).catch(() => { document.getElementById("sub").textContent = "No run found"; });
+  }).catch(() => { document.getElementById("sub").textContent = which === "live" ? "No live run found" : "No offline run yet: run npm run demo, or open the Live sandbox run"; });
 </script>
 </body>
 </html>

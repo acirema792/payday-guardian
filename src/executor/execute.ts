@@ -270,7 +270,16 @@ export async function repayReturnedTransfer(input: ExecuteInput, contractorId: s
     : { status: "blocked", detail: sent.detail! };
 }
 
-export type FeeOutcome = { status: "charged"; chargeId: string } | { status: "accrued" | "deferred" | "failed"; detail: string };
+export type FeeOutcome =
+  | { status: "charged"; chargeId: string }
+  | { status: "pending"; chargeId: string; detail: string }
+  | { status: "accrued" | "deferred" | "failed"; detail: string };
+
+// Charges come back NEW and settle later: read them back before calling the fee collected.
+export interface SettleOptions {
+  attempts: number;
+  waitMs: number;
+}
 
 // Platform fee, after payroll. Connected accounts: charges/create from the employer's wallet.
 // Org-entity fallback: accrue it in our ledger (no platform charge API between sibling accounts).
@@ -280,19 +289,32 @@ export async function collectPlatformFee(
   store: Store,
   runId: string,
   mode: "connected" | "org-entity",
+  settle: SettleOptions = { attempts: 15, waitMs: 2000 },
 ): Promise<FeeOutcome> {
   if (plan.platformFee.status === "defer") return { status: "deferred", detail: "Fee does not fit after wages; deferred" };
   const amount = toMajor(plan.platformFee.amountMinor, plan.platformFee.currency);
   if (mode === "org-entity") return { status: "accrued", detail: `${amount} ${plan.platformFee.currency} accrued to the platform ledger` };
 
   const key = `${runId}:${plan.employerId}:fee`;
-  const saved = store.result<{ chargeId: string }>(key);
-  if (saved) return { status: "charged", chargeId: saved.chargeId };
-  try {
-    const charge = await createCharge(platform, store.requestIdFor(key), plan.accountId, plan.platformFee.currency, amount, `Platform fee ${runId}`);
-    store.saveResult(key, { chargeId: charge.id });
-    return { status: "charged", chargeId: charge.id };
-  } catch (err) {
-    return { status: "failed", detail: (err as Error).message };
+  let saved = store.result<{ chargeId: string; status: string }>(key);
+  if (!saved) {
+    try {
+      const charge = await createCharge(platform, store.requestIdFor(key), plan.accountId, plan.platformFee.currency, amount, `Platform fee ${runId}`);
+      saved = { chargeId: charge.id, status: charge.status };
+      store.saveResult(key, saved);
+    } catch (err) {
+      return { status: "failed", detail: (err as Error).message };
+    }
   }
+
+  let status = saved.status ?? "NEW";
+  const open = (s: string) => s === "NEW" || s === "PENDING";
+  for (let i = 0; i < settle.attempts && open(status); i++) {
+    if (i > 0) await new Promise((r) => setTimeout(r, settle.waitMs));
+    status = (await platform.get<{ status: string }>(`/charges/${saved.chargeId}`)).status;
+  }
+  if (status !== saved.status) store.saveResult(key, { ...saved, status });
+  if (status === "SETTLED") return { status: "charged", chargeId: saved.chargeId };
+  if (open(status)) return { status: "pending", chargeId: saved.chargeId, detail: `Charge still ${status}; collection is confirmed only at SETTLED` };
+  return { status: "failed", detail: `Charge ${saved.chargeId} ended ${status}` };
 }

@@ -236,6 +236,21 @@ describe("platform fee", () => {
     fundingRequestMinor: 0n,
   });
 
+  it("calls the fee collected only once the charge reads back SETTLED", async () => {
+    fake.chargeStatus = "PENDING";
+    const pending = await collectPlatformFee(fake, plan("collect"), store, "run_1", "connected", { attempts: 2, waitMs: 0 });
+    expect(pending.status).toBe("pending");
+    fake.chargeStatus = "SETTLED";
+    const settled = await collectPlatformFee(fake, plan("collect"), store, "run_1", "connected", { attempts: 2, waitMs: 0 });
+    expect(settled).toMatchObject({ status: "charged" });
+    expect(fake.creates("/charges/create")).toHaveLength(1);
+  });
+
+  it("reports a charge that ends in another status as failed", async () => {
+    fake.chargeStatus = "FAILED";
+    expect((await collectPlatformFee(fake, plan("collect"), store, "run_1", "connected", { attempts: 2, waitMs: 0 })).status).toBe("failed");
+  });
+
   it("charges a connected account once, even if collection runs twice", async () => {
     const first = await collectPlatformFee(fake, plan("collect"), store, "run_1", "connected");
     const second = await collectPlatformFee(fake, plan("collect"), store, "run_1", "connected");

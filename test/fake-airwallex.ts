@@ -16,6 +16,7 @@ export class FakeAirwallex implements Api {
   conversions = new Map<string, Record<string, unknown>>();
   beneficiaries = new Map<string, string>(); // request_id -> id
   charges = new Map<string, string>();
+  chargeStatus = "SETTLED";
   // USD per 1 unit of currency, used to price quotes.
   quoteRates: Record<string, number> = { EUR: 1.1, GBP: 1.3, MXN: 0.055, PHP: 0.0175 };
   // Like the sandbox: no wallet conversion into these, only payout-linked FX.
@@ -36,6 +37,7 @@ export class FakeAirwallex implements Api {
 
   async get<T>(path: string, query?: Record<string, string | number | undefined>): Promise<T> {
     this.calls.push({ method: "GET", path, query });
+    if (path.startsWith("/charges/")) return { id: path.split("/").at(-1), status: this.chargeStatus } as T;
     if (path === "/transfers") return { items: this.transfers.filter((t) => t.request_id === query?.request_id) } as T;
     const match = /^\/transfers\/(.+)$/.exec(path);
     if (match) {

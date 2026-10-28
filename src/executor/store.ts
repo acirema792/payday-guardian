@@ -29,6 +29,13 @@ export class Store {
         error_code TEXT,
         ms INTEGER NOT NULL
       );
+      CREATE TABLE IF NOT EXISTS webhook_events (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        account TEXT,
+        outcome TEXT NOT NULL,
+        received_at TEXT NOT NULL
+      );
     `);
   }
 
@@ -58,6 +65,14 @@ export class Store {
 
   auditLog(): { at: string; method: string; path: string; account: string | null; request_id: string | null; status: number; error_code: string | null }[] {
     return this.db.prepare("SELECT at, method, path, account, request_id, status, error_code FROM audit ORDER BY id").all() as never;
+  }
+
+  // False when the event id was already recorded (a redelivery).
+  recordWebhookEvent(id: string, name: string, account: string | null, outcome: string): boolean {
+    const r = this.db
+      .prepare("INSERT OR IGNORE INTO webhook_events (id, name, account, outcome, received_at) VALUES (?, ?, ?, ?, ?)")
+      .run(id, name, account, outcome, new Date().toISOString());
+    return r.changes === 1;
   }
 
   close(): void {

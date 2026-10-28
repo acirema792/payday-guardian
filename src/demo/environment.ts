@@ -5,6 +5,7 @@ import type { Employer } from "../policy/types.ts";
 import { OfflineBank } from "../sandbox/offline-bank.ts";
 import type { Simulator } from "../sandbox/simulator.ts";
 import { employers as seedEmployers, indicativeUsdRates, policyConfig } from "../scenario/seed.ts";
+import { WebhookReceiver } from "../webhooks/airwallex.ts";
 
 // Everything the demo runner needs from the outside world. The offline environment below runs
 // against the in-memory bank; a live environment provides the same shape over the sandbox.
@@ -23,17 +24,22 @@ export interface DemoEnvironment {
   // How long to wait for a deposit to clear into the wallet. On the sandbox, deposits into connected
   // accounts become available a few seconds after the simulation call returns.
   fundsSettleTimeoutMs?: number;
+  // Verified Airwallex webhooks, when a subscription delivers to this run (offline: always).
+  webhooks?: WebhookReceiver;
 }
 
 export async function offlineEnvironment(
   options: { interpreter?: Interpreter; readingNotes?: (messageId: string) => string[]; storePath?: string } = {},
 ): Promise<DemoEnvironment> {
+  const store = new Store(options.storePath);
+  const employerByAccount = new Map(seedEmployers.map((e) => [`acct_${e.employerId}`, e.employerId]));
+  const webhooks = new WebhookReceiver({ secret: "offline-demo-webhook-secret", store, employerByAccount });
   const bank = new OfflineBank({
     usdRates: indicativeUsdRates,
     swiftFeeMinor: policyConfig.swiftFeeMinor,
     restrictedWalletFx: policyConfig.payoutLinkedFx,
+    webhooks: { secret: "offline-demo-webhook-secret", deliver: (headers, rawBody) => webhooks.receive(headers, rawBody), redeliver: true },
   });
-  const store = new Store(options.storePath);
   const audit = (e: Parameters<Store["audit"]>[0]) => store.audit(e);
 
   bank.openAccount("acct_platform");
@@ -63,5 +69,6 @@ export async function offlineEnvironment(
     store,
     interpreter: options.interpreter ?? ruleInterpreter,
     readingNotes: options.readingNotes,
+    webhooks,
   };
 }

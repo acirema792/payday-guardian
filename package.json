@@ -17,7 +17,9 @@
     "smoke:connected": "node --env-file=.env scripts/smoke-connected.ts",
     "reader:eval": "node --env-file=.env scripts/reader-eval.ts",
     "console": "node scripts/console.ts",
-    "demo:live": "node --env-file=.env scripts/demo.ts --live"
+    "demo:live": "node --env-file=.env scripts/demo.ts --live",
+    "webhooks": "node --env-file=.env scripts/webhook-server.ts",
+    "evidence": "node --env-file-if-exists=.env scripts/export-evidence.ts"
   },
   "devDependencies": {
     "@types/node": "^24.19.2",
@@ -27,5 +29,6 @@
   "dependencies": {
     "@anthropic-ai/sdk": "0.132.1",
     "zod": "4.6.6"
-  }
+  },
+  "license": "MIT"
 }

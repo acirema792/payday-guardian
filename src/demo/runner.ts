@@ -114,6 +114,7 @@ export async function runDemo(env: DemoEnvironment, emit: (e: DemoEvent) => void
   let payoutLinkedFx = 0;
   let feesCollected = 0;
   let feesDeferred = 0;
+  const feeIssues: string[] = [];
   const profiles = new Map<string, ContractorProfile>();
   for (const e of env.employers) for (const c of contractorsOf(e.employerId)) profiles.set(c.id, c);
 
@@ -204,6 +205,7 @@ export async function runDemo(env: DemoEnvironment, emit: (e: DemoEvent) => void
     const report = await executeEmployerPlan(input);
     const fee = await collectPlatformFee(env.platform, p, env.store, runId, env.tenantMode);
     if (fee.status === "charged" || fee.status === "accrued") feesCollected += 1;
+    if (fee.status === "pending" || fee.status === "failed") feeIssues.push(`${env.employers.find((e) => e.employerId === employerId)!.name}: ${fee.detail}`);
     if (fee.status === "deferred") feesDeferred += 1;
     walletConversions += report.conversions.filter((c) => c.status === "converted").length;
 
@@ -292,18 +294,41 @@ export async function runDemo(env: DemoEnvironment, emit: (e: DemoEvent) => void
   // New information #3: a returned MXN transfer
   const returnedName = "Valeria Flores";
   const returned = [...sent.entries()].find(([id]) => profiles.get(id)!.name === returnedName);
+  const hooksBefore = env.webhooks?.received.length ?? 0;
+  // The bank's side of each transfer: sandbox transfers stay PROCESSING until simulated to a terminal status.
+  const land = async (contractorId: string, transferId: string) => {
+    const api = env.apiFor(profiles.get(contractorId)!.employerId);
+    await env.simulator.transitionTransfer(api, transferId, "SENT");
+    await env.simulator.transitionTransfer(api, transferId, "PAID");
+  };
   for (const [id, s] of sent) {
     const api = env.apiFor(profiles.get(id)!.employerId);
+    if (id !== returned?.[0]) {
+      await land(id, s.outcome.transferId);
+      setStatus(id, "paid");
+      continue;
+    }
     await env.simulator.transitionTransfer(api, s.outcome.transferId, "SENT");
-    if (id === returned?.[0]) {
+    {
       await env.simulator.transitionTransfer(api, s.outcome.transferId, "FAILED", "BENEFICIARY_BANK_RETURNED");
       setStatus(id, "returned", "BENEFICIARY_BANK_RETURNED");
-    } else {
-      await env.simulator.transitionTransfer(api, s.outcome.transferId, "PAID");
-      setStatus(id, "paid");
     }
   }
-  await say("05:30", "new_info", `#3 Bank return on ${returnedName}'s MXN payout`, [inbox.bankReturn.body]);
+  const hooks = env.webhooks?.received.slice(hooksBefore) ?? [];
+  const failedHook = hooks.find((h) => h.transfer?.name === "payout.transfer.failed" && h.transfer.transferId === returned?.[1].outcome.transferId);
+  const returnLines = [`${inbox.bankReturn.from}: ${inbox.bankReturn.body}`];
+  if (env.webhooks) {
+    returnLines.push(
+      `Webhooks: ${hooks.filter((h) => h.outcome === "processed").length} payout.transfer events verified (HMAC-SHA256 over x-timestamp + raw body); ${hooks.filter((h) => h.outcome === "duplicate").length} redeliveries ignored by event id.`,
+    );
+    if (failedHook?.transfer) {
+      const t = failedHook.transfer;
+      returnLines.push(`payout.transfer.failed for ${returnedName}: ${t.status}, ${t.failureType}, on ${env.employers.find((e) => e.employerId === t.employerId)!.name}'s account.`);
+    }
+  } else {
+    returnLines.push("No webhook subscription on this run: the return is confirmed from GET /transfers/{id} before anything is re-paid.");
+  }
+  await say("05:30", "new_info", `#3 Bank return on ${returnedName}'s MXN payout`, returnLines);
   const notice = await env.interpreter.interpret(inbox.bankReturn);
   const repayLines = [`Read by ${env.interpreter.name}: ${JSON.stringify(notice)}`, ...(env.readingNotes?.(inbox.bankReturn.id) ?? [])];
   if (notice.kind === "transfer_returned" && returned) {
@@ -321,6 +346,7 @@ export async function runDemo(env: DemoEnvironment, emit: (e: DemoEvent) => void
     const again = await repayReturnedTransfer(input, id);
     if (first.status === "repaid") {
       returnsRepaid += 1;
+      await land(id, first.transferId);
       setStatus(id, "repaid", `re-paid once, transfer ${first.transferId.slice(0, 8)}`);
     }
     repayLines.push(
@@ -342,7 +368,14 @@ export async function runDemo(env: DemoEnvironment, emit: (e: DemoEvent) => void
     `Checked against the wallet, not the email: ${cleared(contosoCleared)} Contoso now holds ${usd(balanceNow)}.`,
   ]);
   const lateLines = describePlan(contoso.name, late);
-  lateLines.push(...(await execute(contoso.employerId, "06:40", `payday-${PAYDAY}:b2`)));
+  const batch2 = `payday-${PAYDAY}:b2`;
+  lateLines.push(...(await execute(contoso.employerId, "06:40", batch2)));
+  const lateSent = [...sent].filter(([, s]) => s.runId === batch2);
+  for (const [id, s] of lateSent) {
+    await land(id, s.outcome.transferId);
+    setStatus(id, "paid");
+  }
+  if (lateSent.length) lateLines.push(`${lateSent.length} late transfers reached PAID before their local cut-offs.`);
   for (const id of escalations) {
     const c = profiles.get(id)!;
     lateLines.push(`Escalate ${c.name}: Philippine cut-offs passed (LOCAL 06:30, SWIFT 06:00 UTC). A person chooses: next PH window, or the instant stablecoin rail if the contractor opted in.`);
@@ -358,7 +391,7 @@ export async function runDemo(env: DemoEnvironment, emit: (e: DemoEvent) => void
   const total = env.employers.reduce((n, e) => n + contractorsOf(e.employerId).length, 0);
   const summary: DemoSummary = {
     contractors: total,
-    paidOnPayday: sent.size,
+    paidOnPayday: [...status.values()].filter((v) => v.status === "paid" || v.status === "repaid").length,
     heldForFraud,
     escalatedCutoff: escalations.length,
     returnsRepaid,
@@ -373,7 +406,8 @@ export async function runDemo(env: DemoEnvironment, emit: (e: DemoEvent) => void
     `${summary.paidOnPayday}/${total} contractors paid on payday (${((summary.paidOnPayday / total) * 100).toFixed(1)}%), every one from their own employer's wallet.`,
     `${heldForFraud} payout held for a suspected diversion; ${escalations.length} escalated because their cut-off had passed; ${returnsRepaid} bank return re-paid once.`,
     `${walletConversions} wallet conversions (net gap only) and ${payoutLinkedFx} payout-linked FX payouts at locked quotes.`,
-    `Platform fees: ${feesCollected} collected, ${feesDeferred} deferred until that employer's wages were covered.`,
+    `Platform fees: ${feesCollected} collected (charges read back SETTLED), ${feesDeferred} deferred until that employer's wages were covered.`,
+    ...feeIssues.map((f) => `Fee not confirmed, ${f}`),
     `Audit log: ${summary.apiCalls} API calls recorded.`,
     ...Object.entries(finalBalances).map(([name, b]) => `${name} final balances: ${Object.entries(b).map(([c, v]) => `${c} ${v}`).join(", ") || "0"}`),
   ], summary);

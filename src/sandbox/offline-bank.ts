@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import type { Api } from "../airwallex/api.ts";
 import { AirwallexError } from "../airwallex/client.ts";
 import { type Currency, sellAmountFor, toMajor, toMinor } from "../policy/money.ts";
+import { signWebhook, type WebhookHeaders } from "../webhooks/airwallex.ts";
 import type { Simulator } from "./simulator.ts";
 
 // Deterministic in-memory stand-in for the Airwallex sandbox, with one wallet per account.
@@ -27,6 +28,9 @@ export interface OfflineBankOptions {
   usdRates: Record<Currency, string>; // USD per 1 unit
   swiftFeeMinor: Record<Currency, bigint>;
   restrictedWalletFx: Currency[];
+  // Signed payout.transfer.* events on each simulated transition, like an Airwallex webhook
+  // subscription. With redeliver, each event arrives twice (delivery is at-least-once).
+  webhooks?: { secret: string; deliver: (headers: WebhookHeaders, rawBody: string) => void; redeliver?: boolean };
 }
 
 export class OfflineBank {
@@ -83,8 +87,10 @@ export class OfflineBank {
   // Platform-level API (charges between accounts).
   platformApi(platformAccountId: string): Api {
     return {
-      get: async () => {
-        throw new Error("Not supported offline");
+      // Charges are created NEW and read back SETTLED, as on the sandbox.
+      get: async <T>(path: string) => {
+        if (!/^\/charges\/charge_/.test(path)) throw new Error(`Unhandled platform GET ${path}`);
+        return { id: path.split("/").at(-1), status: "SETTLED" } as T;
       },
       post: async <T>(path: string, body: any) => {
         if (path !== "/charges/create") throw new Error(`Unhandled platform POST ${path}`);
@@ -92,7 +98,7 @@ export class OfflineBank {
         const minor = toMinor(body.amount, body.currency);
         this.move(body.source, body.currency, -minor, "insufficient_fund", path);
         this.move(platformAccountId, body.currency, minor, "insufficient_fund", path);
-        return { id: `charge_${randomUUID().slice(0, 8)}`, status: "SETTLED" } as T;
+        return { id: `charge_${randomUUID().slice(0, 8)}`, status: "NEW" } as T;
       },
     };
   }
@@ -184,8 +190,19 @@ export class OfflineBank {
         } else {
           t.status = next;
         }
+        this.emit(t, `payout.transfer.${next.toLowerCase()}`);
       },
     };
+  }
+
+  private emit(t: BankTransfer, name: string) {
+    const hooks = this.options.webhooks;
+    if (!hooks) return;
+    const rawBody = JSON.stringify({ id: randomUUID(), name, account_id: t.accountId, data: view(t), created_at: new Date().toISOString(), version: "2025-06-30" });
+    const timestamp = String(Date.now());
+    const headers = { timestamp, signature: signWebhook(hooks.secret, timestamp, rawBody) };
+    hooks.deliver(headers, rawBody);
+    if (hooks.redeliver) hooks.deliver(headers, rawBody);
   }
 }
 

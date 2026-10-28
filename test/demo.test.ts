@@ -26,6 +26,23 @@ describe("demo runner (offline bank)", () => {
       for (const amount of Object.values(balances)) expect(Number(amount)).toBeGreaterThanOrEqual(0);
     }
     expect(summary.apiCalls).toBeGreaterThan(100);
+    // No payout is left in flight: each one landed, was held, or was escalated to a person.
+    const finalStatuses = events.at(-1)!.snapshot!.employers.flatMap((e) => e.contractors.map((c) => c.status));
+    expect(new Set(finalStatuses)).toEqual(new Set(["paid", "repaid", "held_fraud", "escalated"]));
+    expect(finalStatuses.filter((s) => s === "paid" || s === "repaid")).toHaveLength(summary.paidOnPayday);
+    // Every transfer the bank received reached a terminal status.
+    expect(env.webhooks!.received.filter((r) => r.transfer?.status === "PROCESSING")).toHaveLength(0);
+    env.store.close();
+  });
+
+  it("confirms the bank return from a verified webhook and ignores its redelivery", async () => {
+    const env = await offlineEnvironment();
+    const events: DemoEvent[] = [];
+    await runDemo(env, (e) => events.push(e));
+    const bankReturn = events.find((e) => e.title.startsWith("#3"))!;
+    expect(bankReturn.lines.join("\n")).toMatch(/payout\.transfer\.failed for Valeria Flores: CANCELLED, BENEFICIARY_BANK_RETURNED, on \w+ \w+'s account/);
+    const processed = env.webhooks!.received.filter((r) => r.outcome === "processed").length;
+    expect(env.webhooks!.received.filter((r) => r.outcome === "duplicate")).toHaveLength(processed);
     env.store.close();
   });
 

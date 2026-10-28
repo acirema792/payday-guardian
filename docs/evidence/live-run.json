@@ -1,0 +1,4172 @@
+{
+  "environment": "Airwallex sandbox (live, Kit 6 connected accounts)",
+  "reader": "claude (claude-opus-5-5)",
+  "events": [
+    {
+      "at": "2026-11-06T04:00:00.000Z",
+      "phase": "goal",
+      "title": "Pay 36 contractors for 3 employers in 6 countries today",
+      "lines": [
+        "Each payout from its own employer's money, before the local cut-off, and never to a fraudster.",
+        "Policy code decides amounts, priorities, rails and holds; the agent reads messages and explains."
+      ],
+      "snapshot": {
+        "employers": [
+          {
+            "employerId": "emp_a",
+            "name": "Northwind Labs",
+            "balances": {
+              "USD": "40000.00"
+            },
+            "contractors": [
+              {
+                "id": "emp_a_ana_lopez",
+                "name": "Ana Lopez",
+                "country": "US",
+                "currency": "USD",
+                "amount": "4200.00",
+                "status": "pending"
+              },
+              {
+                "id": "emp_a_ethan_brooks",
+                "name": "Ethan Brooks",
+                "country": "US",
+                "currency": "USD",
+                "amount": "3900.00",
+                "status": "pending"
+              },
+              {
+                "id": "emp_a_tom_reed",
+                "name": "Tom Reed",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3200.00",
+                "status": "pending"
+              },
+              {
+                "id": "emp_a_priya_kapoor",
+                "name": "Priya Kapoor",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3350.00",
+                "status": "pending"
+              },
+              {
+                "id": "emp_a_lena_schmidt",
+                "name": "Lena Schmidt",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3500.00",
+                "status": "pending"
+              },
+              {
+                "id": "emp_a_jonas_weber",
+                "name": "Jonas Weber",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3650.00",
+                "status": "pending"
+              },
+              {
+                "id": "emp_a_maria_garcia",
+                "name": "Maria Garcia",
+                "country": "MX",
+                "currency": "MXN",
+                "amount": "45000.00",
+                "status": "pending"
+              },
+              {
+                "id": "emp_a_diego_ramirez",
+                "name": "Diego Ramirez",
+                "country": "MX",
+                "currency": "USD",
+                "amount": "2500.00",
+                "status": "pending"
+              },
+              {
+                "id": "emp_a_jose_santos",
+                "name": "Jose Santos",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "90000.00",
+                "status": "pending"
+              },
+              {
+                "id": "emp_a_bea_reyes",
+                "name": "Bea Reyes",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "85000.00",
+                "status": "pending"
+              },
+              {
+                "id": "emp_a_arjun_mehta",
+                "name": "Arjun Mehta",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "250000.00",
+                "status": "pending"
+              },
+              {
+                "id": "emp_a_sneha_iyer",
+                "name": "Sneha Iyer",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "240000.00",
+                "status": "pending"
+              }
+            ]
+          },
+          {
+            "employerId": "emp_b",
+            "name": "Contoso Health",
+            "balances": {
+              "USD": "23000.00"
+            },
+            "contractors": [
+              {
+                "id": "emp_b_grace_kim",
+                "name": "Grace Kim",
+                "country": "US",
+                "currency": "USD",
+                "amount": "4100.00",
+                "status": "pending"
+              },
+              {
+                "id": "emp_b_marcus_hill",
+                "name": "Marcus Hill",
+                "country": "US",
+                "currency": "USD",
+                "amount": "3800.00",
+                "status": "pending"
+              },
+              {
+                "id": "emp_b_olivia_hughes",
+                "name": "Olivia Hughes",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3100.00",
+                "status": "pending"
+              },
+              {
+                "id": "emp_b_harry_patel",
+                "name": "Harry Patel",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3300.00",
+                "status": "pending"
+              },
+              {
+                "id": "emp_b_clara_fischer",
+                "name": "Clara Fischer",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3400.00",
+                "status": "pending"
+              },
+              {
+                "id": "emp_b_felix_wagner",
+                "name": "Felix Wagner",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3550.00",
+                "status": "pending"
+              },
+              {
+                "id": "emp_b_lucia_hernandez",
+                "name": "Lucia Hernandez",
+                "country": "MX",
+                "currency": "MXN",
+                "amount": "47000.00",
+                "status": "pending"
+              },
+              {
+                "id": "emp_b_mateo_torres",
+                "name": "Mateo Torres",
+                "country": "MX",
+                "currency": "USD",
+                "amount": "2600.00",
+                "status": "pending"
+              },
+              {
+                "id": "emp_b_andrea_cruz",
+                "name": "Andrea Cruz",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "260000.00",
+                "status": "pending"
+              },
+              {
+                "id": "emp_b_paolo_mendoza",
+                "name": "Paolo Mendoza",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "250000.00",
+                "status": "pending"
+              },
+              {
+                "id": "emp_b_rahul_verma",
+                "name": "Rahul Verma",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "260000.00",
+                "status": "pending"
+              },
+              {
+                "id": "emp_b_ananya_rao",
+                "name": "Ananya Rao",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "235000.00",
+                "status": "pending"
+              }
+            ]
+          },
+          {
+            "employerId": "emp_c",
+            "name": "Fabrikam Studio",
+            "balances": {},
+            "contractors": [
+              {
+                "id": "emp_c_noah_carter",
+                "name": "Noah Carter",
+                "country": "US",
+                "currency": "USD",
+                "amount": "4300.00",
+                "status": "pending"
+              },
+              {
+                "id": "emp_c_ava_morgan",
+                "name": "Ava Morgan",
+                "country": "US",
+                "currency": "USD",
+                "amount": "3700.00",
+                "status": "pending"
+              },
+              {
+                "id": "emp_c_george_evans",
+                "name": "George Evans",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3150.00",
+                "status": "pending"
+              },
+              {
+                "id": "emp_c_amelia_shah",
+                "name": "Amelia Shah",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3250.00",
+                "status": "pending"
+              },
+              {
+                "id": "emp_c_max_becker",
+                "name": "Max Becker",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3600.00",
+                "status": "pending"
+              },
+              {
+                "id": "emp_c_sophie_hoffmann",
+                "name": "Sophie Hoffmann",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3450.00",
+                "status": "pending"
+              },
+              {
+                "id": "emp_c_valeria_flores",
+                "name": "Valeria Flores",
+                "country": "MX",
+                "currency": "MXN",
+                "amount": "46000.00",
+                "status": "pending"
+              },
+              {
+                "id": "emp_c_santiago_ruiz",
+                "name": "Santiago Ruiz",
+                "country": "MX",
+                "currency": "USD",
+                "amount": "2550.00",
+                "status": "pending"
+              },
+              {
+                "id": "emp_c_carlo_bautista",
+                "name": "Carlo Bautista",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "87000.00",
+                "status": "pending"
+              },
+              {
+                "id": "emp_c_liza_garcia",
+                "name": "Liza Garcia",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "84000.00",
+                "status": "pending"
+              },
+              {
+                "id": "emp_c_vikram_nair",
+                "name": "Vikram Nair",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "255000.00",
+                "status": "pending"
+              },
+              {
+                "id": "emp_c_kavya_menon",
+                "name": "Kavya Menon",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "245000.00",
+                "status": "pending"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "at": "2026-11-06T04:00:00.000Z",
+      "phase": "plan",
+      "title": "Initial plan from live balances",
+      "lines": [
+        "Northwind Labs: pay 12, hold 0",
+        "  fund at payout 175000.00 PHP for USD 2,775.91",
+        "  fund at payout 490000.00 INR for USD 5,202.84",
+        "  convert 45000.00 MXN for USD 2,437.16",
+        "  convert 7150.00 EUR for USD 8,015.77",
+        "  convert 6550.00 GBP for USD 8,777.57",
+        "  platform fee: collect",
+        "Contoso Health: pay 7, hold 5",
+        "  fund at payout 495000.00 INR for USD 5,255.93",
+        "  convert 47000.00 MXN for USD 2,545.48",
+        "  convert 3400.00 EUR for USD 3,811.70",
+        "  fund at payout 250000.00 PHP for USD 3,965.59",
+        "  hold Grace Kim: not enough of this employer's own money",
+        "  hold Olivia Hughes: not enough of this employer's own money",
+        "  hold Harry Patel: not enough of this employer's own money",
+        "  hold Felix Wagner: not enough of this employer's own money",
+        "  hold Andrea Cruz: not enough of this employer's own money",
+        "  funding request to employer: USD 19,823.31",
+        "  platform fee: defer",
+        "Fabrikam Studio: pay 0, hold 12",
+        "  hold Noah Carter: not enough of this employer's own money",
+        "  hold Ava Morgan: not enough of this employer's own money",
+        "  hold George Evans: not enough of this employer's own money",
+        "  hold Amelia Shah: not enough of this employer's own money",
+        "  hold Max Becker: not enough of this employer's own money",
+        "  hold Sophie Hoffmann: not enough of this employer's own money",
+        "  hold Valeria Flores: not enough of this employer's own money",
+        "  hold Santiago Ruiz: not enough of this employer's own money",
+        "  hold Carlo Bautista: not enough of this employer's own money",
+        "  hold Liza Garcia: not enough of this employer's own money",
+        "  hold Vikram Nair: not enough of this employer's own money",
+        "  hold Kavya Menon: not enough of this employer's own money",
+        "  funding request to employer: USD 37,607.02",
+        "  platform fee: defer"
+      ],
+      "snapshot": {
+        "employers": [
+          {
+            "employerId": "emp_a",
+            "name": "Northwind Labs",
+            "balances": {
+              "USD": "40000.00"
+            },
+            "contractors": [
+              {
+                "id": "emp_a_ana_lopez",
+                "name": "Ana Lopez",
+                "country": "US",
+                "currency": "USD",
+                "amount": "4200.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_a_ethan_brooks",
+                "name": "Ethan Brooks",
+                "country": "US",
+                "currency": "USD",
+                "amount": "3900.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_a_tom_reed",
+                "name": "Tom Reed",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3200.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_a_priya_kapoor",
+                "name": "Priya Kapoor",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3350.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_a_lena_schmidt",
+                "name": "Lena Schmidt",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3500.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_a_jonas_weber",
+                "name": "Jonas Weber",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3650.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_a_maria_garcia",
+                "name": "Maria Garcia",
+                "country": "MX",
+                "currency": "MXN",
+                "amount": "45000.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_a_diego_ramirez",
+                "name": "Diego Ramirez",
+                "country": "MX",
+                "currency": "USD",
+                "amount": "2500.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_a_jose_santos",
+                "name": "Jose Santos",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "90000.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_a_bea_reyes",
+                "name": "Bea Reyes",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "85000.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_a_arjun_mehta",
+                "name": "Arjun Mehta",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "250000.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_a_sneha_iyer",
+                "name": "Sneha Iyer",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "240000.00",
+                "status": "planned"
+              }
+            ]
+          },
+          {
+            "employerId": "emp_b",
+            "name": "Contoso Health",
+            "balances": {
+              "USD": "23000.00"
+            },
+            "contractors": [
+              {
+                "id": "emp_b_grace_kim",
+                "name": "Grace Kim",
+                "country": "US",
+                "currency": "USD",
+                "amount": "4100.00",
+                "status": "short",
+                "note": "not enough of this employer's own money"
+              },
+              {
+                "id": "emp_b_marcus_hill",
+                "name": "Marcus Hill",
+                "country": "US",
+                "currency": "USD",
+                "amount": "3800.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_b_olivia_hughes",
+                "name": "Olivia Hughes",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3100.00",
+                "status": "short",
+                "note": "not enough of this employer's own money"
+              },
+              {
+                "id": "emp_b_harry_patel",
+                "name": "Harry Patel",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3300.00",
+                "status": "short",
+                "note": "not enough of this employer's own money"
+              },
+              {
+                "id": "emp_b_clara_fischer",
+                "name": "Clara Fischer",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3400.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_b_felix_wagner",
+                "name": "Felix Wagner",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3550.00",
+                "status": "short",
+                "note": "not enough of this employer's own money"
+              },
+              {
+                "id": "emp_b_lucia_hernandez",
+                "name": "Lucia Hernandez",
+                "country": "MX",
+                "currency": "MXN",
+                "amount": "47000.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_b_mateo_torres",
+                "name": "Mateo Torres",
+                "country": "MX",
+                "currency": "USD",
+                "amount": "2600.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_b_andrea_cruz",
+                "name": "Andrea Cruz",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "260000.00",
+                "status": "short",
+                "note": "not enough of this employer's own money"
+              },
+              {
+                "id": "emp_b_paolo_mendoza",
+                "name": "Paolo Mendoza",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "250000.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_b_rahul_verma",
+                "name": "Rahul Verma",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "260000.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_b_ananya_rao",
+                "name": "Ananya Rao",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "235000.00",
+                "status": "planned"
+              }
+            ]
+          },
+          {
+            "employerId": "emp_c",
+            "name": "Fabrikam Studio",
+            "balances": {},
+            "contractors": [
+              {
+                "id": "emp_c_noah_carter",
+                "name": "Noah Carter",
+                "country": "US",
+                "currency": "USD",
+                "amount": "4300.00",
+                "status": "short",
+                "note": "not enough of this employer's own money"
+              },
+              {
+                "id": "emp_c_ava_morgan",
+                "name": "Ava Morgan",
+                "country": "US",
+                "currency": "USD",
+                "amount": "3700.00",
+                "status": "short",
+                "note": "not enough of this employer's own money"
+              },
+              {
+                "id": "emp_c_george_evans",
+                "name": "George Evans",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3150.00",
+                "status": "short",
+                "note": "not enough of this employer's own money"
+              },
+              {
+                "id": "emp_c_amelia_shah",
+                "name": "Amelia Shah",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3250.00",
+                "status": "short",
+                "note": "not enough of this employer's own money"
+              },
+              {
+                "id": "emp_c_max_becker",
+                "name": "Max Becker",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3600.00",
+                "status": "short",
+                "note": "not enough of this employer's own money"
+              },
+              {
+                "id": "emp_c_sophie_hoffmann",
+                "name": "Sophie Hoffmann",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3450.00",
+                "status": "short",
+                "note": "not enough of this employer's own money"
+              },
+              {
+                "id": "emp_c_valeria_flores",
+                "name": "Valeria Flores",
+                "country": "MX",
+                "currency": "MXN",
+                "amount": "46000.00",
+                "status": "short",
+                "note": "not enough of this employer's own money"
+              },
+              {
+                "id": "emp_c_santiago_ruiz",
+                "name": "Santiago Ruiz",
+                "country": "MX",
+                "currency": "USD",
+                "amount": "2550.00",
+                "status": "short",
+                "note": "not enough of this employer's own money"
+              },
+              {
+                "id": "emp_c_carlo_bautista",
+                "name": "Carlo Bautista",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "87000.00",
+                "status": "short",
+                "note": "not enough of this employer's own money"
+              },
+              {
+                "id": "emp_c_liza_garcia",
+                "name": "Liza Garcia",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "84000.00",
+                "status": "short",
+                "note": "not enough of this employer's own money"
+              },
+              {
+                "id": "emp_c_vikram_nair",
+                "name": "Vikram Nair",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "255000.00",
+                "status": "short",
+                "note": "not enough of this employer's own money"
+              },
+              {
+                "id": "emp_c_kavya_menon",
+                "name": "Kavya Menon",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "245000.00",
+                "status": "short",
+                "note": "not enough of this employer's own money"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "at": "2026-11-06T04:10:00.000Z",
+      "phase": "new_info",
+      "title": "#1 Fabrikam's funding lands; Contoso is still short",
+      "lines": [
+        "Fabrikam Studio deposit received: USD 40000. Cleared into the wallet after 22s.",
+        "A pooled ledger would now see USD 103,000.00 and pay Contoso in full, partly with other employers' money."
+      ],
+      "snapshot": {
+        "employers": [
+          {
+            "employerId": "emp_a",
+            "name": "Northwind Labs",
+            "balances": {
+              "USD": "40000.00"
+            },
+            "contractors": [
+              {
+                "id": "emp_a_ana_lopez",
+                "name": "Ana Lopez",
+                "country": "US",
+                "currency": "USD",
+                "amount": "4200.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_a_ethan_brooks",
+                "name": "Ethan Brooks",
+                "country": "US",
+                "currency": "USD",
+                "amount": "3900.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_a_tom_reed",
+                "name": "Tom Reed",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3200.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_a_priya_kapoor",
+                "name": "Priya Kapoor",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3350.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_a_lena_schmidt",
+                "name": "Lena Schmidt",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3500.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_a_jonas_weber",
+                "name": "Jonas Weber",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3650.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_a_maria_garcia",
+                "name": "Maria Garcia",
+                "country": "MX",
+                "currency": "MXN",
+                "amount": "45000.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_a_diego_ramirez",
+                "name": "Diego Ramirez",
+                "country": "MX",
+                "currency": "USD",
+                "amount": "2500.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_a_jose_santos",
+                "name": "Jose Santos",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "90000.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_a_bea_reyes",
+                "name": "Bea Reyes",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "85000.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_a_arjun_mehta",
+                "name": "Arjun Mehta",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "250000.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_a_sneha_iyer",
+                "name": "Sneha Iyer",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "240000.00",
+                "status": "planned"
+              }
+            ]
+          },
+          {
+            "employerId": "emp_b",
+            "name": "Contoso Health",
+            "balances": {
+              "USD": "23000.00"
+            },
+            "contractors": [
+              {
+                "id": "emp_b_grace_kim",
+                "name": "Grace Kim",
+                "country": "US",
+                "currency": "USD",
+                "amount": "4100.00",
+                "status": "short",
+                "note": "not enough of this employer's own money"
+              },
+              {
+                "id": "emp_b_marcus_hill",
+                "name": "Marcus Hill",
+                "country": "US",
+                "currency": "USD",
+                "amount": "3800.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_b_olivia_hughes",
+                "name": "Olivia Hughes",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3100.00",
+                "status": "short",
+                "note": "not enough of this employer's own money"
+              },
+              {
+                "id": "emp_b_harry_patel",
+                "name": "Harry Patel",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3300.00",
+                "status": "short",
+                "note": "not enough of this employer's own money"
+              },
+              {
+                "id": "emp_b_clara_fischer",
+                "name": "Clara Fischer",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3400.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_b_felix_wagner",
+                "name": "Felix Wagner",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3550.00",
+                "status": "short",
+                "note": "not enough of this employer's own money"
+              },
+              {
+                "id": "emp_b_lucia_hernandez",
+                "name": "Lucia Hernandez",
+                "country": "MX",
+                "currency": "MXN",
+                "amount": "47000.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_b_mateo_torres",
+                "name": "Mateo Torres",
+                "country": "MX",
+                "currency": "USD",
+                "amount": "2600.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_b_andrea_cruz",
+                "name": "Andrea Cruz",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "260000.00",
+                "status": "short",
+                "note": "not enough of this employer's own money"
+              },
+              {
+                "id": "emp_b_paolo_mendoza",
+                "name": "Paolo Mendoza",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "250000.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_b_rahul_verma",
+                "name": "Rahul Verma",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "260000.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_b_ananya_rao",
+                "name": "Ananya Rao",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "235000.00",
+                "status": "planned"
+              }
+            ]
+          },
+          {
+            "employerId": "emp_c",
+            "name": "Fabrikam Studio",
+            "balances": {
+              "USD": "40000.00"
+            },
+            "contractors": [
+              {
+                "id": "emp_c_noah_carter",
+                "name": "Noah Carter",
+                "country": "US",
+                "currency": "USD",
+                "amount": "4300.00",
+                "status": "short",
+                "note": "not enough of this employer's own money"
+              },
+              {
+                "id": "emp_c_ava_morgan",
+                "name": "Ava Morgan",
+                "country": "US",
+                "currency": "USD",
+                "amount": "3700.00",
+                "status": "short",
+                "note": "not enough of this employer's own money"
+              },
+              {
+                "id": "emp_c_george_evans",
+                "name": "George Evans",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3150.00",
+                "status": "short",
+                "note": "not enough of this employer's own money"
+              },
+              {
+                "id": "emp_c_amelia_shah",
+                "name": "Amelia Shah",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3250.00",
+                "status": "short",
+                "note": "not enough of this employer's own money"
+              },
+              {
+                "id": "emp_c_max_becker",
+                "name": "Max Becker",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3600.00",
+                "status": "short",
+                "note": "not enough of this employer's own money"
+              },
+              {
+                "id": "emp_c_sophie_hoffmann",
+                "name": "Sophie Hoffmann",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3450.00",
+                "status": "short",
+                "note": "not enough of this employer's own money"
+              },
+              {
+                "id": "emp_c_valeria_flores",
+                "name": "Valeria Flores",
+                "country": "MX",
+                "currency": "MXN",
+                "amount": "46000.00",
+                "status": "short",
+                "note": "not enough of this employer's own money"
+              },
+              {
+                "id": "emp_c_santiago_ruiz",
+                "name": "Santiago Ruiz",
+                "country": "MX",
+                "currency": "USD",
+                "amount": "2550.00",
+                "status": "short",
+                "note": "not enough of this employer's own money"
+              },
+              {
+                "id": "emp_c_carlo_bautista",
+                "name": "Carlo Bautista",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "87000.00",
+                "status": "short",
+                "note": "not enough of this employer's own money"
+              },
+              {
+                "id": "emp_c_liza_garcia",
+                "name": "Liza Garcia",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "84000.00",
+                "status": "short",
+                "note": "not enough of this employer's own money"
+              },
+              {
+                "id": "emp_c_vikram_nair",
+                "name": "Vikram Nair",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "255000.00",
+                "status": "short",
+                "note": "not enough of this employer's own money"
+              },
+              {
+                "id": "emp_c_kavya_menon",
+                "name": "Kavya Menon",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "245000.00",
+                "status": "short",
+                "note": "not enough of this employer's own money"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "at": "2026-11-06T04:10:00.000Z",
+      "phase": "decision",
+      "title": "Revised: Fabrikam pays everyone; Contoso stays limited to its own wallet",
+      "lines": [
+        "Fabrikam Studio: pay 12, hold 0",
+        "  fund at payout 171000.00 PHP for USD 2,712.46",
+        "  fund at payout 500000.00 INR for USD 5,309.02",
+        "  convert 46000.00 MXN for USD 2,491.32",
+        "  convert 7050.00 EUR for USD 7,903.66",
+        "  convert 6400.00 GBP for USD 8,576.56",
+        "  platform fee: collect",
+        "Contoso Health: pay 7, hold 5",
+        "  fund at payout 495000.00 INR for USD 5,255.93",
+        "  convert 47000.00 MXN for USD 2,545.48",
+        "  convert 3400.00 EUR for USD 3,811.70",
+        "  fund at payout 250000.00 PHP for USD 3,965.59",
+        "  hold Grace Kim: not enough of this employer's own money",
+        "  hold Olivia Hughes: not enough of this employer's own money",
+        "  hold Harry Patel: not enough of this employer's own money",
+        "  hold Felix Wagner: not enough of this employer's own money",
+        "  hold Andrea Cruz: not enough of this employer's own money",
+        "  funding request to employer: USD 19,823.31",
+        "  platform fee: defer"
+      ],
+      "snapshot": {
+        "employers": [
+          {
+            "employerId": "emp_a",
+            "name": "Northwind Labs",
+            "balances": {
+              "USD": "40000.00"
+            },
+            "contractors": [
+              {
+                "id": "emp_a_ana_lopez",
+                "name": "Ana Lopez",
+                "country": "US",
+                "currency": "USD",
+                "amount": "4200.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_a_ethan_brooks",
+                "name": "Ethan Brooks",
+                "country": "US",
+                "currency": "USD",
+                "amount": "3900.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_a_tom_reed",
+                "name": "Tom Reed",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3200.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_a_priya_kapoor",
+                "name": "Priya Kapoor",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3350.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_a_lena_schmidt",
+                "name": "Lena Schmidt",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3500.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_a_jonas_weber",
+                "name": "Jonas Weber",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3650.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_a_maria_garcia",
+                "name": "Maria Garcia",
+                "country": "MX",
+                "currency": "MXN",
+                "amount": "45000.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_a_diego_ramirez",
+                "name": "Diego Ramirez",
+                "country": "MX",
+                "currency": "USD",
+                "amount": "2500.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_a_jose_santos",
+                "name": "Jose Santos",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "90000.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_a_bea_reyes",
+                "name": "Bea Reyes",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "85000.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_a_arjun_mehta",
+                "name": "Arjun Mehta",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "250000.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_a_sneha_iyer",
+                "name": "Sneha Iyer",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "240000.00",
+                "status": "planned"
+              }
+            ]
+          },
+          {
+            "employerId": "emp_b",
+            "name": "Contoso Health",
+            "balances": {
+              "USD": "23000.00"
+            },
+            "contractors": [
+              {
+                "id": "emp_b_grace_kim",
+                "name": "Grace Kim",
+                "country": "US",
+                "currency": "USD",
+                "amount": "4100.00",
+                "status": "short",
+                "note": "not enough of this employer's own money"
+              },
+              {
+                "id": "emp_b_marcus_hill",
+                "name": "Marcus Hill",
+                "country": "US",
+                "currency": "USD",
+                "amount": "3800.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_b_olivia_hughes",
+                "name": "Olivia Hughes",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3100.00",
+                "status": "short",
+                "note": "not enough of this employer's own money"
+              },
+              {
+                "id": "emp_b_harry_patel",
+                "name": "Harry Patel",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3300.00",
+                "status": "short",
+                "note": "not enough of this employer's own money"
+              },
+              {
+                "id": "emp_b_clara_fischer",
+                "name": "Clara Fischer",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3400.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_b_felix_wagner",
+                "name": "Felix Wagner",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3550.00",
+                "status": "short",
+                "note": "not enough of this employer's own money"
+              },
+              {
+                "id": "emp_b_lucia_hernandez",
+                "name": "Lucia Hernandez",
+                "country": "MX",
+                "currency": "MXN",
+                "amount": "47000.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_b_mateo_torres",
+                "name": "Mateo Torres",
+                "country": "MX",
+                "currency": "USD",
+                "amount": "2600.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_b_andrea_cruz",
+                "name": "Andrea Cruz",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "260000.00",
+                "status": "short",
+                "note": "not enough of this employer's own money"
+              },
+              {
+                "id": "emp_b_paolo_mendoza",
+                "name": "Paolo Mendoza",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "250000.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_b_rahul_verma",
+                "name": "Rahul Verma",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "260000.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_b_ananya_rao",
+                "name": "Ananya Rao",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "235000.00",
+                "status": "planned"
+              }
+            ]
+          },
+          {
+            "employerId": "emp_c",
+            "name": "Fabrikam Studio",
+            "balances": {
+              "USD": "40000.00"
+            },
+            "contractors": [
+              {
+                "id": "emp_c_noah_carter",
+                "name": "Noah Carter",
+                "country": "US",
+                "currency": "USD",
+                "amount": "4300.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_c_ava_morgan",
+                "name": "Ava Morgan",
+                "country": "US",
+                "currency": "USD",
+                "amount": "3700.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_c_george_evans",
+                "name": "George Evans",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3150.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_c_amelia_shah",
+                "name": "Amelia Shah",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3250.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_c_max_becker",
+                "name": "Max Becker",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3600.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_c_sophie_hoffmann",
+                "name": "Sophie Hoffmann",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3450.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_c_valeria_flores",
+                "name": "Valeria Flores",
+                "country": "MX",
+                "currency": "MXN",
+                "amount": "46000.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_c_santiago_ruiz",
+                "name": "Santiago Ruiz",
+                "country": "MX",
+                "currency": "USD",
+                "amount": "2550.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_c_carlo_bautista",
+                "name": "Carlo Bautista",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "87000.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_c_liza_garcia",
+                "name": "Liza Garcia",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "84000.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_c_vikram_nair",
+                "name": "Vikram Nair",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "255000.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_c_kavya_menon",
+                "name": "Kavya Menon",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "245000.00",
+                "status": "planned"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "at": "2026-11-06T04:20:00.000Z",
+      "phase": "new_info",
+      "title": "#2 Email: \"please send my pay to this new account today, urgent\"",
+      "lines": [
+        "From maria.garcia.payments@gmail.com: Hi, it's Maria. My bank account was closed, please send my pay to this new account today, it's urgent. CLABE 012180001234567891. Thanks, Maria Garcia"
+      ],
+      "snapshot": {
+        "employers": [
+          {
+            "employerId": "emp_a",
+            "name": "Northwind Labs",
+            "balances": {
+              "USD": "40000.00"
+            },
+            "contractors": [
+              {
+                "id": "emp_a_ana_lopez",
+                "name": "Ana Lopez",
+                "country": "US",
+                "currency": "USD",
+                "amount": "4200.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_a_ethan_brooks",
+                "name": "Ethan Brooks",
+                "country": "US",
+                "currency": "USD",
+                "amount": "3900.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_a_tom_reed",
+                "name": "Tom Reed",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3200.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_a_priya_kapoor",
+                "name": "Priya Kapoor",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3350.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_a_lena_schmidt",
+                "name": "Lena Schmidt",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3500.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_a_jonas_weber",
+                "name": "Jonas Weber",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3650.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_a_maria_garcia",
+                "name": "Maria Garcia",
+                "country": "MX",
+                "currency": "MXN",
+                "amount": "45000.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_a_diego_ramirez",
+                "name": "Diego Ramirez",
+                "country": "MX",
+                "currency": "USD",
+                "amount": "2500.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_a_jose_santos",
+                "name": "Jose Santos",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "90000.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_a_bea_reyes",
+                "name": "Bea Reyes",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "85000.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_a_arjun_mehta",
+                "name": "Arjun Mehta",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "250000.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_a_sneha_iyer",
+                "name": "Sneha Iyer",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "240000.00",
+                "status": "planned"
+              }
+            ]
+          },
+          {
+            "employerId": "emp_b",
+            "name": "Contoso Health",
+            "balances": {
+              "USD": "23000.00"
+            },
+            "contractors": [
+              {
+                "id": "emp_b_grace_kim",
+                "name": "Grace Kim",
+                "country": "US",
+                "currency": "USD",
+                "amount": "4100.00",
+                "status": "short",
+                "note": "not enough of this employer's own money"
+              },
+              {
+                "id": "emp_b_marcus_hill",
+                "name": "Marcus Hill",
+                "country": "US",
+                "currency": "USD",
+                "amount": "3800.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_b_olivia_hughes",
+                "name": "Olivia Hughes",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3100.00",
+                "status": "short",
+                "note": "not enough of this employer's own money"
+              },
+              {
+                "id": "emp_b_harry_patel",
+                "name": "Harry Patel",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3300.00",
+                "status": "short",
+                "note": "not enough of this employer's own money"
+              },
+              {
+                "id": "emp_b_clara_fischer",
+                "name": "Clara Fischer",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3400.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_b_felix_wagner",
+                "name": "Felix Wagner",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3550.00",
+                "status": "short",
+                "note": "not enough of this employer's own money"
+              },
+              {
+                "id": "emp_b_lucia_hernandez",
+                "name": "Lucia Hernandez",
+                "country": "MX",
+                "currency": "MXN",
+                "amount": "47000.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_b_mateo_torres",
+                "name": "Mateo Torres",
+                "country": "MX",
+                "currency": "USD",
+                "amount": "2600.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_b_andrea_cruz",
+                "name": "Andrea Cruz",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "260000.00",
+                "status": "short",
+                "note": "not enough of this employer's own money"
+              },
+              {
+                "id": "emp_b_paolo_mendoza",
+                "name": "Paolo Mendoza",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "250000.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_b_rahul_verma",
+                "name": "Rahul Verma",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "260000.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_b_ananya_rao",
+                "name": "Ananya Rao",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "235000.00",
+                "status": "planned"
+              }
+            ]
+          },
+          {
+            "employerId": "emp_c",
+            "name": "Fabrikam Studio",
+            "balances": {
+              "USD": "40000.00"
+            },
+            "contractors": [
+              {
+                "id": "emp_c_noah_carter",
+                "name": "Noah Carter",
+                "country": "US",
+                "currency": "USD",
+                "amount": "4300.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_c_ava_morgan",
+                "name": "Ava Morgan",
+                "country": "US",
+                "currency": "USD",
+                "amount": "3700.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_c_george_evans",
+                "name": "George Evans",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3150.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_c_amelia_shah",
+                "name": "Amelia Shah",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3250.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_c_max_becker",
+                "name": "Max Becker",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3600.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_c_sophie_hoffmann",
+                "name": "Sophie Hoffmann",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3450.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_c_valeria_flores",
+                "name": "Valeria Flores",
+                "country": "MX",
+                "currency": "MXN",
+                "amount": "46000.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_c_santiago_ruiz",
+                "name": "Santiago Ruiz",
+                "country": "MX",
+                "currency": "USD",
+                "amount": "2550.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_c_carlo_bautista",
+                "name": "Carlo Bautista",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "87000.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_c_liza_garcia",
+                "name": "Liza Garcia",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "84000.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_c_vikram_nair",
+                "name": "Vikram Nair",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "255000.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_c_kavya_menon",
+                "name": "Kavya Menon",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "245000.00",
+                "status": "planned"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "at": "2026-11-06T04:20:00.000Z",
+      "phase": "decision",
+      "title": "Revised: hold one payout, not the payroll",
+      "lines": [
+        "Read by claude (claude-opus-5-5): {\"kind\":\"bank_detail_change_request\",\"personName\":\"Maria Garcia\",\"urgent\":true,\"includesNewAccountDetails\":true}",
+        "Claude's summary: An email signed Maria Garcia from a personal Gmail address asks to redirect her pay today to a new CLABE account, saying her old bank account was closed.",
+        "Red flags: urgent same-day request to redirect pay; sent from personal Gmail address; new account details included in email; claims previous bank account was closed; no verification or reference details provided",
+        "Matched to Maria Garcia (Northwind Labs). The account number in the email is not used.",
+        "Hold Maria Garcia: bank-detail change requested on payday; request came by email, not the verified portal.",
+        "Everyone else at Northwind Labs is still paid (11 payouts).",
+        "Verification request goes to the contact on file, not to maria.garcia.payments@gmail.com."
+      ],
+      "snapshot": {
+        "employers": [
+          {
+            "employerId": "emp_a",
+            "name": "Northwind Labs",
+            "balances": {
+              "USD": "40000.00"
+            },
+            "contractors": [
+              {
+                "id": "emp_a_ana_lopez",
+                "name": "Ana Lopez",
+                "country": "US",
+                "currency": "USD",
+                "amount": "4200.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_a_ethan_brooks",
+                "name": "Ethan Brooks",
+                "country": "US",
+                "currency": "USD",
+                "amount": "3900.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_a_tom_reed",
+                "name": "Tom Reed",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3200.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_a_priya_kapoor",
+                "name": "Priya Kapoor",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3350.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_a_lena_schmidt",
+                "name": "Lena Schmidt",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3500.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_a_jonas_weber",
+                "name": "Jonas Weber",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3650.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_a_maria_garcia",
+                "name": "Maria Garcia",
+                "country": "MX",
+                "currency": "MXN",
+                "amount": "45000.00",
+                "status": "held_fraud",
+                "note": "bank-detail change requested on payday; request came by email, not the verified portal"
+              },
+              {
+                "id": "emp_a_diego_ramirez",
+                "name": "Diego Ramirez",
+                "country": "MX",
+                "currency": "USD",
+                "amount": "2500.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_a_jose_santos",
+                "name": "Jose Santos",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "90000.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_a_bea_reyes",
+                "name": "Bea Reyes",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "85000.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_a_arjun_mehta",
+                "name": "Arjun Mehta",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "250000.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_a_sneha_iyer",
+                "name": "Sneha Iyer",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "240000.00",
+                "status": "planned"
+              }
+            ]
+          },
+          {
+            "employerId": "emp_b",
+            "name": "Contoso Health",
+            "balances": {
+              "USD": "23000.00"
+            },
+            "contractors": [
+              {
+                "id": "emp_b_grace_kim",
+                "name": "Grace Kim",
+                "country": "US",
+                "currency": "USD",
+                "amount": "4100.00",
+                "status": "short",
+                "note": "not enough of this employer's own money"
+              },
+              {
+                "id": "emp_b_marcus_hill",
+                "name": "Marcus Hill",
+                "country": "US",
+                "currency": "USD",
+                "amount": "3800.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_b_olivia_hughes",
+                "name": "Olivia Hughes",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3100.00",
+                "status": "short",
+                "note": "not enough of this employer's own money"
+              },
+              {
+                "id": "emp_b_harry_patel",
+                "name": "Harry Patel",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3300.00",
+                "status": "short",
+                "note": "not enough of this employer's own money"
+              },
+              {
+                "id": "emp_b_clara_fischer",
+                "name": "Clara Fischer",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3400.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_b_felix_wagner",
+                "name": "Felix Wagner",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3550.00",
+                "status": "short",
+                "note": "not enough of this employer's own money"
+              },
+              {
+                "id": "emp_b_lucia_hernandez",
+                "name": "Lucia Hernandez",
+                "country": "MX",
+                "currency": "MXN",
+                "amount": "47000.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_b_mateo_torres",
+                "name": "Mateo Torres",
+                "country": "MX",
+                "currency": "USD",
+                "amount": "2600.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_b_andrea_cruz",
+                "name": "Andrea Cruz",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "260000.00",
+                "status": "short",
+                "note": "not enough of this employer's own money"
+              },
+              {
+                "id": "emp_b_paolo_mendoza",
+                "name": "Paolo Mendoza",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "250000.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_b_rahul_verma",
+                "name": "Rahul Verma",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "260000.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_b_ananya_rao",
+                "name": "Ananya Rao",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "235000.00",
+                "status": "planned"
+              }
+            ]
+          },
+          {
+            "employerId": "emp_c",
+            "name": "Fabrikam Studio",
+            "balances": {
+              "USD": "40000.00"
+            },
+            "contractors": [
+              {
+                "id": "emp_c_noah_carter",
+                "name": "Noah Carter",
+                "country": "US",
+                "currency": "USD",
+                "amount": "4300.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_c_ava_morgan",
+                "name": "Ava Morgan",
+                "country": "US",
+                "currency": "USD",
+                "amount": "3700.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_c_george_evans",
+                "name": "George Evans",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3150.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_c_amelia_shah",
+                "name": "Amelia Shah",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3250.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_c_max_becker",
+                "name": "Max Becker",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3600.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_c_sophie_hoffmann",
+                "name": "Sophie Hoffmann",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3450.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_c_valeria_flores",
+                "name": "Valeria Flores",
+                "country": "MX",
+                "currency": "MXN",
+                "amount": "46000.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_c_santiago_ruiz",
+                "name": "Santiago Ruiz",
+                "country": "MX",
+                "currency": "USD",
+                "amount": "2550.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_c_carlo_bautista",
+                "name": "Carlo Bautista",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "87000.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_c_liza_garcia",
+                "name": "Liza Garcia",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "84000.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_c_vikram_nair",
+                "name": "Vikram Nair",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "255000.00",
+                "status": "planned"
+              },
+              {
+                "id": "emp_c_kavya_menon",
+                "name": "Kavya Menon",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "245000.00",
+                "status": "planned"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "at": "2026-11-06T04:30:00.000Z",
+      "phase": "action",
+      "title": "Payroll batch executed on Airwallex",
+      "lines": [
+        "Northwind Labs: 11 sent (10 LOCAL, 1 SWIFT), 1 held, 0 blocked",
+        "  platform fee: charged",
+        "Contoso Health: 7 sent (6 LOCAL, 1 SWIFT), 5 held, 0 blocked",
+        "  platform fee: deferred",
+        "Fabrikam Studio: 12 sent (11 LOCAL, 1 SWIFT), 0 held, 0 blocked",
+        "  platform fee: charged"
+      ],
+      "snapshot": {
+        "employers": [
+          {
+            "employerId": "emp_a",
+            "name": "Northwind Labs",
+            "balances": {
+              "USD": "4564.41"
+            },
+            "contractors": [
+              {
+                "id": "emp_a_ana_lopez",
+                "name": "Ana Lopez",
+                "country": "US",
+                "currency": "USD",
+                "amount": "4200.00",
+                "status": "sent",
+                "note": "LOCAL transfer a3978435"
+              },
+              {
+                "id": "emp_a_ethan_brooks",
+                "name": "Ethan Brooks",
+                "country": "US",
+                "currency": "USD",
+                "amount": "3900.00",
+                "status": "sent",
+                "note": "LOCAL transfer cc05897b"
+              },
+              {
+                "id": "emp_a_tom_reed",
+                "name": "Tom Reed",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3200.00",
+                "status": "sent",
+                "note": "LOCAL transfer 7d45b10d"
+              },
+              {
+                "id": "emp_a_priya_kapoor",
+                "name": "Priya Kapoor",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3350.00",
+                "status": "sent",
+                "note": "LOCAL transfer daa9d5cf"
+              },
+              {
+                "id": "emp_a_lena_schmidt",
+                "name": "Lena Schmidt",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3500.00",
+                "status": "sent",
+                "note": "LOCAL transfer fdf6ebc6"
+              },
+              {
+                "id": "emp_a_jonas_weber",
+                "name": "Jonas Weber",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3650.00",
+                "status": "sent",
+                "note": "LOCAL transfer 24532648"
+              },
+              {
+                "id": "emp_a_maria_garcia",
+                "name": "Maria Garcia",
+                "country": "MX",
+                "currency": "MXN",
+                "amount": "45000.00",
+                "status": "held_fraud",
+                "note": "bank-detail change requested on payday; request came by email, not the verified portal"
+              },
+              {
+                "id": "emp_a_diego_ramirez",
+                "name": "Diego Ramirez",
+                "country": "MX",
+                "currency": "USD",
+                "amount": "2500.00",
+                "status": "sent",
+                "note": "SWIFT transfer 1702c938"
+              },
+              {
+                "id": "emp_a_jose_santos",
+                "name": "Jose Santos",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "90000.00",
+                "status": "sent",
+                "note": "LOCAL transfer bee29993"
+              },
+              {
+                "id": "emp_a_bea_reyes",
+                "name": "Bea Reyes",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "85000.00",
+                "status": "sent",
+                "note": "LOCAL transfer 0b4e8cac"
+              },
+              {
+                "id": "emp_a_arjun_mehta",
+                "name": "Arjun Mehta",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "250000.00",
+                "status": "sent",
+                "note": "LOCAL transfer 2023b181"
+              },
+              {
+                "id": "emp_a_sneha_iyer",
+                "name": "Sneha Iyer",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "240000.00",
+                "status": "sent",
+                "note": "LOCAL transfer bc92bf52"
+              }
+            ]
+          },
+          {
+            "employerId": "emp_b",
+            "name": "Contoso Health",
+            "balances": {
+              "USD": "1006.78"
+            },
+            "contractors": [
+              {
+                "id": "emp_b_grace_kim",
+                "name": "Grace Kim",
+                "country": "US",
+                "currency": "USD",
+                "amount": "4100.00",
+                "status": "short",
+                "note": "not enough of this employer's own money"
+              },
+              {
+                "id": "emp_b_marcus_hill",
+                "name": "Marcus Hill",
+                "country": "US",
+                "currency": "USD",
+                "amount": "3800.00",
+                "status": "sent",
+                "note": "LOCAL transfer e2b6e955"
+              },
+              {
+                "id": "emp_b_olivia_hughes",
+                "name": "Olivia Hughes",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3100.00",
+                "status": "short",
+                "note": "not enough of this employer's own money"
+              },
+              {
+                "id": "emp_b_harry_patel",
+                "name": "Harry Patel",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3300.00",
+                "status": "short",
+                "note": "not enough of this employer's own money"
+              },
+              {
+                "id": "emp_b_clara_fischer",
+                "name": "Clara Fischer",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3400.00",
+                "status": "sent",
+                "note": "LOCAL transfer 411ff519"
+              },
+              {
+                "id": "emp_b_felix_wagner",
+                "name": "Felix Wagner",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3550.00",
+                "status": "short",
+                "note": "not enough of this employer's own money"
+              },
+              {
+                "id": "emp_b_lucia_hernandez",
+                "name": "Lucia Hernandez",
+                "country": "MX",
+                "currency": "MXN",
+                "amount": "47000.00",
+                "status": "sent",
+                "note": "LOCAL transfer ea70fa97"
+              },
+              {
+                "id": "emp_b_mateo_torres",
+                "name": "Mateo Torres",
+                "country": "MX",
+                "currency": "USD",
+                "amount": "2600.00",
+                "status": "sent",
+                "note": "SWIFT transfer 6cd81ce2"
+              },
+              {
+                "id": "emp_b_andrea_cruz",
+                "name": "Andrea Cruz",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "260000.00",
+                "status": "short",
+                "note": "not enough of this employer's own money"
+              },
+              {
+                "id": "emp_b_paolo_mendoza",
+                "name": "Paolo Mendoza",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "250000.00",
+                "status": "sent",
+                "note": "LOCAL transfer 324048f9"
+              },
+              {
+                "id": "emp_b_rahul_verma",
+                "name": "Rahul Verma",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "260000.00",
+                "status": "sent",
+                "note": "LOCAL transfer 059f14d5"
+              },
+              {
+                "id": "emp_b_ananya_rao",
+                "name": "Ananya Rao",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "235000.00",
+                "status": "sent",
+                "note": "LOCAL transfer a8c8505a"
+              }
+            ]
+          },
+          {
+            "employerId": "emp_c",
+            "name": "Fabrikam Studio",
+            "balances": {
+              "USD": "2393.39"
+            },
+            "contractors": [
+              {
+                "id": "emp_c_noah_carter",
+                "name": "Noah Carter",
+                "country": "US",
+                "currency": "USD",
+                "amount": "4300.00",
+                "status": "sent",
+                "note": "LOCAL transfer 52dc17d5"
+              },
+              {
+                "id": "emp_c_ava_morgan",
+                "name": "Ava Morgan",
+                "country": "US",
+                "currency": "USD",
+                "amount": "3700.00",
+                "status": "sent",
+                "note": "LOCAL transfer 00f82651"
+              },
+              {
+                "id": "emp_c_george_evans",
+                "name": "George Evans",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3150.00",
+                "status": "sent",
+                "note": "LOCAL transfer 7ab2109b"
+              },
+              {
+                "id": "emp_c_amelia_shah",
+                "name": "Amelia Shah",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3250.00",
+                "status": "sent",
+                "note": "LOCAL transfer d611de6b"
+              },
+              {
+                "id": "emp_c_max_becker",
+                "name": "Max Becker",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3600.00",
+                "status": "sent",
+                "note": "LOCAL transfer 8d954ff0"
+              },
+              {
+                "id": "emp_c_sophie_hoffmann",
+                "name": "Sophie Hoffmann",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3450.00",
+                "status": "sent",
+                "note": "LOCAL transfer 33506435"
+              },
+              {
+                "id": "emp_c_valeria_flores",
+                "name": "Valeria Flores",
+                "country": "MX",
+                "currency": "MXN",
+                "amount": "46000.00",
+                "status": "sent",
+                "note": "LOCAL transfer 454df869"
+              },
+              {
+                "id": "emp_c_santiago_ruiz",
+                "name": "Santiago Ruiz",
+                "country": "MX",
+                "currency": "USD",
+                "amount": "2550.00",
+                "status": "sent",
+                "note": "SWIFT transfer e84fcdce"
+              },
+              {
+                "id": "emp_c_carlo_bautista",
+                "name": "Carlo Bautista",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "87000.00",
+                "status": "sent",
+                "note": "LOCAL transfer f805a3aa"
+              },
+              {
+                "id": "emp_c_liza_garcia",
+                "name": "Liza Garcia",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "84000.00",
+                "status": "sent",
+                "note": "LOCAL transfer 98325505"
+              },
+              {
+                "id": "emp_c_vikram_nair",
+                "name": "Vikram Nair",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "255000.00",
+                "status": "sent",
+                "note": "LOCAL transfer 40e9f91d"
+              },
+              {
+                "id": "emp_c_kavya_menon",
+                "name": "Kavya Menon",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "245000.00",
+                "status": "sent",
+                "note": "LOCAL transfer 18169383"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "at": "2026-11-06T05:30:00.000Z",
+      "phase": "new_info",
+      "title": "#3 Bank return on Valeria Flores's MXN payout",
+      "lines": [
+        "Airwallex: Your transfer to Valeria Flores was returned by the beneficiary bank: BENEFICIARY_BANK_RETURNED.",
+        "No webhook subscription on this run: the return is confirmed from GET /transfers/{id} before anything is re-paid."
+      ],
+      "snapshot": {
+        "employers": [
+          {
+            "employerId": "emp_a",
+            "name": "Northwind Labs",
+            "balances": {
+              "USD": "4564.41"
+            },
+            "contractors": [
+              {
+                "id": "emp_a_ana_lopez",
+                "name": "Ana Lopez",
+                "country": "US",
+                "currency": "USD",
+                "amount": "4200.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_a_ethan_brooks",
+                "name": "Ethan Brooks",
+                "country": "US",
+                "currency": "USD",
+                "amount": "3900.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_a_tom_reed",
+                "name": "Tom Reed",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3200.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_a_priya_kapoor",
+                "name": "Priya Kapoor",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3350.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_a_lena_schmidt",
+                "name": "Lena Schmidt",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3500.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_a_jonas_weber",
+                "name": "Jonas Weber",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3650.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_a_maria_garcia",
+                "name": "Maria Garcia",
+                "country": "MX",
+                "currency": "MXN",
+                "amount": "45000.00",
+                "status": "held_fraud",
+                "note": "bank-detail change requested on payday; request came by email, not the verified portal"
+              },
+              {
+                "id": "emp_a_diego_ramirez",
+                "name": "Diego Ramirez",
+                "country": "MX",
+                "currency": "USD",
+                "amount": "2500.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_a_jose_santos",
+                "name": "Jose Santos",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "90000.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_a_bea_reyes",
+                "name": "Bea Reyes",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "85000.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_a_arjun_mehta",
+                "name": "Arjun Mehta",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "250000.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_a_sneha_iyer",
+                "name": "Sneha Iyer",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "240000.00",
+                "status": "paid"
+              }
+            ]
+          },
+          {
+            "employerId": "emp_b",
+            "name": "Contoso Health",
+            "balances": {
+              "USD": "1006.78"
+            },
+            "contractors": [
+              {
+                "id": "emp_b_grace_kim",
+                "name": "Grace Kim",
+                "country": "US",
+                "currency": "USD",
+                "amount": "4100.00",
+                "status": "short",
+                "note": "not enough of this employer's own money"
+              },
+              {
+                "id": "emp_b_marcus_hill",
+                "name": "Marcus Hill",
+                "country": "US",
+                "currency": "USD",
+                "amount": "3800.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_b_olivia_hughes",
+                "name": "Olivia Hughes",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3100.00",
+                "status": "short",
+                "note": "not enough of this employer's own money"
+              },
+              {
+                "id": "emp_b_harry_patel",
+                "name": "Harry Patel",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3300.00",
+                "status": "short",
+                "note": "not enough of this employer's own money"
+              },
+              {
+                "id": "emp_b_clara_fischer",
+                "name": "Clara Fischer",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3400.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_b_felix_wagner",
+                "name": "Felix Wagner",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3550.00",
+                "status": "short",
+                "note": "not enough of this employer's own money"
+              },
+              {
+                "id": "emp_b_lucia_hernandez",
+                "name": "Lucia Hernandez",
+                "country": "MX",
+                "currency": "MXN",
+                "amount": "47000.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_b_mateo_torres",
+                "name": "Mateo Torres",
+                "country": "MX",
+                "currency": "USD",
+                "amount": "2600.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_b_andrea_cruz",
+                "name": "Andrea Cruz",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "260000.00",
+                "status": "short",
+                "note": "not enough of this employer's own money"
+              },
+              {
+                "id": "emp_b_paolo_mendoza",
+                "name": "Paolo Mendoza",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "250000.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_b_rahul_verma",
+                "name": "Rahul Verma",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "260000.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_b_ananya_rao",
+                "name": "Ananya Rao",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "235000.00",
+                "status": "paid"
+              }
+            ]
+          },
+          {
+            "employerId": "emp_c",
+            "name": "Fabrikam Studio",
+            "balances": {
+              "MXN": "46000.00",
+              "USD": "2393.39"
+            },
+            "contractors": [
+              {
+                "id": "emp_c_noah_carter",
+                "name": "Noah Carter",
+                "country": "US",
+                "currency": "USD",
+                "amount": "4300.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_c_ava_morgan",
+                "name": "Ava Morgan",
+                "country": "US",
+                "currency": "USD",
+                "amount": "3700.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_c_george_evans",
+                "name": "George Evans",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3150.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_c_amelia_shah",
+                "name": "Amelia Shah",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3250.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_c_max_becker",
+                "name": "Max Becker",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3600.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_c_sophie_hoffmann",
+                "name": "Sophie Hoffmann",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3450.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_c_valeria_flores",
+                "name": "Valeria Flores",
+                "country": "MX",
+                "currency": "MXN",
+                "amount": "46000.00",
+                "status": "returned",
+                "note": "BENEFICIARY_BANK_RETURNED"
+              },
+              {
+                "id": "emp_c_santiago_ruiz",
+                "name": "Santiago Ruiz",
+                "country": "MX",
+                "currency": "USD",
+                "amount": "2550.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_c_carlo_bautista",
+                "name": "Carlo Bautista",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "87000.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_c_liza_garcia",
+                "name": "Liza Garcia",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "84000.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_c_vikram_nair",
+                "name": "Vikram Nair",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "255000.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_c_kavya_menon",
+                "name": "Kavya Menon",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "245000.00",
+                "status": "paid"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "at": "2026-11-06T05:30:00.000Z",
+      "phase": "decision",
+      "title": "Revised: re-verify and re-pay once",
+      "lines": [
+        "Read by claude (claude-opus-5-5): {\"kind\":\"transfer_returned\",\"personName\":\"Valeria Flores\",\"failureType\":\"BENEFICIARY_BANK_RETURNED\"}",
+        "Claude's summary: Airwallex reports that the transfer to Valeria Flores was returned by the beneficiary bank (BENEFICIARY_BANK_RETURNED).",
+        "Re-verified Valeria Flores's bank details and re-paid: repaid (new transfer 8c2aaad6).",
+        "Running the repay again returns the same transfer: no duplicate."
+      ],
+      "snapshot": {
+        "employers": [
+          {
+            "employerId": "emp_a",
+            "name": "Northwind Labs",
+            "balances": {
+              "USD": "4564.41"
+            },
+            "contractors": [
+              {
+                "id": "emp_a_ana_lopez",
+                "name": "Ana Lopez",
+                "country": "US",
+                "currency": "USD",
+                "amount": "4200.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_a_ethan_brooks",
+                "name": "Ethan Brooks",
+                "country": "US",
+                "currency": "USD",
+                "amount": "3900.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_a_tom_reed",
+                "name": "Tom Reed",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3200.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_a_priya_kapoor",
+                "name": "Priya Kapoor",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3350.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_a_lena_schmidt",
+                "name": "Lena Schmidt",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3500.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_a_jonas_weber",
+                "name": "Jonas Weber",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3650.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_a_maria_garcia",
+                "name": "Maria Garcia",
+                "country": "MX",
+                "currency": "MXN",
+                "amount": "45000.00",
+                "status": "held_fraud",
+                "note": "bank-detail change requested on payday; request came by email, not the verified portal"
+              },
+              {
+                "id": "emp_a_diego_ramirez",
+                "name": "Diego Ramirez",
+                "country": "MX",
+                "currency": "USD",
+                "amount": "2500.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_a_jose_santos",
+                "name": "Jose Santos",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "90000.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_a_bea_reyes",
+                "name": "Bea Reyes",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "85000.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_a_arjun_mehta",
+                "name": "Arjun Mehta",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "250000.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_a_sneha_iyer",
+                "name": "Sneha Iyer",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "240000.00",
+                "status": "paid"
+              }
+            ]
+          },
+          {
+            "employerId": "emp_b",
+            "name": "Contoso Health",
+            "balances": {
+              "USD": "1006.78"
+            },
+            "contractors": [
+              {
+                "id": "emp_b_grace_kim",
+                "name": "Grace Kim",
+                "country": "US",
+                "currency": "USD",
+                "amount": "4100.00",
+                "status": "short",
+                "note": "not enough of this employer's own money"
+              },
+              {
+                "id": "emp_b_marcus_hill",
+                "name": "Marcus Hill",
+                "country": "US",
+                "currency": "USD",
+                "amount": "3800.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_b_olivia_hughes",
+                "name": "Olivia Hughes",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3100.00",
+                "status": "short",
+                "note": "not enough of this employer's own money"
+              },
+              {
+                "id": "emp_b_harry_patel",
+                "name": "Harry Patel",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3300.00",
+                "status": "short",
+                "note": "not enough of this employer's own money"
+              },
+              {
+                "id": "emp_b_clara_fischer",
+                "name": "Clara Fischer",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3400.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_b_felix_wagner",
+                "name": "Felix Wagner",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3550.00",
+                "status": "short",
+                "note": "not enough of this employer's own money"
+              },
+              {
+                "id": "emp_b_lucia_hernandez",
+                "name": "Lucia Hernandez",
+                "country": "MX",
+                "currency": "MXN",
+                "amount": "47000.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_b_mateo_torres",
+                "name": "Mateo Torres",
+                "country": "MX",
+                "currency": "USD",
+                "amount": "2600.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_b_andrea_cruz",
+                "name": "Andrea Cruz",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "260000.00",
+                "status": "short",
+                "note": "not enough of this employer's own money"
+              },
+              {
+                "id": "emp_b_paolo_mendoza",
+                "name": "Paolo Mendoza",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "250000.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_b_rahul_verma",
+                "name": "Rahul Verma",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "260000.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_b_ananya_rao",
+                "name": "Ananya Rao",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "235000.00",
+                "status": "paid"
+              }
+            ]
+          },
+          {
+            "employerId": "emp_c",
+            "name": "Fabrikam Studio",
+            "balances": {
+              "USD": "2393.39"
+            },
+            "contractors": [
+              {
+                "id": "emp_c_noah_carter",
+                "name": "Noah Carter",
+                "country": "US",
+                "currency": "USD",
+                "amount": "4300.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_c_ava_morgan",
+                "name": "Ava Morgan",
+                "country": "US",
+                "currency": "USD",
+                "amount": "3700.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_c_george_evans",
+                "name": "George Evans",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3150.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_c_amelia_shah",
+                "name": "Amelia Shah",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3250.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_c_max_becker",
+                "name": "Max Becker",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3600.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_c_sophie_hoffmann",
+                "name": "Sophie Hoffmann",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3450.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_c_valeria_flores",
+                "name": "Valeria Flores",
+                "country": "MX",
+                "currency": "MXN",
+                "amount": "46000.00",
+                "status": "repaid",
+                "note": "re-paid once, transfer 8c2aaad6"
+              },
+              {
+                "id": "emp_c_santiago_ruiz",
+                "name": "Santiago Ruiz",
+                "country": "MX",
+                "currency": "USD",
+                "amount": "2550.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_c_carlo_bautista",
+                "name": "Carlo Bautista",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "87000.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_c_liza_garcia",
+                "name": "Liza Garcia",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "84000.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_c_vikram_nair",
+                "name": "Vikram Nair",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "255000.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_c_kavya_menon",
+                "name": "Kavya Menon",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "245000.00",
+                "status": "paid"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "at": "2026-11-06T06:40:00.000Z",
+      "phase": "new_info",
+      "title": "#4 Contoso's top-up arrives at 06:40 UTC",
+      "lines": [
+        "From finance@contoso-health.example: Hi team, Contoso Health here. We have just sent USD 21,000 to cover the rest of this week's payroll. Apologies for the delay.",
+        "Read by claude (claude-opus-5-5): {\"kind\":\"funding_notice\",\"employerName\":\"Contoso Health\",\"amountMajor\":\"21000\",\"currency\":\"USD\"}",
+        "Claude's summary: Contoso Health says it has sent USD 21,000 to cover the rest of this week's payroll and apologizes for the delay.",
+        "Checked against the wallet, not the email: Available in the wallet immediately. Contoso now holds USD 22,006.78."
+      ],
+      "snapshot": {
+        "employers": [
+          {
+            "employerId": "emp_a",
+            "name": "Northwind Labs",
+            "balances": {
+              "USD": "4564.41"
+            },
+            "contractors": [
+              {
+                "id": "emp_a_ana_lopez",
+                "name": "Ana Lopez",
+                "country": "US",
+                "currency": "USD",
+                "amount": "4200.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_a_ethan_brooks",
+                "name": "Ethan Brooks",
+                "country": "US",
+                "currency": "USD",
+                "amount": "3900.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_a_tom_reed",
+                "name": "Tom Reed",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3200.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_a_priya_kapoor",
+                "name": "Priya Kapoor",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3350.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_a_lena_schmidt",
+                "name": "Lena Schmidt",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3500.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_a_jonas_weber",
+                "name": "Jonas Weber",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3650.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_a_maria_garcia",
+                "name": "Maria Garcia",
+                "country": "MX",
+                "currency": "MXN",
+                "amount": "45000.00",
+                "status": "held_fraud",
+                "note": "bank-detail change requested on payday; request came by email, not the verified portal"
+              },
+              {
+                "id": "emp_a_diego_ramirez",
+                "name": "Diego Ramirez",
+                "country": "MX",
+                "currency": "USD",
+                "amount": "2500.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_a_jose_santos",
+                "name": "Jose Santos",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "90000.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_a_bea_reyes",
+                "name": "Bea Reyes",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "85000.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_a_arjun_mehta",
+                "name": "Arjun Mehta",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "250000.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_a_sneha_iyer",
+                "name": "Sneha Iyer",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "240000.00",
+                "status": "paid"
+              }
+            ]
+          },
+          {
+            "employerId": "emp_b",
+            "name": "Contoso Health",
+            "balances": {
+              "USD": "22006.78"
+            },
+            "contractors": [
+              {
+                "id": "emp_b_grace_kim",
+                "name": "Grace Kim",
+                "country": "US",
+                "currency": "USD",
+                "amount": "4100.00",
+                "status": "short",
+                "note": "not enough of this employer's own money"
+              },
+              {
+                "id": "emp_b_marcus_hill",
+                "name": "Marcus Hill",
+                "country": "US",
+                "currency": "USD",
+                "amount": "3800.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_b_olivia_hughes",
+                "name": "Olivia Hughes",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3100.00",
+                "status": "short",
+                "note": "not enough of this employer's own money"
+              },
+              {
+                "id": "emp_b_harry_patel",
+                "name": "Harry Patel",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3300.00",
+                "status": "short",
+                "note": "not enough of this employer's own money"
+              },
+              {
+                "id": "emp_b_clara_fischer",
+                "name": "Clara Fischer",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3400.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_b_felix_wagner",
+                "name": "Felix Wagner",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3550.00",
+                "status": "short",
+                "note": "not enough of this employer's own money"
+              },
+              {
+                "id": "emp_b_lucia_hernandez",
+                "name": "Lucia Hernandez",
+                "country": "MX",
+                "currency": "MXN",
+                "amount": "47000.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_b_mateo_torres",
+                "name": "Mateo Torres",
+                "country": "MX",
+                "currency": "USD",
+                "amount": "2600.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_b_andrea_cruz",
+                "name": "Andrea Cruz",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "260000.00",
+                "status": "short",
+                "note": "not enough of this employer's own money"
+              },
+              {
+                "id": "emp_b_paolo_mendoza",
+                "name": "Paolo Mendoza",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "250000.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_b_rahul_verma",
+                "name": "Rahul Verma",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "260000.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_b_ananya_rao",
+                "name": "Ananya Rao",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "235000.00",
+                "status": "paid"
+              }
+            ]
+          },
+          {
+            "employerId": "emp_c",
+            "name": "Fabrikam Studio",
+            "balances": {
+              "USD": "2393.39"
+            },
+            "contractors": [
+              {
+                "id": "emp_c_noah_carter",
+                "name": "Noah Carter",
+                "country": "US",
+                "currency": "USD",
+                "amount": "4300.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_c_ava_morgan",
+                "name": "Ava Morgan",
+                "country": "US",
+                "currency": "USD",
+                "amount": "3700.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_c_george_evans",
+                "name": "George Evans",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3150.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_c_amelia_shah",
+                "name": "Amelia Shah",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3250.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_c_max_becker",
+                "name": "Max Becker",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3600.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_c_sophie_hoffmann",
+                "name": "Sophie Hoffmann",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3450.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_c_valeria_flores",
+                "name": "Valeria Flores",
+                "country": "MX",
+                "currency": "MXN",
+                "amount": "46000.00",
+                "status": "repaid",
+                "note": "re-paid once, transfer 8c2aaad6"
+              },
+              {
+                "id": "emp_c_santiago_ruiz",
+                "name": "Santiago Ruiz",
+                "country": "MX",
+                "currency": "USD",
+                "amount": "2550.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_c_carlo_bautista",
+                "name": "Carlo Bautista",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "87000.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_c_liza_garcia",
+                "name": "Liza Garcia",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "84000.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_c_vikram_nair",
+                "name": "Vikram Nair",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "255000.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_c_kavya_menon",
+                "name": "Kavya Menon",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "245000.00",
+                "status": "paid"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "at": "2026-11-06T06:40:00.000Z",
+      "phase": "decision",
+      "title": "Revised: pay what can still land today, escalate what cannot",
+      "lines": [
+        "Contoso Health: pay 4, hold 1",
+        "  convert 3550.00 EUR for USD 3,979.86",
+        "  convert 6400.00 GBP for USD 8,576.56",
+        "  hold Andrea Cruz: PH cut-off passed (LOCAL 06:30 and SWIFT 06:00 UTC)",
+        "  platform fee: collect",
+        "Contoso Health: 4 sent (4 LOCAL, 0 SWIFT), 1 held, 0 blocked",
+        "  platform fee: charged",
+        "4 late transfers reached PAID before their local cut-offs.",
+        "Escalate Andrea Cruz: Philippine cut-offs passed (LOCAL 06:30, SWIFT 06:00 UTC). A person chooses: next PH window, or the instant stablecoin rail if the contractor opted in."
+      ],
+      "snapshot": {
+        "employers": [
+          {
+            "employerId": "emp_a",
+            "name": "Northwind Labs",
+            "balances": {
+              "USD": "4564.41"
+            },
+            "contractors": [
+              {
+                "id": "emp_a_ana_lopez",
+                "name": "Ana Lopez",
+                "country": "US",
+                "currency": "USD",
+                "amount": "4200.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_a_ethan_brooks",
+                "name": "Ethan Brooks",
+                "country": "US",
+                "currency": "USD",
+                "amount": "3900.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_a_tom_reed",
+                "name": "Tom Reed",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3200.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_a_priya_kapoor",
+                "name": "Priya Kapoor",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3350.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_a_lena_schmidt",
+                "name": "Lena Schmidt",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3500.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_a_jonas_weber",
+                "name": "Jonas Weber",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3650.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_a_maria_garcia",
+                "name": "Maria Garcia",
+                "country": "MX",
+                "currency": "MXN",
+                "amount": "45000.00",
+                "status": "held_fraud",
+                "note": "bank-detail change requested on payday; request came by email, not the verified portal"
+              },
+              {
+                "id": "emp_a_diego_ramirez",
+                "name": "Diego Ramirez",
+                "country": "MX",
+                "currency": "USD",
+                "amount": "2500.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_a_jose_santos",
+                "name": "Jose Santos",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "90000.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_a_bea_reyes",
+                "name": "Bea Reyes",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "85000.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_a_arjun_mehta",
+                "name": "Arjun Mehta",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "250000.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_a_sneha_iyer",
+                "name": "Sneha Iyer",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "240000.00",
+                "status": "paid"
+              }
+            ]
+          },
+          {
+            "employerId": "emp_b",
+            "name": "Contoso Health",
+            "balances": {
+              "USD": "5302.23"
+            },
+            "contractors": [
+              {
+                "id": "emp_b_grace_kim",
+                "name": "Grace Kim",
+                "country": "US",
+                "currency": "USD",
+                "amount": "4100.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_b_marcus_hill",
+                "name": "Marcus Hill",
+                "country": "US",
+                "currency": "USD",
+                "amount": "3800.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_b_olivia_hughes",
+                "name": "Olivia Hughes",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3100.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_b_harry_patel",
+                "name": "Harry Patel",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3300.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_b_clara_fischer",
+                "name": "Clara Fischer",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3400.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_b_felix_wagner",
+                "name": "Felix Wagner",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3550.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_b_lucia_hernandez",
+                "name": "Lucia Hernandez",
+                "country": "MX",
+                "currency": "MXN",
+                "amount": "47000.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_b_mateo_torres",
+                "name": "Mateo Torres",
+                "country": "MX",
+                "currency": "USD",
+                "amount": "2600.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_b_andrea_cruz",
+                "name": "Andrea Cruz",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "260000.00",
+                "status": "escalated",
+                "note": "PH cut-off passed (LOCAL 06:30 and SWIFT 06:00 UTC)"
+              },
+              {
+                "id": "emp_b_paolo_mendoza",
+                "name": "Paolo Mendoza",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "250000.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_b_rahul_verma",
+                "name": "Rahul Verma",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "260000.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_b_ananya_rao",
+                "name": "Ananya Rao",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "235000.00",
+                "status": "paid"
+              }
+            ]
+          },
+          {
+            "employerId": "emp_c",
+            "name": "Fabrikam Studio",
+            "balances": {
+              "USD": "2393.39"
+            },
+            "contractors": [
+              {
+                "id": "emp_c_noah_carter",
+                "name": "Noah Carter",
+                "country": "US",
+                "currency": "USD",
+                "amount": "4300.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_c_ava_morgan",
+                "name": "Ava Morgan",
+                "country": "US",
+                "currency": "USD",
+                "amount": "3700.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_c_george_evans",
+                "name": "George Evans",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3150.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_c_amelia_shah",
+                "name": "Amelia Shah",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3250.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_c_max_becker",
+                "name": "Max Becker",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3600.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_c_sophie_hoffmann",
+                "name": "Sophie Hoffmann",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3450.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_c_valeria_flores",
+                "name": "Valeria Flores",
+                "country": "MX",
+                "currency": "MXN",
+                "amount": "46000.00",
+                "status": "repaid",
+                "note": "re-paid once, transfer 8c2aaad6"
+              },
+              {
+                "id": "emp_c_santiago_ruiz",
+                "name": "Santiago Ruiz",
+                "country": "MX",
+                "currency": "USD",
+                "amount": "2550.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_c_carlo_bautista",
+                "name": "Carlo Bautista",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "87000.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_c_liza_garcia",
+                "name": "Liza Garcia",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "84000.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_c_vikram_nair",
+                "name": "Vikram Nair",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "255000.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_c_kavya_menon",
+                "name": "Kavya Menon",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "245000.00",
+                "status": "paid"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "at": "2026-11-06T07:00:00.000Z",
+      "phase": "result",
+      "title": "Payday report",
+      "lines": [
+        "34/36 contractors paid on payday (94.4%), every one from their own employer's wallet.",
+        "1 payout held for a suspected diversion; 1 escalated because their cut-off had passed; 1 bank return re-paid once.",
+        "9 wallet conversions (net gap only) and 11 payout-linked FX payouts at locked quotes.",
+        "Platform fees: 3 collected (charges read back SETTLED), 1 deferred until that employer's wages were covered.",
+        "Audit log: 293 API calls recorded.",
+        "Northwind Labs final balances: USD 4564.41",
+        "Contoso Health final balances: USD 5302.23",
+        "Fabrikam Studio final balances: USD 2393.39"
+      ],
+      "data": {
+        "contractors": 36,
+        "paidOnPayday": 34,
+        "heldForFraud": 1,
+        "escalatedCutoff": 1,
+        "returnsRepaid": 1,
+        "walletConversions": 9,
+        "payoutLinkedFx": 11,
+        "feesCollected": 3,
+        "feesDeferred": 1,
+        "apiCalls": 293,
+        "finalBalances": {
+          "Northwind Labs": {
+            "USD": "4564.41"
+          },
+          "Contoso Health": {
+            "USD": "5302.23"
+          },
+          "Fabrikam Studio": {
+            "USD": "2393.39"
+          }
+        }
+      },
+      "snapshot": {
+        "employers": [
+          {
+            "employerId": "emp_a",
+            "name": "Northwind Labs",
+            "balances": {
+              "USD": "4564.41"
+            },
+            "contractors": [
+              {
+                "id": "emp_a_ana_lopez",
+                "name": "Ana Lopez",
+                "country": "US",
+                "currency": "USD",
+                "amount": "4200.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_a_ethan_brooks",
+                "name": "Ethan Brooks",
+                "country": "US",
+                "currency": "USD",
+                "amount": "3900.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_a_tom_reed",
+                "name": "Tom Reed",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3200.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_a_priya_kapoor",
+                "name": "Priya Kapoor",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3350.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_a_lena_schmidt",
+                "name": "Lena Schmidt",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3500.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_a_jonas_weber",
+                "name": "Jonas Weber",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3650.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_a_maria_garcia",
+                "name": "Maria Garcia",
+                "country": "MX",
+                "currency": "MXN",
+                "amount": "45000.00",
+                "status": "held_fraud",
+                "note": "bank-detail change requested on payday; request came by email, not the verified portal"
+              },
+              {
+                "id": "emp_a_diego_ramirez",
+                "name": "Diego Ramirez",
+                "country": "MX",
+                "currency": "USD",
+                "amount": "2500.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_a_jose_santos",
+                "name": "Jose Santos",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "90000.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_a_bea_reyes",
+                "name": "Bea Reyes",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "85000.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_a_arjun_mehta",
+                "name": "Arjun Mehta",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "250000.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_a_sneha_iyer",
+                "name": "Sneha Iyer",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "240000.00",
+                "status": "paid"
+              }
+            ]
+          },
+          {
+            "employerId": "emp_b",
+            "name": "Contoso Health",
+            "balances": {
+              "USD": "5302.23"
+            },
+            "contractors": [
+              {
+                "id": "emp_b_grace_kim",
+                "name": "Grace Kim",
+                "country": "US",
+                "currency": "USD",
+                "amount": "4100.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_b_marcus_hill",
+                "name": "Marcus Hill",
+                "country": "US",
+                "currency": "USD",
+                "amount": "3800.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_b_olivia_hughes",
+                "name": "Olivia Hughes",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3100.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_b_harry_patel",
+                "name": "Harry Patel",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3300.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_b_clara_fischer",
+                "name": "Clara Fischer",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3400.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_b_felix_wagner",
+                "name": "Felix Wagner",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3550.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_b_lucia_hernandez",
+                "name": "Lucia Hernandez",
+                "country": "MX",
+                "currency": "MXN",
+                "amount": "47000.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_b_mateo_torres",
+                "name": "Mateo Torres",
+                "country": "MX",
+                "currency": "USD",
+                "amount": "2600.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_b_andrea_cruz",
+                "name": "Andrea Cruz",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "260000.00",
+                "status": "escalated",
+                "note": "PH cut-off passed (LOCAL 06:30 and SWIFT 06:00 UTC)"
+              },
+              {
+                "id": "emp_b_paolo_mendoza",
+                "name": "Paolo Mendoza",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "250000.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_b_rahul_verma",
+                "name": "Rahul Verma",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "260000.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_b_ananya_rao",
+                "name": "Ananya Rao",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "235000.00",
+                "status": "paid"
+              }
+            ]
+          },
+          {
+            "employerId": "emp_c",
+            "name": "Fabrikam Studio",
+            "balances": {
+              "USD": "2393.39"
+            },
+            "contractors": [
+              {
+                "id": "emp_c_noah_carter",
+                "name": "Noah Carter",
+                "country": "US",
+                "currency": "USD",
+                "amount": "4300.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_c_ava_morgan",
+                "name": "Ava Morgan",
+                "country": "US",
+                "currency": "USD",
+                "amount": "3700.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_c_george_evans",
+                "name": "George Evans",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3150.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_c_amelia_shah",
+                "name": "Amelia Shah",
+                "country": "GB",
+                "currency": "GBP",
+                "amount": "3250.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_c_max_becker",
+                "name": "Max Becker",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3600.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_c_sophie_hoffmann",
+                "name": "Sophie Hoffmann",
+                "country": "DE",
+                "currency": "EUR",
+                "amount": "3450.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_c_valeria_flores",
+                "name": "Valeria Flores",
+                "country": "MX",
+                "currency": "MXN",
+                "amount": "46000.00",
+                "status": "repaid",
+                "note": "re-paid once, transfer 8c2aaad6"
+              },
+              {
+                "id": "emp_c_santiago_ruiz",
+                "name": "Santiago Ruiz",
+                "country": "MX",
+                "currency": "USD",
+                "amount": "2550.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_c_carlo_bautista",
+                "name": "Carlo Bautista",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "87000.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_c_liza_garcia",
+                "name": "Liza Garcia",
+                "country": "PH",
+                "currency": "PHP",
+                "amount": "84000.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_c_vikram_nair",
+                "name": "Vikram Nair",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "255000.00",
+                "status": "paid"
+              },
+              {
+                "id": "emp_c_kavya_menon",
+                "name": "Kavya Menon",
+                "country": "IN",
+                "currency": "INR",
+                "amount": "245000.00",
+                "status": "paid"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "summary": {
+    "contractors": 36,
+    "paidOnPayday": 34,
+    "heldForFraud": 1,
+    "escalatedCutoff": 1,
+    "returnsRepaid": 1,
+    "walletConversions": 9,
+    "payoutLinkedFx": 11,
+    "feesCollected": 3,
+    "feesDeferred": 1,
+    "apiCalls": 293,
+    "finalBalances": {
+      "Northwind Labs": {
+        "USD": "4564.41"
+      },
+      "Contoso Health": {
+        "USD": "5302.23"
+      },
+      "Fabrikam Studio": {
+        "USD": "2393.39"
+      }
+    }
+  }
+}
