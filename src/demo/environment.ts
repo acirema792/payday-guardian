@@ -18,9 +18,13 @@ export interface DemoEnvironment {
   rates: Record<string, string>;
   store: Store;
   interpreter: Interpreter;
+  // Extra lines the reader produced for a message (e.g. Claude's red flags and summary).
+  readingNotes?: (messageId: string) => string[];
 }
 
-export async function offlineEnvironment(options: { interpreter?: Interpreter; storePath?: string } = {}): Promise<DemoEnvironment> {
+export async function offlineEnvironment(
+  options: { interpreter?: Interpreter; readingNotes?: (messageId: string) => string[]; storePath?: string } = {},
+): Promise<DemoEnvironment> {
   const bank = new OfflineBank({
     usdRates: indicativeUsdRates,
     swiftFeeMinor: policyConfig.swiftFeeMinor,
@@ -55,5 +59,6 @@ export async function offlineEnvironment(options: { interpreter?: Interpreter; s
     rates: indicativeUsdRates,
     store,
     interpreter: options.interpreter ?? ruleInterpreter,
+    readingNotes: options.readingNotes,
   };
 }

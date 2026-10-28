@@ -13,12 +13,25 @@ import type { DemoEnvironment } from "./environment.ts";
 
 export type Phase = "goal" | "plan" | "new_info" | "decision" | "action" | "result";
 
+export type ContractorStatus = "pending" | "planned" | "short" | "held_fraud" | "sent" | "paid" | "returned" | "repaid" | "escalated" | "blocked";
+
+// State of every wallet and payout after a step, for the console.
+export interface Snapshot {
+  employers: {
+    employerId: string;
+    name: string;
+    balances: Record<string, string>;
+    contractors: { id: string; name: string; country: string; currency: string; amount: string; status: ContractorStatus; note?: string }[];
+  }[];
+}
+
 export interface DemoEvent {
   at: string;
   phase: Phase;
   title: string;
   lines: string[];
   data?: unknown;
+  snapshot?: Snapshot;
 }
 
 export interface DemoSummary {
@@ -104,7 +117,45 @@ export async function runDemo(env: DemoEnvironment, emit: (e: DemoEvent) => void
   const profiles = new Map<string, ContractorProfile>();
   for (const e of env.employers) for (const c of contractorsOf(e.employerId)) profiles.set(c.id, c);
 
-  const say = (time: string, phase: Phase, title: string, lines: string[], data?: unknown) => emit({ at: at(time).toISOString(), phase, title, lines, data });
+  const status = new Map<string, { status: ContractorStatus; note?: string }>();
+  const setStatus = (id: string, value: ContractorStatus, note?: string) => status.set(id, { status: value, note });
+  const holdStatus = (reasons: HoldReason[]): ContractorStatus =>
+    reasons.some((r) => r.code === "unverified_instruction_channel" || r.code === "bank_details_changed_recently")
+      ? "held_fraud"
+      : reasons.some((r) => r.code === "cutoff_missed")
+        ? "escalated"
+        : "short";
+  const applyPlan = (p: EmployerPlan) => {
+    for (const d of p.payouts) {
+      if (d.status === "pay") setStatus(d.contractor.id, "planned");
+      else setStatus(d.contractor.id, holdStatus(d.holdReasons), d.holdReasons.map(holdText).join("; "));
+    }
+  };
+
+  async function snapshot(): Promise<Snapshot> {
+    const out: Snapshot = { employers: [] };
+    for (const e of env.employers) {
+      const balances = await readBalances(env.apiFor(e.employerId));
+      out.employers.push({
+        employerId: e.employerId,
+        name: e.name,
+        balances: Object.fromEntries(Object.entries(balances).filter(([, v]) => v !== 0n).map(([c, v]) => [c, toMajor(v, c)])),
+        contractors: contractorsOf(e.employerId).map((c) => ({
+          id: c.id,
+          name: c.name,
+          country: c.country,
+          currency: c.currency,
+          amount: toMajor(c.amountMinor, c.currency),
+          status: status.get(c.id)?.status ?? "pending",
+          note: status.get(c.id)?.note,
+        })),
+      });
+    }
+    return out;
+  }
+
+  const say = async (time: string, phase: Phase, title: string, lines: string[], data?: unknown) =>
+    emit({ at: at(time).toISOString(), phase, title, lines, data, snapshot: await snapshot() });
   const employer = (id: string) => env.employers.find((e) => e.employerId === id)!;
 
   // Contractors still to be paid, with any change requests the agent has recorded.
@@ -140,6 +191,9 @@ export async function runDemo(env: DemoEnvironment, emit: (e: DemoEvent) => void
     walletConversions += report.conversions.filter((c) => c.status === "converted").length;
 
     for (const o of report.payouts) {
+      if (o.status === "sent") setStatus(o.contractorId, "sent", `${o.method} transfer ${o.transferId.slice(0, 8)}`);
+      else if (o.status === "held") setStatus(o.contractorId, holdStatus(o.reasons), o.reasons.map(holdText).join("; "));
+      else setStatus(o.contractorId, "blocked", o.detail);
       if (o.status === "sent") {
         sent.set(o.contractorId, { runId, outcome: o });
         if (profiles.get(o.contractorId)!.currency !== "USD" && policyConfig.payoutLinkedFx.includes(profiles.get(o.contractorId)!.currency)) payoutLinkedFx += 1;
@@ -156,34 +210,42 @@ export async function runDemo(env: DemoEnvironment, emit: (e: DemoEvent) => void
   }
 
   // Goal
-  say("04:00", "goal", "Pay 36 contractors for 3 employers in 6 countries today", [
+  await say("04:00", "goal", "Pay 36 contractors for 3 employers in 6 countries today", [
     "Each payout from its own employer's money, before the local cut-off, and never to a fraudster.",
     "Policy code decides amounts, priorities, rails and holds; the agent reads messages and explains.",
   ]);
 
   // Plan
   const initial: string[] = [];
-  for (const e of env.employers) initial.push(...describePlan(e.name, await plan(e.employerId, "04:00")));
-  say("04:00", "plan", "Initial plan from live balances", initial);
+  for (const e of env.employers) {
+    const p = await plan(e.employerId, "04:00");
+    applyPlan(p);
+    initial.push(...describePlan(e.name, p));
+  }
+  await say("04:00", "plan", "Initial plan from live balances", initial);
 
   // New information #1: a deposit lands in the wrong tenant
   const fabrikam = env.employers.find((e) => e.midRunDepositMajor)!;
   await env.simulator.deposit(env.apiFor(fabrikam.employerId), fabrikam.globalAccountId, fabrikam.midRunDepositMajor!, `${fabrikam.name} payroll funding`);
   const contoso = env.employers.find((e) => e.employerId === "emp_b")!;
   const contosoPlan = await plan(contoso.employerId, "04:10");
+  const fabrikamPlan = await plan(fabrikam.employerId, "04:10");
   const pooled = sum(await Promise.all(env.employers.map(async (e) => (await readBalances(env.apiFor(e.employerId))).USD ?? 0n)));
-  say("04:10", "new_info", "#1 Fabrikam's funding lands; Contoso is still short", [
+  await say("04:10", "new_info", "#1 Fabrikam's funding lands; Contoso is still short", [
     `${fabrikam.name} deposit received: USD ${fabrikam.midRunDepositMajor}.`,
     `A pooled ledger would now see ${usd(pooled)} and pay Contoso in full, partly with other employers' money.`,
   ]);
-  say("04:10", "decision", "Revised: Fabrikam pays everyone; Contoso stays limited to its own wallet", [
-    ...describePlan(fabrikam.name, await plan(fabrikam.employerId, "04:10")),
+  applyPlan(fabrikamPlan);
+  applyPlan(contosoPlan);
+  await say("04:10", "decision", "Revised: Fabrikam pays everyone; Contoso stays limited to its own wallet", [
+    ...describePlan(fabrikam.name, fabrikamPlan),
     ...describePlan(contoso.name, contosoPlan),
   ]);
 
   // New information #2: payroll-diversion email
+  await say("04:20", "new_info", "#2 Email: \"please send my pay to this new account today, urgent\"", [`From ${inbox.diversion.from}: ${inbox.diversion.body}`]);
   const reading = await env.interpreter.interpret(inbox.diversion);
-  const decisionLines: string[] = [`Read by ${env.interpreter.name}: ${JSON.stringify(reading)}`];
+  const decisionLines: string[] = [`Read by ${env.interpreter.name}: ${JSON.stringify(reading)}`, ...(env.readingNotes?.(inbox.diversion.id) ?? [])];
   if (reading.kind === "bank_detail_change_request") {
     const all = env.employers.flatMap((e) => contractorsOf(e.employerId));
     const match = matchByName(reading.personName, all);
@@ -191,6 +253,7 @@ export async function runDemo(env: DemoEnvironment, emit: (e: DemoEvent) => void
       changeRequests.set(match.id, { at: inbox.diversion.receivedAt, channel: "email" });
       const revised = await plan(match.employerId, "04:20");
       const held = revised.payouts.find((p) => p.contractor.id === match.id)!;
+      applyPlan(revised);
       decisionLines.push(
         `Matched to ${match.name} (${employer(match.employerId).name}). The account number in the email is not used.`,
         `Hold ${match.name}: ${held.holdReasons.map(holdText).join("; ")}.`,
@@ -201,14 +264,13 @@ export async function runDemo(env: DemoEnvironment, emit: (e: DemoEvent) => void
       decisionLines.push(`No unique contractor matches "${reading.personName}": escalate to a person.`);
     }
   }
-  say("04:20", "new_info", "#2 Email: \"please send my pay to this new account today, urgent\"", [`From ${inbox.diversion.from}: ${inbox.diversion.body}`]);
-  say("04:20", "decision", "Revised: hold one payout, not the payroll", decisionLines);
+  await say("04:20", "decision", "Revised: hold one payout, not the payroll", decisionLines);
 
   // Execute the batch
   const batch1 = `payday-${PAYDAY}:b1`;
   const executed: string[] = [];
   for (const e of env.employers) executed.push(...(await execute(e.employerId, "04:30", batch1)));
-  say("04:30", "action", "Payroll batch executed on Airwallex", executed);
+  await say("04:30", "action", "Payroll batch executed on Airwallex", executed);
 
   // New information #3: a returned MXN transfer
   const returnedName = "Valeria Flores";
@@ -216,11 +278,17 @@ export async function runDemo(env: DemoEnvironment, emit: (e: DemoEvent) => void
   for (const [id, s] of sent) {
     const api = env.apiFor(profiles.get(id)!.employerId);
     await env.simulator.transitionTransfer(api, s.outcome.transferId, "SENT");
-    if (id === returned?.[0]) await env.simulator.transitionTransfer(api, s.outcome.transferId, "FAILED", "BENEFICIARY_BANK_RETURNED");
-    else await env.simulator.transitionTransfer(api, s.outcome.transferId, "PAID");
+    if (id === returned?.[0]) {
+      await env.simulator.transitionTransfer(api, s.outcome.transferId, "FAILED", "BENEFICIARY_BANK_RETURNED");
+      setStatus(id, "returned", "BENEFICIARY_BANK_RETURNED");
+    } else {
+      await env.simulator.transitionTransfer(api, s.outcome.transferId, "PAID");
+      setStatus(id, "paid");
+    }
   }
+  await say("05:30", "new_info", `#3 Bank return on ${returnedName}'s MXN payout`, [inbox.bankReturn.body]);
   const notice = await env.interpreter.interpret(inbox.bankReturn);
-  const repayLines = [`Read by ${env.interpreter.name}: ${JSON.stringify(notice)}`];
+  const repayLines = [`Read by ${env.interpreter.name}: ${JSON.stringify(notice)}`, ...(env.readingNotes?.(inbox.bankReturn.id) ?? [])];
   if (notice.kind === "transfer_returned" && returned) {
     const [id, s] = returned;
     const e = profiles.get(id)!.employerId;
@@ -234,23 +302,26 @@ export async function runDemo(env: DemoEnvironment, emit: (e: DemoEvent) => void
     };
     const first = await repayReturnedTransfer(input, id);
     const again = await repayReturnedTransfer(input, id);
-    if (first.status === "repaid") returnsRepaid += 1;
+    if (first.status === "repaid") {
+      returnsRepaid += 1;
+      setStatus(id, "repaid", `re-paid once, transfer ${first.transferId.slice(0, 8)}`);
+    }
     repayLines.push(
       `Re-verified ${returnedName}'s bank details and re-paid: ${first.status} (new transfer ${first.status === "repaid" ? first.transferId.slice(0, 8) : "-"}).`,
       `Running the repay again returns the same transfer: ${again.status === "repaid" && first.status === "repaid" && again.transferId === first.transferId ? "no duplicate" : "CHECK"}.`,
     );
   }
-  say("05:30", "new_info", `#3 Bank return on ${returnedName}'s MXN payout`, [inbox.bankReturn.body]);
-  say("05:30", "decision", "Revised: re-verify and re-pay once", repayLines);
+  await say("05:30", "decision", "Revised: re-verify and re-pay once", repayLines);
 
   // New information #4: Contoso's top-up lands after the PH cut-offs
   const topUp = await env.interpreter.interpret(inbox.topUp);
   await env.simulator.deposit(env.apiFor(contoso.employerId), contoso.globalAccountId, "21000", `${contoso.name} top-up`);
   const balanceNow = (await readBalances(env.apiFor(contoso.employerId))).USD ?? 0n;
   const late = await plan(contoso.employerId, "06:40");
-  say("06:40", "new_info", "#4 Contoso's top-up arrives at 06:40 UTC", [
+  await say("06:40", "new_info", "#4 Contoso's top-up arrives at 06:40 UTC", [
     `From ${inbox.topUp.from}: ${inbox.topUp.body}`,
     `Read by ${env.interpreter.name}: ${JSON.stringify(topUp)}`,
+    ...(env.readingNotes?.(inbox.topUp.id) ?? []),
     `Checked against the wallet, not the email: Contoso now holds ${usd(balanceNow)}.`,
   ]);
   const lateLines = describePlan(contoso.name, late);
@@ -259,7 +330,7 @@ export async function runDemo(env: DemoEnvironment, emit: (e: DemoEvent) => void
     const c = profiles.get(id)!;
     lateLines.push(`Escalate ${c.name}: Philippine cut-offs passed (LOCAL 06:30, SWIFT 06:00 UTC). A person chooses: next PH window, or the instant stablecoin rail if the contractor opted in.`);
   }
-  say("06:40", "decision", "Revised: pay what can still land today, escalate what cannot", lateLines);
+  await say("06:40", "decision", "Revised: pay what can still land today, escalate what cannot", lateLines);
 
   // Result
   const finalBalances: DemoSummary["finalBalances"] = {};
@@ -281,7 +352,7 @@ export async function runDemo(env: DemoEnvironment, emit: (e: DemoEvent) => void
     apiCalls: env.store.auditLog().length,
     finalBalances,
   };
-  say("07:00", "result", "Payday report", [
+  await say("07:00", "result", "Payday report", [
     `${summary.paidOnPayday}/${total} contractors paid on payday (${((summary.paidOnPayday / total) * 100).toFixed(1)}%), every one from their own employer's wallet.`,
     `${heldForFraud} payout held for a suspected diversion; ${escalations.length} escalated because their cut-off had passed; ${returnsRepaid} bank return re-paid once.`,
     `${walletConversions} wallet conversions (net gap only) and ${payoutLinkedFx} payout-linked FX payouts at locked quotes.`,

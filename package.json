@@ -12,11 +12,19 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "smoke": "node --env-file=.env scripts/smoke-live.ts",
-    "demo": "node scripts/demo.ts"
+    "demo": "node scripts/demo.ts",
+    "provision": "node --env-file=.env scripts/provision-employers.ts",
+    "smoke:connected": "node --env-file=.env scripts/smoke-connected.ts",
+    "reader:eval": "node --env-file=.env scripts/reader-eval.ts",
+    "console": "node scripts/console.ts"
   },
   "devDependencies": {
     "@types/node": "^24.19.2",
     "typescript": "^5.9.3",
     "vitest": "^3.2.7"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "0.132.1",
+    "zod": "4.6.6"
   }
 }

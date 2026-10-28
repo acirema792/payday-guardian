@@ -12,6 +12,8 @@ Built on the Airwallex sandbox for the Agentic Banking Hackathon (Starter Kit 06
 4. **API key**: in the sandbox web app, go to Developer > API keys > New scoped key. Then `cp .env.example .env` and fill in `AWX_CLIENT_ID` and `AWX_API_KEY`.
 5. **Platform access**: Kit 6 needs Connected Accounts and Platform Payments, which are not self-serve. Email devhelp@airwallex.com with your sandbox email and Client ID.
 6. **Check**: `npm run check` logs in and reports global accounts, balances and whether connected accounts are enabled. It changes nothing.
+7. **Employers**: `npm run provision` creates, submits and activates one connected account per demo employer (synthetic data) with a USD Global Account, and records them in `data/tenants.json`. Wait a few minutes after activation before FX, then `npm run smoke:connected` proves money movement on behalf of an employer, including the platform fee.
+8. **Demo**: `npm run demo` (add `-- --reader claude` to have Claude read the messages), then `npm run console` and open http://localhost:4321
 
 ### Claude Code MCP servers (optional, for development)
 
@@ -35,9 +37,9 @@ Test it in a new Claude session: "Using airwallex-dev, list my global accounts a
 
 - [x] Sandbox account and API key; `npm run check` passes
 - [x] Platform access requested from devhelp@airwallex.com (2026-10-25)
-- [ ] Airwallex confirms Connected Accounts + Platform Payments
+- [x] Airwallex enabled Connected Accounts + Platform Payments (verified live 2026-10-27)
 - [x] `airwallex-dev` MCP signed in
-- [ ] `ANTHROPIC_API_KEY` in `.env`
+- [x] `ANTHROPIC_API_KEY` in `.env` (claim the hackathon's $100 Claude credits from the #announcements link)
 - [ ] Webhook subscription + `AWX_WEBHOOK_SECRET` in `.env` (when the webhook receiver is built)
 
 ## Status
@@ -58,4 +60,8 @@ Built so far:
   4. Contoso's top-up lands after the Philippine cut-offs: the rest are paid, the two PH payouts are escalated to a person
   Result: 33/36 paid on payday, every one from its own employer's wallet, with an audit log of every API call
 
-Next: the Claude reader, the console, and the live three-employer run once employer accounts exist. See [docs/strategy.md](docs/strategy.md).
+- Claude reader (`src/agent/claude-interpreter.ts`): Claude Opus 5.5 turns each inbound message into a schema-constrained reading (kind, person, amount, red flags, summary) with no tools and no credentials; the deterministic reader takes over on any error or refusal. `npm run reader:eval` checks it on labelled messages, including a prompt-injection attempt (7/7 on 2026-10-27)
+- Console (`npm run console`): steps through the demo timeline with every employer's own wallet and all 36 payouts coloured by status
+- Kit 6 live: three employers provisioned as connected accounts; payouts, FX and the platform fee verified on behalf of an employer while the other tenants stay untouched (`npm run smoke:connected`)
+
+Next: run the demo live on the three connected accounts, then the video. See [docs/strategy.md](docs/strategy.md).

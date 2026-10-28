@@ -44,6 +44,9 @@ The model reads, the code decides, the API moves the money.
 - `src/sandbox/simulator.ts`: the only place sandbox simulation endpoints are called
 - `src/sandbox/offline-bank.ts`: deterministic in-memory multi-account bank mirroring measured sandbox behaviour, for rehearsing and recording the demo without provisioned employer accounts
 - `src/agent/messages.ts`: `InboundMessage` -> typed `Interpretation` (`Interpreter` interface; `ruleInterpreter` is the fallback, a Claude interpreter plugs in with the same schema). `matchByName` matches people by code and refuses to guess
+- `src/agent/claude-interpreter.ts`: Claude reader. `client.messages.parse` with a Zod schema (`ReadingSchema`), `claude-opus-5-5`, effort low, no tools. Falls back to `ruleInterpreter` on refusal or any error. `onReading` exposes red flags and the summary
+- `src/scenario/tenants.ts`: `data/tenants.json` maps each demo employer to its provisioned connected account and Global Account (sandbox-specific, not committed)
+- `console/index.html` + `scripts/console.ts`: the demo console, served on localhost:4321 from `data/demo-run.json`; each event carries a `snapshot` of wallets and contractor statuses
 - `src/demo/`: `runner.ts` is the demo script as code (goal, plan, new information #1 pooled-deposit trap, #2 diversion email, #3 bank return, #4 late top-up after PH cut-off, result); `environment.ts` builds the offline environment. Executions use one runId per batch (`:b1`, `:b2`) so a later batch can convert again
 - `src/scenario/`: `corridors.ts` (beneficiary shapes validated live for US, GB, DE, MX MXN/USD, PH, IN) and `seed.ts` (3 employers x 12 contractors, policy config)
 - `test/`: vitest. `fixtures.ts` holds the shared policy config and employers; `fake-airwallex.ts` is the in-memory API used by executor tests
@@ -55,14 +58,20 @@ The model reads, the code decides, the API moves the money.
 - Beneficiary routing: MX MXN puts the CLABE in `account_number` with no routing type; IN uses `account_routing_type1: "bank_code"` with the IFSC; PH needs `swift_code`; DE EUR validates for both LOCAL (SEPA) and SWIFT
 - A transfer moved to FAILED reads back as CANCELLED with its `failure_type`
 - `npm run smoke` runs the executor live on your own account as a single employer (org-entity mode)
+- Kit 6 connected accounts and platform payments were enabled on 2026-10-27. A connected account needs `business_person_details[].identifications.primary` (e.g. a passport) at create time or submit fails with `field_required`; fields cannot be added afterwards. Two unusable CREATED leftovers exist from probing (acct_AWe06nUKO-y53un_4IA18w, acct_AllbenTgMquWYV-MbYSrKQ); ignore them
+- First FX call on a newly activated connected account returns `unconfigured_client_fee`; it worked about 5 minutes later. `charges/create` goes PENDING then SETTLED within seconds
 
 ## Open setup items
 
-Remind the user of unchecked items in the README "Setup checklist" (Airwallex platform-access reply, `airwallex-dev` sign-in, `ANTHROPIC_API_KEY`, webhook secret), especially before starting work that needs them.
+Remind the user of unchecked items in the README "Setup checklist" (webhook secret), especially before starting work that needs them.
 
 ## Commands
 
 - `npm run check`: read-only sandbox readiness check (login, global accounts, balances, connected-account access)
 - `npm run smoke`: live money-movement smoke test on the sandbox (small amounts; writes `data/smoke.db`)
-- `npm run demo`: the full demo on the offline bank; prints the timeline and writes `data/demo-run.json` for the console
+- `npm run demo` (`-- --reader claude` to use Claude): the full demo on the offline bank; prints the timeline and writes `data/demo-run.json` for the console
+- `npm run console`: serves the console on http://localhost:4321
+- `npm run provision`: create/submit/activate the three employer connected accounts (skips provisioned ones)
+- `npm run smoke:connected`: live Kit 6 money movement on behalf of employer A, plus platform fee and tenant-isolation check
+- `npm run reader:eval`: live check of the Claude reader on labelled messages (costs a few cents)
 - `npm run typecheck`, `npm test`

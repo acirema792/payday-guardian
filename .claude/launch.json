@@ -1,0 +1,6 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    { "name": "console", "runtimeExecutable": "npm", "runtimeArgs": ["run", "console"], "port": 4321 }
+  ]
+}
