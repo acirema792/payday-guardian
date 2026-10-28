@@ -1,7 +1,7 @@
 import { readBalances } from "../airwallex/api.ts";
 import { type InboundMessage, matchByName } from "../agent/messages.ts";
 import { collectPlatformFee, executeEmployerPlan, type ExecuteInput, type PayoutOutcome, repayReturnedTransfer } from "../executor/execute.ts";
-import { sum, toMajor } from "../policy/money.ts";
+import { sum, toMajor, toMinor } from "../policy/money.ts";
 import { planEmployerPayroll } from "../policy/planner.ts";
 import type { EmployerPlan, HoldReason } from "../policy/types.ts";
 import { type ContractorProfile, contractorsOf, PAYDAY, policyConfig } from "../scenario/seed.ts";
@@ -167,6 +167,23 @@ export async function runDemo(env: DemoEnvironment, emit: (e: DemoEvent) => void
         return req ? { ...c, bankDetailsChangedAt: req.at, bankDetailsChangeChannel: req.channel } : c;
       });
 
+
+  // Deposit, then trust only the wallet: poll until the funds are available or the window closes.
+  async function depositAndWait(employerId: string, globalAccountId: string, amountMajor: string, payer: string): Promise<number | null> {
+    const api = env.apiFor(employerId);
+    const before = (await readBalances(api)).USD ?? 0n;
+    await env.simulator.deposit(api, globalAccountId, amountMajor, payer);
+    const target = before + toMinor(amountMajor, "USD");
+    const started = Date.now();
+    for (;;) {
+      if (((await readBalances(api)).USD ?? 0n) >= target) return (Date.now() - started) / 1000;
+      if (Date.now() - started >= (env.fundsSettleTimeoutMs ?? 0)) return null;
+      await new Promise((r) => setTimeout(r, 2000));
+    }
+  }
+  const cleared = (seconds: number | null) =>
+    seconds === null ? "Not yet available in the wallet when the window closed; planning with what is there." : seconds < 1 ? "Available in the wallet immediately." : `Cleared into the wallet after ${seconds.toFixed(0)}s.`;
+
   async function plan(employerId: string, time: string): Promise<EmployerPlan> {
     const e = employer(employerId);
     const available = await readBalances(env.apiFor(employerId));
@@ -226,13 +243,13 @@ export async function runDemo(env: DemoEnvironment, emit: (e: DemoEvent) => void
 
   // New information #1: a deposit lands in the wrong tenant
   const fabrikam = env.employers.find((e) => e.midRunDepositMajor)!;
-  await env.simulator.deposit(env.apiFor(fabrikam.employerId), fabrikam.globalAccountId, fabrikam.midRunDepositMajor!, `${fabrikam.name} payroll funding`);
+  const fabrikamCleared = await depositAndWait(fabrikam.employerId, fabrikam.globalAccountId, fabrikam.midRunDepositMajor!, `${fabrikam.name} payroll funding`);
   const contoso = env.employers.find((e) => e.employerId === "emp_b")!;
   const contosoPlan = await plan(contoso.employerId, "04:10");
   const fabrikamPlan = await plan(fabrikam.employerId, "04:10");
   const pooled = sum(await Promise.all(env.employers.map(async (e) => (await readBalances(env.apiFor(e.employerId))).USD ?? 0n)));
   await say("04:10", "new_info", "#1 Fabrikam's funding lands; Contoso is still short", [
-    `${fabrikam.name} deposit received: USD ${fabrikam.midRunDepositMajor}.`,
+    `${fabrikam.name} deposit received: USD ${fabrikam.midRunDepositMajor}. ${cleared(fabrikamCleared)}`,
     `A pooled ledger would now see ${usd(pooled)} and pay Contoso in full, partly with other employers' money.`,
   ]);
   applyPlan(fabrikamPlan);
@@ -315,14 +332,14 @@ export async function runDemo(env: DemoEnvironment, emit: (e: DemoEvent) => void
 
   // New information #4: Contoso's top-up lands after the PH cut-offs
   const topUp = await env.interpreter.interpret(inbox.topUp);
-  await env.simulator.deposit(env.apiFor(contoso.employerId), contoso.globalAccountId, "21000", `${contoso.name} top-up`);
+  const contosoCleared = await depositAndWait(contoso.employerId, contoso.globalAccountId, "21000", `${contoso.name} top-up`);
   const balanceNow = (await readBalances(env.apiFor(contoso.employerId))).USD ?? 0n;
   const late = await plan(contoso.employerId, "06:40");
   await say("06:40", "new_info", "#4 Contoso's top-up arrives at 06:40 UTC", [
     `From ${inbox.topUp.from}: ${inbox.topUp.body}`,
     `Read by ${env.interpreter.name}: ${JSON.stringify(topUp)}`,
     ...(env.readingNotes?.(inbox.topUp.id) ?? []),
-    `Checked against the wallet, not the email: Contoso now holds ${usd(balanceNow)}.`,
+    `Checked against the wallet, not the email: ${cleared(contosoCleared)} Contoso now holds ${usd(balanceNow)}.`,
   ]);
   const lateLines = describePlan(contoso.name, late);
   lateLines.push(...(await execute(contoso.employerId, "06:40", `payday-${PAYDAY}:b2`)));

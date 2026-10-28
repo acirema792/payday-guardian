@@ -13,7 +13,7 @@ Built on the Airwallex sandbox for the Agentic Banking Hackathon (Starter Kit 06
 5. **Platform access**: Kit 6 needs Connected Accounts and Platform Payments, which are not self-serve. Email devhelp@airwallex.com with your sandbox email and Client ID.
 6. **Check**: `npm run check` logs in and reports global accounts, balances and whether connected accounts are enabled. It changes nothing.
 7. **Employers**: `npm run provision` creates, submits and activates one connected account per demo employer (synthetic data) with a USD Global Account, and records them in `data/tenants.json`. Wait a few minutes after activation before FX, then `npm run smoke:connected` proves money movement on behalf of an employer, including the platform fee.
-8. **Demo**: `npm run demo` (add `-- --reader claude` to have Claude read the messages), then `npm run console` and open http://localhost:4321
+8. **Demo**: `npm run demo` (add `-- --reader claude` to have Claude read the messages) for the offline rehearsal, or `npm run demo:live -- --reader claude` to run it on the real sandbox's connected accounts. Then `npm run console` and open http://localhost:4321 (switch between the offline and live runs in the header). A second live run needs fresh employers: `npm run provision -- --fresh`, then wait about 5 minutes for FX to be configured
 
 ### Claude Code MCP servers (optional, for development)
 
@@ -64,4 +64,4 @@ Built so far:
 - Console (`npm run console`): steps through the demo timeline with every employer's own wallet and all 36 payouts coloured by status
 - Kit 6 live: three employers provisioned as connected accounts; payouts, FX and the platform fee verified on behalf of an employer while the other tenants stay untouched (`npm run smoke:connected`)
 
-Next: run the demo live on the three connected accounts, then the video. See [docs/strategy.md](docs/strategy.md).
+Next: the video. See [docs/strategy.md](docs/strategy.md).

@@ -106,7 +106,24 @@ export class AirwallexClient {
     return this.token;
   }
 
+  // Retries only what cannot move money twice: reads on throttling, server errors or no response, and
+  // any call rejected with 429 (not processed). Other POST failures surface to the caller, which
+  // recovers by request_id (see executor).
   async request<T = unknown>(method: "GET" | "POST", path: string, opts: RequestOptions = {}): Promise<T> {
+    const maxAttempts = 4;
+    for (let attempt = 1; ; attempt++) {
+      try {
+        return await this.send<T>(method, path, opts);
+      } catch (err) {
+        const status = err instanceof AirwallexError ? err.status : 0;
+        const retryable = status === 429 || (method === "GET" && (status === 0 || status >= 500));
+        if (!retryable || attempt >= maxAttempts) throw err;
+        await new Promise((r) => setTimeout(r, 400 * 2 ** (attempt - 1)));
+      }
+    }
+  }
+
+  private async send<T>(method: "GET" | "POST", path: string, opts: RequestOptions): Promise<T> {
     const token = await this.login();
     const url = new URL(`${this.baseUrl}/api/v1${path}`);
     for (const [k, v] of Object.entries(opts.query ?? {})) {

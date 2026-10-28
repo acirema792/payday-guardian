@@ -2,12 +2,19 @@
 // USD Global Account. Synthetic data, sandbox only. Safe to re-run: provisioned employers are skipped.
 // Run: npm run provision            (all employers)
 //      npm run provision -- emp_a   (one employer)
+//      npm run provision -- --fresh (archive data/tenants.json and provision a new set, e.g. for a clean demo re-run)
+import { existsSync, renameSync } from "node:fs";
 import { AirwallexClient } from "../src/airwallex/client.ts";
 import { employers } from "../src/scenario/seed.ts";
-import { loadTenants, saveTenant } from "../src/scenario/tenants.ts";
+import { loadTenants, saveTenant, TENANTS_FILE } from "../src/scenario/tenants.ts";
 
 const platform = AirwallexClient.fromEnv();
-const only = process.argv[2];
+const only = process.argv.slice(2).find((a) => !a.startsWith("--"));
+if (process.argv.includes("--fresh") && existsSync(TENANTS_FILE)) {
+  const archived = TENANTS_FILE.replace(".json", `-${Date.now()}.json`);
+  renameSync(TENANTS_FILE, archived);
+  console.log(`Archived previous employers to ${archived}`);
+}
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 // Fields lock after submit, so everything goes into the create call (builder guide).

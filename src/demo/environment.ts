@@ -20,6 +20,9 @@ export interface DemoEnvironment {
   interpreter: Interpreter;
   // Extra lines the reader produced for a message (e.g. Claude's red flags and summary).
   readingNotes?: (messageId: string) => string[];
+  // How long to wait for a deposit to clear into the wallet. On the sandbox, deposits into connected
+  // accounts become available a few seconds after the simulation call returns.
+  fundsSettleTimeoutMs?: number;
 }
 
 export async function offlineEnvironment(

@@ -7,6 +7,7 @@ const PORT = Number(process.env.PORT ?? 4321);
 const routes: Record<string, [string, string]> = {
   "/": ["console/index.html", "text/html; charset=utf-8"],
   "/demo-run.json": ["data/demo-run.json", "application/json"],
+  "/demo-run-live.json": ["data/demo-run-live.json", "application/json"],
 };
 
 createServer(async (req, res) => {
@@ -19,6 +20,6 @@ createServer(async (req, res) => {
     const body = await readFile(route[0]);
     res.writeHead(200, { "Content-Type": route[1], "Cache-Control": "no-store" }).end(body);
   } catch {
-    res.writeHead(404).end(route[0] === "data/demo-run.json" ? "Run npm run demo first" : "Not found");
+    res.writeHead(404).end(route[0].startsWith("data/") ? "Run npm run demo (or demo:live) first" : "Not found");
   }
 }).listen(PORT, "127.0.0.1", () => console.log(`Payday Guardian console on http://localhost:${PORT}`));

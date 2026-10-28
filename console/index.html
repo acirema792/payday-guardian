@@ -77,8 +77,11 @@
   <h1>Payday Guardian</h1>
   <span class="sub" id="sub">Loading run…</span>
   <div class="controls">
+    <span class="sub">Run:</span>
+    <button id="run-offline">Offline rehearsal</button>
+    <button id="run-live">Live sandbox</button>
     <button id="prev" aria-label="Previous step">◀ Prev</button>
-    <button id="play" class="primary">▶ Play</button>
+    <button id="play">▶ Play</button>
     <button id="next" aria-label="Next step">Next ▶</button>
   </div>
 </header>
@@ -170,7 +173,11 @@
   document.getElementById("steps").onclick = (ev) => { const li = ev.target.closest("li"); if (li) { stop(); go(Number(li.dataset.i)); } };
   document.addEventListener("keydown", (ev) => { if (ev.key === "ArrowRight") { stop(); go(index + 1); } if (ev.key === "ArrowLeft") { stop(); go(index - 1); } });
 
-  fetch("demo-run.json").then((r) => r.json()).then((data) => {
+  const which = new URLSearchParams(location.search).get("run") === "live" ? "live" : "offline";
+  document.getElementById(`run-${which}`).classList.add("primary");
+  document.getElementById("run-offline").onclick = () => { location.search = ""; };
+  document.getElementById("run-live").onclick = () => { location.search = "?run=live"; };
+  fetch(which === "live" ? "demo-run-live.json" : "demo-run.json").then((r) => r.json()).then((data) => {
     run = data;
     document.getElementById("sub").textContent = `Payday ${run.events[0].at.slice(0, 10)} · ${run.environment} · reader: ${run.reader ?? "rules"}`;
     render();

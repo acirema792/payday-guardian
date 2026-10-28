@@ -60,6 +60,9 @@ The model reads, the code decides, the API moves the money.
 - `npm run smoke` runs the executor live on your own account as a single employer (org-entity mode)
 - Kit 6 connected accounts and platform payments were enabled on 2026-10-27. A connected account needs `business_person_details[].identifications.primary` (e.g. a passport) at create time or submit fails with `field_required`; fields cannot be added afterwards. Two unusable CREATED leftovers exist from probing (acct_AWe06nUKO-y53un_4IA18w, acct_AllbenTgMquWYV-MbYSrKQ); ignore them
 - First FX call on a newly activated connected account returns `unconfigured_client_fee`; it worked about 5 minutes later. `charges/create` goes PENDING then SETTLED within seconds
+- Simulated deposits into connected accounts are NOT available immediately (unlike the builder guide's note for the platform wallet): the 201 returns, the balance updates a few seconds later. The runner polls the wallet after every deposit (`fundsSettleTimeoutMs`) and never trusts the funding email
+- `npm run demo:live -- --reader claude` runs the full demo on the connected accounts in `data/tenants.json` (fresh audit DB `data/live-*.db`, timeline `data/demo-run-live.json`). It needs Contoso and Fabrikam at their starting balances: after a run, `npm run provision -- --fresh` and wait ~5 minutes before the next one
+- `AirwallexClient.request` retries reads on 429/5xx/no response and any 429; it never retries a POST that failed otherwise (the executor recovers those by request_id)
 
 ## Open setup items
 
@@ -70,8 +73,9 @@ Remind the user of unchecked items in the README "Setup checklist" (webhook secr
 - `npm run check`: read-only sandbox readiness check (login, global accounts, balances, connected-account access)
 - `npm run smoke`: live money-movement smoke test on the sandbox (small amounts; writes `data/smoke.db`)
 - `npm run demo` (`-- --reader claude` to use Claude): the full demo on the offline bank; prints the timeline and writes `data/demo-run.json` for the console
-- `npm run console`: serves the console on http://localhost:4321
-- `npm run provision`: create/submit/activate the three employer connected accounts (skips provisioned ones)
+- `npm run console`: serves the console on http://localhost:4321 (`?run=live` for the live run)
+- `npm run provision` (`-- --fresh` for a new set): create/submit/activate the three employer connected accounts (skips provisioned ones)
+- `npm run demo:live -- --reader claude`: the full demo on the real sandbox (Kit 6 connected accounts)
 - `npm run smoke:connected`: live Kit 6 money movement on behalf of employer A, plus platform fee and tenant-isolation check
 - `npm run reader:eval`: live check of the Claude reader on labelled messages (costs a few cents)
 - `npm run typecheck`, `npm test`

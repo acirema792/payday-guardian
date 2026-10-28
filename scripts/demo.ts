@@ -1,14 +1,17 @@
 // Runs the 5-minute demo end to end and writes the timeline for the console.
 // Run: npm run demo                    (offline bank, rule-based reader; deterministic, no credentials)
 //      npm run demo -- --reader claude (offline bank, Claude reads the messages; needs ANTHROPIC_API_KEY)
+//      npm run demo:live -- --reader claude (Airwallex sandbox, Kit 6 connected accounts from npm run provision)
 import { mkdirSync, writeFileSync } from "node:fs";
 import { claudeInterpreter, type Reading } from "../src/agent/claude-interpreter.ts";
-import { offlineEnvironment } from "../src/demo/environment.ts";
+import { type DemoEnvironment, offlineEnvironment } from "../src/demo/environment.ts";
+import { liveEnvironment } from "../src/demo/live-environment.ts";
 import { type DemoEvent, runDemo } from "../src/demo/runner.ts";
 
 const useClaude = process.argv.includes("--reader") && process.argv[process.argv.indexOf("--reader") + 1] === "claude";
 const readings = new Map<string, { reading?: Reading; note: string }>();
-const env = await offlineEnvironment(
+const live = process.argv.includes("--live");
+const readerOptions = (
   useClaude
     ? {
         interpreter: claudeInterpreter({ onReading: (m, reading, note) => readings.set(m.id, { reading, note }) }),
@@ -19,8 +22,11 @@ const env = await offlineEnvironment(
           return [`Claude's summary: ${r.reading.summary}`, ...(r.reading.red_flags.length ? [`Red flags: ${r.reading.red_flags.join("; ")}`] : [])];
         },
       }
-    : {},
-);
+    : {}
+) as Parameters<typeof offlineEnvironment>[0];
+const env: DemoEnvironment = live
+  ? await liveEnvironment({ ...readerOptions, log: (line) => console.log(`[setup] ${line}`) })
+  : await offlineEnvironment(readerOptions);
 
 const events: DemoEvent[] = [];
 const label: Record<DemoEvent["phase"], string> = {
@@ -41,9 +47,10 @@ const summary = await runDemo(env, (e) => {
 });
 
 mkdirSync("data", { recursive: true });
+const out = live ? "data/demo-run-live.json" : "data/demo-run.json";
 writeFileSync(
-  "data/demo-run.json",
+  out,
   JSON.stringify({ environment: env.label, reader: env.interpreter.name, events, summary }, (_, v) => (typeof v === "bigint" ? v.toString() : v), 2),
 );
-console.log("Timeline written to data/demo-run.json");
+console.log(`Timeline written to ${out}`);
 env.store.close();

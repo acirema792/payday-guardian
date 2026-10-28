@@ -12,11 +12,12 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "smoke": "node --env-file=.env scripts/smoke-live.ts",
-    "demo": "node scripts/demo.ts",
+    "demo": "node --env-file-if-exists=.env scripts/demo.ts",
     "provision": "node --env-file=.env scripts/provision-employers.ts",
     "smoke:connected": "node --env-file=.env scripts/smoke-connected.ts",
     "reader:eval": "node --env-file=.env scripts/reader-eval.ts",
-    "console": "node scripts/console.ts"
+    "console": "node scripts/console.ts",
+    "demo:live": "node --env-file=.env scripts/demo.ts --live"
   },
   "devDependencies": {
     "@types/node": "^24.19.2",
