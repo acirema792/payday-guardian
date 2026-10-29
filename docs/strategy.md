@@ -52,4 +52,6 @@ Shortlisted for the Build Phase (Oct 27 – Nov 13). Judging criteria from the s
 - [x] Video (4:45, neural narration, captioned, rendered from the live run): https://youtu.be/jE588gNmAYU (Unlisted). Replaces the first cut, whose text-to-speech voice sounded robotic
 - [x] Build Phase submission saved as a **draft** on HackerEarth (2026-10-29): title, description with video and evidence links, parent submission, repo URL
 - [ ] Oscar: make the repo public (`gh repo edit acirema792/payday-guardian --visibility public --accept-visibility-change-consequences`)
+- [x] Static console for judges in `docs/console` (`npm run site`); hosted at https://acirema792.github.io/payday-guardian/ once Pages is on
+- [ ] Oscar: enable GitHub Pages from main `/docs` (after the repo is public)
 - [ ] Oscar: open the draft on HackerEarth and click Submit, before noon Bogota on Nov 13 (the form closes 1:29 PM)

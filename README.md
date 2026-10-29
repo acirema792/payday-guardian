@@ -6,6 +6,8 @@ Airwallex Agentic Banking Hackathon · Starter Kit 06, Multi-Employer Payroll Ex
 
 > **Demo video (4:45):** https://youtu.be/jE588gNmAYU — recorded from the live sandbox run
 
+> **Click-through demo, no install:** https://acirema792.github.io/payday-guardian/ — the console replaying the live sandbox run (switch to the offline rehearsal in its header)
+
 > **Proof it ran live:** the full demo on three Kit 6 connected accounts in the Airwallex sandbox, with Claude reading the messages. 35 of 36 contractors were paid on payday. The [audit log](docs/evidence/) has 297 API calls: 0 errors, and no employer call outside the three employer accounts.
 
 ## Try it in 60 seconds (no credentials needed)

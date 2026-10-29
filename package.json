@@ -19,7 +19,8 @@
     "console": "node scripts/console.ts",
     "demo:live": "node --env-file=.env scripts/demo.ts --live",
     "webhooks": "node --env-file=.env scripts/webhook-server.ts",
-    "evidence": "node --env-file-if-exists=.env scripts/export-evidence.ts"
+    "evidence": "node --env-file-if-exists=.env scripts/export-evidence.ts",
+    "site": "node scripts/build-site.ts"
   },
   "devDependencies": {
     "@types/node": "^24.19.2",

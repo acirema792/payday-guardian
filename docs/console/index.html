@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Payday Guardian Console</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --panel: #ffffff; --ink: #14171f; --muted: #5b6474; --line: #e3e6eb; --accent: #4b3bd6;
+    --planned: #3b82f6; --short: #d97706; --fraud: #dc2626; --sent: #6366f1; --paid: #16a34a; --returned: #ea580c;
+    --repaid: #0d9488; --escalated: #9333ea; --pending: #9aa3b2; --blocked: #64748b;
+    --chip-bg: #f2f4f7;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0f1218; --panel: #171b23; --ink: #e8ebf1; --muted: #9aa3b2; --line: #262c37; --accent: #8b7cff; --chip-bg: #1e232d;
+    }
+  }
+  :root[data-theme="dark"] { --bg: #0f1218; --panel: #171b23; --ink: #e8ebf1; --muted: #9aa3b2; --line: #262c37; --accent: #8b7cff; --chip-bg: #1e232d; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.45 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
+  header { display: flex; align-items: center; gap: 16px; padding: 14px 24px; border-bottom: 1px solid var(--line); background: var(--panel); flex-wrap: wrap; }
+  header h1 { margin: 0; font-size: 18px; letter-spacing: -0.01em; }
+  header .sub { color: var(--muted); font-size: 13px; }
+  .controls { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+  button { font: inherit; border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 8px; padding: 6px 12px; cursor: pointer; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  button:disabled { opacity: .4; cursor: default; }
+  main { display: grid; grid-template-columns: 280px 1fr; gap: 0; min-height: calc(100vh - 60px); }
+  nav { border-right: 1px solid var(--line); background: var(--panel); padding: 12px 0; overflow-y: auto; }
+  nav ol { list-style: none; margin: 0; padding: 0; }
+  nav li { padding: 8px 18px; cursor: pointer; border-left: 3px solid transparent; }
+  nav li:hover { background: var(--chip-bg); }
+  nav li.active { border-left-color: var(--accent); background: var(--chip-bg); }
+  nav .time { color: var(--muted); font-variant-numeric: tabular-nums; font-size: 12px; }
+  .phase { display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: 1px 6px; border-radius: 4px; margin-left: 6px; color: #fff; }
+  .phase.goal { background: #475569; } .phase.plan { background: #3b82f6; } .phase.new_info { background: #ea580c; }
+  .phase.decision { background: var(--accent); } .phase.approval { background: #db2777; } .phase.action { background: #16a34a; } .phase.result { background: #0d9488; }
+  nav .title { display: block; font-size: 13px; margin-top: 2px; }
+  section.content { padding: 20px 24px; overflow-y: auto; }
+  .step { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; }
+  .step h2 { margin: 6px 0 10px; font-size: 20px; letter-spacing: -0.01em; }
+  .step .lines { margin: 0; padding: 0; list-style: none; }
+  .step .lines li { padding: 3px 0; color: var(--ink); white-space: pre-wrap; }
+  .step .lines li.indent { color: var(--muted); padding-left: 16px; }
+  .step .lines li.flag { color: var(--fraud); }
+  .step .lines li.note { margin: 6px 0; padding: 8px 12px; border-left: 3px solid var(--accent); background: var(--chip-bg); border-radius: 6px; }
+  .step .lines li.ok { color: var(--paid); }
+  .board { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 18px; }
+  .employer { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px; }
+  .employer h3 { margin: 0; font-size: 15px; }
+  .wallet { color: var(--muted); font-size: 12px; margin: 2px 0 10px; font-variant-numeric: tabular-nums; }
+  .wallet b { color: var(--ink); }
+  .chips { display: grid; grid-template-columns: 1fr; gap: 6px; }
+  .chip { display: grid; grid-template-columns: 22px 1fr; gap: 8px; align-items: center; background: var(--chip-bg); border-radius: 8px; padding: 6px 8px; border-left: 4px solid var(--pending); transition: border-color .4s, background .4s; }
+  .chip .who { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .chip .amt { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+  .chip .st { font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; margin-left: 6px; }
+  .step .lines li.code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; color: var(--muted); }
+  .chip.changed { animation: pulse 1.2s ease-out; }
+  @keyframes pulse { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 60%, transparent); } 100% { box-shadow: 0 0 0 10px transparent; } }
+  .legend { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 14px; color: var(--muted); font-size: 12px; }
+  .legend span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; background: var(--c); }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-top: 16px; }
+  .stat { background: var(--chip-bg); border-radius: 10px; padding: 12px; }
+  .stat .n { font-size: 26px; font-weight: 700; letter-spacing: -0.02em; }
+  .stat .l { color: var(--muted); font-size: 12px; }
+  .empty { color: var(--muted); padding: 40px; text-align: center; }
+  @media (max-width: 900px) {
+    main { grid-template-columns: 1fr; }
+    nav { border-right: 0; border-bottom: 1px solid var(--line); max-height: 220px; }
+    .board { grid-template-columns: 1fr; }
+    header, section.content { padding-left: 16px; padding-right: 16px; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Payday Guardian</h1>
+  <span class="sub" id="sub">Loading run…</span>
+  <div class="controls">
+    <span class="sub">Run:</span>
+    <button id="run-offline">Offline rehearsal</button>
+    <button id="run-live">Live sandbox</button>
+    <button id="prev" aria-label="Previous step">◀ Prev</button>
+    <button id="play">▶ Play</button>
+    <button id="next" aria-label="Next step">Next ▶</button>
+  </div>
+</header>
+<main>
+  <nav><ol id="steps"></ol></nav>
+  <section class="content">
+    <div id="step" class="step"><div class="empty">Run <code>npm run demo</code>, then reload.</div></div>
+    <div id="board" class="board"></div>
+    <div class="legend" id="legend"></div>
+  </section>
+</main>
+<script>
+  const STATUS = {
+    pending: ["Pending", "--pending"], planned: ["Will pay", "--planned"], short: ["Short of funds", "--short"],
+    held_fraud: ["Held: fraud check", "--fraud"], sent: ["Sent", "--sent"], paid: ["Paid", "--paid"],
+    returned: ["Returned", "--returned"], repaid: ["Re-paid", "--repaid"], escalated: ["Escalated", "--escalated"], blocked: ["Blocked", "--blocked"],
+  };
+  const flag = (cc) => String.fromCodePoint(...[...cc].map((c) => 0x1f1e6 + c.charCodeAt(0) - 65));
+  const fmt = (n, c, cents = false) => `${c} ${Number(n).toLocaleString("en-US", { minimumFractionDigits: cents ? 2 : 0, maximumFractionDigits: 2 })}`;
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+
+  let run, index = 0, timer = null, previous = new Map();
+
+  document.getElementById("legend").innerHTML = Object.values(STATUS).map(([label, v]) => `<span style="--c: var(${v})">${label}</span>`).join("");
+
+  function renderNav() {
+    document.getElementById("steps").innerHTML = run.events.map((e, i) =>
+      `<li data-i="${i}" class="${i === index ? "active" : ""}"><span class="time">${e.at.slice(11, 16)} UTC</span><span class="phase ${e.phase}">${e.phase.replace("_", " ")}</span><span class="title">${esc(e.title)}</span></li>`).join("");
+  }
+
+  function lineClass(line) {
+    if (/^Read by /.test(line)) return "code";
+    if (/^Red flags|^Hold /.test(line)) return "flag";
+    if (/Note for the ops lead/.test(line)) return "note";
+    if (/: rejected|^Approved by|paid to the account/.test(line)) return "ok";
+    if (/^\s/.test(line)) return "indent";
+    return "";
+  }
+
+  function render() {
+    const e = run.events[index];
+    renderNav();
+    let stats = "";
+    if (e.phase === "result" && e.data) {
+      const s = e.data;
+      stats = `<div class="stats">
+        <div class="stat"><div class="n">${s.paidOnPayday}/${s.contractors}</div><div class="l">paid on payday, each from its own employer</div></div>
+        <div class="stat"><div class="n">${s.heldForFraud}</div><div class="l">${s.releasedAfterApproval ? "diversion stopped; paid to the account on file after approval" : "held as suspected payroll diversion"}</div></div>
+        <div class="stat"><div class="n">${s.escalatedCutoff}</div><div class="l">escalated: cut-off already passed</div></div>
+        <div class="stat"><div class="n">${s.returnsRepaid}</div><div class="l">bank return re-paid exactly once</div></div>
+        <div class="stat"><div class="n">${s.walletConversions + s.payoutLinkedFx}</div><div class="l">FX at locked quotes (net gap only)</div></div>
+        <div class="stat"><div class="n">${s.apiCalls}</div><div class="l">API calls in the audit log</div></div>
+      </div>`;
+    }
+    document.getElementById("step").innerHTML =
+      `<span class="phase ${e.phase}" style="margin-left:0">${e.phase.replace("_", " ")}</span> <span class="time" style="color:var(--muted)">${e.at.slice(11, 16)} UTC</span>
+       <h2>${esc(e.title)}</h2>
+       <ul class="lines">${e.lines.map((l) => `<li class="${lineClass(l)}">${esc(l)}</li>`).join("")}</ul>${stats}`;
+
+    const board = document.getElementById("board");
+    const snap = e.snapshot;
+    if (!snap) { board.innerHTML = ""; return; }
+    const now = new Map();
+    board.innerHTML = snap.employers.map((emp) => {
+      const wallet = Object.entries(emp.balances).map(([c, v]) => `<b>${fmt(v, c, true)}</b>`).join(" · ") || "<b>empty</b>";
+      const chips = emp.contractors.map((c) => {
+        const [label, color] = STATUS[c.status] ?? STATUS.pending;
+        now.set(c.id, c.status);
+        const changed = previous.has(c.id) && previous.get(c.id) !== c.status ? " changed" : "";
+        return `<div class="chip${changed}" style="border-left-color: var(${color})" title="${esc(c.note ?? label)}">
+          <span>${flag(c.country)}</span>
+          <span class="who">${esc(c.name)}<br><span class="amt">${fmt(c.amount, c.currency)}</span><span class="st" style="color: var(${color})">${label}</span></span></div>`;
+      }).join("");
+      return `<div class="employer"><h3>${esc(emp.name)}</h3><div class="wallet">Own wallet: ${wallet}</div><div class="chips">${chips}</div></div>`;
+    }).join("");
+    previous = now;
+    document.getElementById("prev").disabled = index === 0;
+    document.getElementById("next").disabled = index === run.events.length - 1;
+  }
+
+  function go(i) { index = Math.max(0, Math.min(run.events.length - 1, i)); render(); }
+  function stop() { clearInterval(timer); timer = null; document.getElementById("play").textContent = "▶ Play"; }
+  document.getElementById("prev").onclick = () => { stop(); go(index - 1); };
+  document.getElementById("next").onclick = () => { stop(); go(index + 1); };
+  document.getElementById("play").onclick = () => {
+    if (timer) return stop();
+    document.getElementById("play").textContent = "❚❚ Pause";
+    if (index === run.events.length - 1) go(0);
+    timer = setInterval(() => (index < run.events.length - 1 ? go(index + 1) : stop()), 6000);
+  };
+  document.getElementById("steps").onclick = (ev) => { const li = ev.target.closest("li"); if (li) { stop(); go(Number(li.dataset.i)); } };
+  document.addEventListener("keydown", (ev) => { if (ev.key === "ArrowRight") { stop(); go(index + 1); } if (ev.key === "ArrowLeft") { stop(); go(index - 1); } });
+
+  const which = new URLSearchParams(location.search).get("run") === "live" ? "live" : "offline";
+  document.getElementById(`run-${which}`).classList.add("primary");
+  document.getElementById("run-offline").onclick = () => { location.search = ""; };
+  document.getElementById("run-live").onclick = () => { location.search = "?run=live"; };
+  fetch(which === "live" ? "demo-run-live.json" : "demo-run.json").then((r) => r.json()).then((data) => {
+    run = data;
+    document.getElementById("sub").textContent = `Payday ${run.events[0].at.slice(0, 10)} · ${run.environment} · reader: ${run.reader ?? "rules"}`;
+    render();
+  }).catch(() => { document.getElementById("sub").textContent = which === "live" ? "No live run found" : "No offline run yet: run npm run demo, or open the Live sandbox run"; });
+</script>
+</body>
+</html>

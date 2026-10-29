@@ -69,11 +69,12 @@ The model reads, the code decides, the API moves the money.
 
 ## Open setup items
 
-Remind the user of unchecked items in the README "Setup checklist" (webhook secret), especially before starting work that needs them.
+A live webhook subscription is optional (needs a public URL and `AWX_WEBHOOK_SECRET`); the receiver is built and tested offline.
 
 ## Commands
 
 - `npm run evidence`: writes `docs/evidence` (live timeline, full audit CSV, isolation checks, fee charges read back) from the latest `data/live-*.db`
+- `npm run site`: copies the console and both runs into `docs/console` for GitHub Pages (main, `/docs`); re-run after `npm run demo` / `npm run evidence`
 - `npm run webhooks`: webhook receiver on port 4322 (needs `AWX_WEBHOOK_SECRET` and a tunnel)
 
 - `npm run check`: read-only sandbox readiness check (login, global accounts, balances, connected-account access)
