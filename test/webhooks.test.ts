@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { Store } from "../src/executor/store.ts";
+import type { AddressInfo } from "node:net";
 import { signWebhook, verifySignature, WebhookReceiver } from "../src/webhooks/airwallex.ts";
+import { startWebhookServer, WEBHOOK_PATH } from "../src/webhooks/server.ts";
 
 const SECRET = "whsec_test";
 const NOW = 1_793_000_000_000;
@@ -22,6 +24,14 @@ const failed = {
 const receiver = () => new WebhookReceiver({ secret: SECRET, store: new Store(), employerByAccount: new Map([["acct_contoso", "emp_b"]]), now: () => NOW });
 
 describe("webhook signature", () => {
+  it("accepts a delivery signed by any of the subscriptions' secrets, and no other", () => {
+    const r = new WebhookReceiver({ secret: ["whsec_platform", SECRET], store: new Store(), employerByAccount: new Map([["acct_contoso", "emp_b"]]), now: () => NOW });
+    const d = delivery(failed);
+    expect(r.receive(d.headers, d.rawBody).outcome).toBe("processed");
+    const other = delivery({ ...failed, id: "evt_2" }, { secret: "whsec_other" });
+    expect(r.receive(other.headers, other.rawBody).outcome).toBe("bad_signature");
+  });
+
   it("accepts the documented HMAC-SHA256 of x-timestamp + raw body", () => {
     const d = delivery(failed);
     expect(verifySignature(SECRET, d.headers, d.rawBody, NOW)).toBe("ok");
@@ -90,5 +100,22 @@ describe("webhook receiver", () => {
     expect(r.receive(wrapped.headers, wrapped.rawBody).transfer?.transferId).toBe("tr_1");
     const other = delivery({ ...failed, id: "evt_4", name: "deposit.settled" });
     expect(r.receive(other.headers, other.rawBody).outcome).toBe("ignored");
+  });
+});
+
+describe("webhook HTTP endpoint", () => {
+  it("verifies the raw body as delivered and answers 200, or 400 for a bad signature", async () => {
+    const r = new WebhookReceiver({ secret: SECRET, store: new Store(), employerByAccount: new Map([["acct_contoso", "emp_b"]]), now: Date.now });
+    const server = await startWebhookServer(r, 0);
+    const url = `http://127.0.0.1:${(server.address() as AddressInfo).port}${WEBHOOK_PATH}`;
+    const post = (event: object, secret = SECRET) => {
+      const body = JSON.stringify(event);
+      const timestamp = String(Date.now());
+      return fetch(url, { method: "POST", body, headers: { "x-timestamp": timestamp, "x-signature": signWebhook(secret, timestamp, body) } });
+    };
+    expect((await post(failed)).status).toBe(200);
+    expect((await post({ ...failed, id: "evt_9" }, "whsec_wrong")).status).toBe(400);
+    expect(r.received.map((x) => x.outcome)).toEqual(["processed", "bad_signature"]);
+    server.close();
   });
 });

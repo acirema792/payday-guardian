@@ -2,6 +2,8 @@
 // Run: npm run demo                    (offline bank, rule-based reader; deterministic, no credentials)
 //      npm run demo -- --reader claude (offline bank, Claude reads the messages; needs ANTHROPIC_API_KEY)
 //      npm run demo:live -- --reader claude (Airwallex sandbox, Kit 6 connected accounts from npm run provision)
+//        add --webhook-url https://<tunnel to localhost:4322> to verify live payout.transfer webhooks;
+//        the Metal instant rail joins when npm run metal:setup has run and METAL_RPC_URL is set
 import { mkdirSync, writeFileSync } from "node:fs";
 import { claudeInterpreter, type Reading } from "../src/agent/claude-interpreter.ts";
 import { claudeExplainer } from "../src/agent/explainer.ts";
@@ -12,6 +14,7 @@ import { type DemoEvent, runDemo } from "../src/demo/runner.ts";
 const useClaude = process.argv.includes("--reader") && process.argv[process.argv.indexOf("--reader") + 1] === "claude";
 const readings = new Map<string, { reading?: Reading; note: string }>();
 const live = process.argv.includes("--live");
+const webhookUrl = process.argv.includes("--webhook-url") ? process.argv[process.argv.indexOf("--webhook-url") + 1] : undefined;
 const readerOptions = (
   useClaude
     ? {
@@ -27,7 +30,7 @@ const readerOptions = (
     : {}
 ) as Parameters<typeof offlineEnvironment>[0];
 const env: DemoEnvironment = live
-  ? await liveEnvironment({ ...readerOptions, log: (line) => console.log(`[setup] ${line}`) })
+  ? await liveEnvironment({ ...readerOptions, webhookUrl, log: (line) => console.log(`[setup] ${line}`) })
   : await offlineEnvironment(readerOptions);
 
 const events: DemoEvent[] = [];
@@ -57,3 +60,4 @@ writeFileSync(
 );
 console.log(`Timeline written to ${out}`);
 env.store.close();
+process.exit(0); // a live run may hold the webhook receiver open

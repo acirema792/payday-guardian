@@ -3,11 +3,11 @@ import type { Currency } from "./money.ts";
 
 // What a person actually saw when approving. Any change to these fields invalidates the approval.
 export interface ApprovalSubject {
-  action: "conversion" | "payout" | "release_hold" | "platform_fee";
+  action: "conversion" | "payout" | "release_hold" | "platform_fee" | "instant_advance";
   employerAccountId: string;
   amountMinor: bigint;
   currency: Currency;
-  counterparty: string; // beneficiary id, or the currency bought for a conversion
+  counterparty: string; // beneficiary id, the currency bought for a conversion, or a payout address
   evidence: string[]; // ids or hashes of the documents shown
 }
 

@@ -20,7 +20,8 @@
     "demo:live": "node --env-file=.env scripts/demo.ts --live",
     "webhooks": "node --env-file=.env scripts/webhook-server.ts",
     "evidence": "node --env-file-if-exists=.env scripts/export-evidence.ts",
-    "site": "node scripts/build-site.ts"
+    "site": "node scripts/build-site.ts",
+    "metal:setup": "node --env-file=.env scripts/metal-setup.ts"
   },
   "devDependencies": {
     "@types/node": "^24.19.2",
@@ -29,6 +30,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "0.132.1",
+    "@metalntwx/metal-agent": "0.3.3",
     "zod": "4.6.6"
   },
   "license": "MIT"

@@ -51,6 +51,13 @@ export function sellAmountFor(buyMinor: bigint, buy: Currency, sell: Currency, r
   return (numerator + denominator - 1n) / denominator;
 }
 
+// How much `buy` currency `sellMinor` of `sell` currency buys, rounded down so it never exceeds what is paid.
+// `rate` is units of sell currency per 1 unit of buy currency, as in sellAmountFor.
+export function buyAmountFor(sellMinor: bigint, sell: Currency, buy: Currency, rate: string): bigint {
+  if (sellMinor <= 0n) return 0n;
+  return (sellMinor * RATE_SCALE * 10n ** BigInt(exponent(buy))) / (parseRate(rate) * 10n ** BigInt(exponent(sell)));
+}
+
 export function sum(values: Iterable<bigint>): bigint {
   let total = 0n;
   for (const v of values) total += v;

@@ -2,11 +2,12 @@ import { readBalances } from "../airwallex/api.ts";
 import { type ExceptionFacts, templateExplainer } from "../agent/explainer.ts";
 import { type InboundMessage, matchByName } from "../agent/messages.ts";
 import { collectPlatformFee, executeEmployerPlan, type ExecuteInput, type PayoutOutcome, repayReturnedTransfer } from "../executor/execute.ts";
+import { type AdvanceDecision, planInstantAdvance } from "../policy/advance.ts";
 import { approve, type ApprovalSubject, isApproved, subjectHash } from "../policy/approval.ts";
 import { sum, toMajor, toMinor } from "../policy/money.ts";
 import { planEmployerPayroll } from "../policy/planner.ts";
 import type { EmployerPlan, HoldReason } from "../policy/types.ts";
-import { type ContractorProfile, contractorsOf, PAYDAY, policyConfig } from "../scenario/seed.ts";
+import { type ContractorProfile, contractorsOf, instantAdvanceConfig, PAYDAY, policyConfig } from "../scenario/seed.ts";
 import type { DemoEnvironment } from "./environment.ts";
 
 // The 5-minute demo as code: Goal -> Plan -> New information -> Revised decision -> Result.
@@ -15,7 +16,7 @@ import type { DemoEnvironment } from "./environment.ts";
 
 export type Phase = "goal" | "plan" | "new_info" | "decision" | "approval" | "action" | "result";
 
-export type ContractorStatus = "pending" | "planned" | "short" | "held_fraud" | "sent" | "paid" | "returned" | "repaid" | "escalated" | "blocked";
+export type ContractorStatus = "pending" | "planned" | "short" | "held_fraud" | "sent" | "paid" | "returned" | "repaid" | "escalated" | "advanced" | "blocked";
 
 // State of every wallet and payout after a step, for the console.
 export interface Snapshot {
@@ -42,6 +43,7 @@ export interface DemoSummary {
   heldForFraud: number;
   releasedAfterApproval: number;
   escalatedCutoff: number;
+  instantAdvances: number;
   returnsRepaid: number;
   walletConversions: number;
   payoutLinkedFx: number;
@@ -87,6 +89,9 @@ export const callLog = {
   by: "Ops lead",
   note: "Called Maria Garcia at 04:45 on the phone number on file. Maria did not send the email, and the bank account on file is unchanged.",
 };
+// An address on no mandate, for probing the chain's own limits.
+const PROBE_ADDRESS = "0x000000000000000000000000000000000000dEaD";
+const COUNTRY_ADJECTIVE: Record<string, string> = { PH: "Philippine" };
 // Scripted stand-in for the person who approves in this demo.
 const DEMO_APPROVER = "ops-lead@platform.example (scripted approver)";
 
@@ -121,6 +126,7 @@ export async function runDemo(env: DemoEnvironment, emit: (e: DemoEvent) => void
   let heldForRelease: ContractorProfile | undefined;
   const sent = new Map<string, { runId: string; outcome: Extract<PayoutOutcome, { status: "sent" }> }>();
   const escalations: string[] = [];
+  const escalationReasons = new Map<string, HoldReason[]>();
   let heldForFraud = 0;
   let returnsRepaid = 0;
   let walletConversions = 0;
@@ -236,7 +242,10 @@ export async function runDemo(env: DemoEnvironment, emit: (e: DemoEvent) => void
         if (profiles.get(o.contractorId)!.currency !== "USD" && policyConfig.payoutLinkedFx.includes(profiles.get(o.contractorId)!.currency)) payoutLinkedFx += 1;
       }
       if (o.status === "held" && o.reasons.some((r) => r.code === "unverified_instruction_channel")) heldForFraud += 1;
-      if (o.status === "held" && o.reasons.some((r) => r.code === "cutoff_missed")) escalations.push(o.contractorId);
+      if (o.status === "held" && o.reasons.some((r) => r.code === "cutoff_missed")) {
+        escalations.push(o.contractorId);
+        escalationReasons.set(o.contractorId, o.reasons);
+      }
     }
     const count = (s: string) => report.payouts.filter((o) => o.status === s).length;
     const methods = report.payouts.flatMap((o) => (o.status === "sent" ? [o.method] : []));
@@ -388,8 +397,17 @@ export async function runDemo(env: DemoEnvironment, emit: (e: DemoEvent) => void
       setStatus(id, "returned", "BENEFICIARY_BANK_RETURNED");
     }
   }
+  const isReturnEvent = (h: { transfer?: { name: string; transferId: string } }) =>
+    h.transfer?.name === "payout.transfer.failed" && h.transfer.transferId === returned?.[1].outcome.transferId;
+  // Live deliveries arrive asynchronously; wait a bounded time for the return's own event.
+  if (env.webhooks && env.webhookWaitMs) {
+    const started = Date.now();
+    while (!env.webhooks.received.slice(hooksBefore).some(isReturnEvent) && Date.now() - started < env.webhookWaitMs) {
+      await new Promise((r) => setTimeout(r, 1000));
+    }
+  }
   const hooks = env.webhooks?.received.slice(hooksBefore) ?? [];
-  const failedHook = hooks.find((h) => h.transfer?.name === "payout.transfer.failed" && h.transfer.transferId === returned?.[1].outcome.transferId);
+  const failedHook = hooks.find(isReturnEvent);
   const returnLines = [`${inbox.bankReturn.from}: ${inbox.bankReturn.body}`];
   if (env.webhooks) {
     returnLines.push(
@@ -450,8 +468,22 @@ export async function runDemo(env: DemoEnvironment, emit: (e: DemoEvent) => void
     setStatus(id, "paid");
   }
   if (lateSent.length) lateLines.push(`${lateSent.length} late transfers reached PAID before their local cut-offs.`);
+  const advances = new Map<string, Extract<AdvanceDecision, { status: "offer" }>>();
   for (const id of escalations) {
     const c = profiles.get(id)!;
+    const rail = env.instantRails?.[c.employerId];
+    const optIn = rail?.optIns[id];
+    const advance = planInstantAdvance({
+      contractor: c,
+      holdReasons: escalationReasons.get(id) ?? [],
+      optIn,
+      usdRates: env.rates,
+      payday: at("00:00"),
+      fraudWindowDays: policyConfig.fraudWindowDays,
+      config: instantAdvanceConfig,
+    });
+    const window = `the next ${COUNTRY_ADJECTIVE[c.country] ?? c.country} window`;
+    if (advance.status === "offer") advances.set(id, advance);
     const note = await explainer.explain({
       kind: "cutoff_escalation",
       person: c.name,
@@ -459,11 +491,77 @@ export async function runDemo(env: DemoEnvironment, emit: (e: DemoEvent) => void
       amount: money(c.amountMinor, c.currency),
       reasons: ["the employer's funds cleared at 06:40 UTC", "the Philippine cut-offs passed (LOCAL 06:30 UTC, SWIFT 06:00 UTC)"],
       evidence: ["top-up email at 06:40 UTC", "wallet balance read at 06:40 UTC"],
-      options: ["pay in the next Philippine window and tell the contractor now", "use an instant rail if the contractor has opted in"],
+      options:
+        advance.status === "offer" && rail && optIn
+          ? [
+              `approve an instant ${money(advance.advanceMinor, "USD")} advance on ${rail.label} to the address ${c.name} gave when opting in through the verified portal on ${optIn.optedInAt.toISOString().slice(0, 10)}, and pay the remaining ${money(advance.remainderMinor, c.currency)} in ${window}`,
+              `pay all of it in ${window} and tell ${c.name} now`,
+            ]
+          : [`pay in ${window} and tell the contractor now`, "use an instant rail if the contractor has opted in"],
     });
     lateLines.push(`Escalate ${c.name}. Note for the ops lead, by ${explainer.name}: ${note}`);
+    if (advance.status === "none" && rail) lateLines.push(`  No instant advance for ${c.name}: ${advance.reason}.`);
   }
   await say("06:40", "decision", "Revised: pay what can still land today, escalate what cannot", lateLines);
+
+  // A person approves an instant advance; the agent pays it under the employer's Metal mandate.
+  let instantAdvances = 0;
+  let advancedMinor = 0n;
+  const short = (address: string) => `${address.slice(0, 6)}…${address.slice(-4)}`;
+  const usdz = (minor: bigint) => `${toMajor(minor, "USD")} USDZ`;
+  const refusal = (r: Awaited<ReturnType<NonNullable<DemoEnvironment["instantRails"]>[string]["pull"]>>) =>
+    r.outcome === "refused" ? `Metal refused, ${r.sent ? "refusal recorded on chain" : "nothing sent"}: ${r.reason}` : `NOT REFUSED (${r.outcome}), CHECK`;
+  for (const [id, advance] of advances) {
+    const c = profiles.get(id)!;
+    const e = employer(c.employerId);
+    const rail = env.instantRails![c.employerId];
+    const optIn = rail.optIns[id];
+    const evidence = [inbox.topUp.id, `optin:${id}:${optIn.optedInAt.toISOString()}`];
+    const subject = (counterparty: string, amountMinor = advance.advanceMinor): ApprovalSubject => ({
+      action: "instant_advance", employerAccountId: rail.account, amountMinor, currency: instantAdvanceConfig.token, counterparty, evidence,
+    });
+    const requested = subject(`${id}:${advance.address}`);
+    const approval = approve(requested, DEMO_APPROVER, at("06:45"));
+    const mandate = await rail.status();
+    const paymentId = `payday-${PAYDAY}:advance:${id}`;
+    const lines = [
+      `${c.name} opted in to instant advances on ${optIn.optedInAt.toISOString().slice(0, 10)} through the verified portal, to ${short(advance.address)}. ${e.name} caps an advance at ${money(instantAdvanceConfig.maxAdvanceMinor, "USD")}.`,
+      `Approval requested: advance ${usdz(advance.advanceMinor)} from ${e.name}'s Metal account ${short(rail.account)} to ${c.name}. Bound to SHA-256 ${subjectHash(requested).slice(0, 12)}…`,
+      `Approved by ${DEMO_APPROVER}.`,
+      `Mandate on ${e.name}'s Metal account, enforced on chain: pays only ${c.name}, at most ${usdz(mandate.capMinor)} per payment and ${usdz(mandate.budgetMinor)} in total (spent ${usdz(mandate.spentMinor)}).`,
+    ];
+    const probes: { probe: string; result: unknown }[] = [];
+    const probe = async (label: string, to: string, amountMinor: bigint, suffix: string) => {
+      const r = await rail.pull(to, amountMinor, `${paymentId}:probe-${suffix}`);
+      probes.push({ probe: label, result: r });
+      lines.push(`Probe, bypassing our policy code: ${label}. ${refusal(r)}`);
+    };
+    await probe(`${usdz(advance.advanceMinor)} to ${short(PROBE_ADDRESS)}, an address not on the mandate`, PROBE_ADDRESS, advance.advanceMinor, "payee");
+    await probe(`${usdz(advance.advanceMinor + 1n)} to ${c.name}, one cent over the cap`, advance.address, advance.advanceMinor + 1n, "cap");
+    let paid: Awaited<ReturnType<typeof rail.pull>> | undefined;
+    let again: Awaited<ReturnType<typeof rail.pull>> | undefined;
+    let verification: Awaited<ReturnType<typeof rail.verify>> | undefined;
+    if (isApproved(approval, subject(`${id}:${advance.address}`))) {
+      paid = await rail.pull(advance.address, advance.advanceMinor, paymentId);
+      if (paid.outcome === "paid") {
+        instantAdvances += 1;
+        advancedMinor += advance.advanceMinor;
+        lines.push(`Paid ${usdz(advance.advanceMinor)} to ${c.name} on ${rail.label}: transaction ${short(paid.transaction)}${paid.explorer ? ` ${paid.explorer}` : ""}`);
+        again = await rail.pull(advance.address, advance.advanceMinor, paymentId);
+        lines.push(`Same pull again, same payment id: ${again.outcome === "paid" && again.again && again.transaction === paid.transaction ? "already paid, nothing sent" : "CHECK"}.`);
+        await probe(`another ${usdz(advance.advanceMinor)} to ${c.name} under a new payment id`, advance.address, advance.advanceMinor, "budget");
+        verification = await rail.verify();
+        lines.push(`Verified from the chain alone (mandate verify): ${verification.verified ? "yes" : "NO"}, ${verification.payments.filter((p) => p.startsWith("payment")).length} payment under this mandate.`);
+        lines.push(`The remaining ${money(advance.remainderMinor, c.currency)} goes in the next ${COUNTRY_ADJECTIVE[c.country] ?? c.country} LOCAL window; ${c.name} is told now.`);
+        setStatus(id, "advanced", `${usdz(advance.advanceMinor)} advance paid on ${rail.label} (${short(paid.transaction)}); ${money(advance.remainderMinor, c.currency)} in the next window`);
+      } else {
+        lines.push(`Advance not paid: ${paid.outcome}${"reason" in paid && paid.reason ? `, ${paid.reason}` : ""}. ${c.name} stays escalated.`);
+      }
+    }
+    await say("06:45", "approval", `Approval: instant advance for ${c.name} on ${rail.label}`, lines, {
+      metal: { rail: rail.label, account: rail.account, mandate: mandate.reference, payee: advance.address, amount: toMajor(advance.advanceMinor, "USD"), paymentId, paid, again, probes, verification },
+    });
+  }
 
   // Result
   const finalBalances: DemoSummary["finalBalances"] = {};
@@ -478,6 +576,7 @@ export async function runDemo(env: DemoEnvironment, emit: (e: DemoEvent) => void
     heldForFraud,
     releasedAfterApproval,
     escalatedCutoff: escalations.length,
+    instantAdvances,
     returnsRepaid,
     walletConversions,
     payoutLinkedFx,
@@ -488,7 +587,7 @@ export async function runDemo(env: DemoEnvironment, emit: (e: DemoEvent) => void
   };
   await say("07:00", "result", "Payday report", [
     `${summary.paidOnPayday}/${total} contractors paid on payday (${((summary.paidOnPayday / total) * 100).toFixed(1)}%), every one from their own employer's wallet.`,
-    `${heldForFraud} suspected diversion stopped${releasedAfterApproval ? `, then released to the account on file after a person approved` : ""}; ${escalations.length} escalated because their cut-off had passed; ${returnsRepaid} bank return re-paid once.`,
+    `${heldForFraud} suspected diversion stopped${releasedAfterApproval ? `, then released to the account on file after a person approved` : ""}; ${escalations.length} escalated because their cut-off had passed${instantAdvances ? ` (${instantAdvances} given an instant ${usd(advancedMinor)} advance on Metal testnet, the rest in the next window)` : ""}; ${returnsRepaid} bank return re-paid once.`,
     `${walletConversions} wallet conversions (net gap only) and ${payoutLinkedFx} payout-linked FX payouts at locked quotes.`,
     `Platform fees: ${feesCollected} collected (charges read back SETTLED), ${feesDeferred} deferred until that employer's wages were covered.`,
     ...feeIssues.map((f) => `Fee not confirmed, ${f}`),

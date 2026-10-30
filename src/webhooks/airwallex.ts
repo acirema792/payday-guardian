@@ -57,15 +57,16 @@ export function verifySignature(secret: string, headers: WebhookHeaders, rawBody
 }
 
 export class WebhookReceiver {
-  private readonly secret: string;
+  private readonly secrets: string[];
   private readonly store: Store;
   private readonly employerByAccount: Map<string, string>;
   private readonly now: () => number;
   readonly received: WebhookResult[] = [];
 
-  constructor(options: { secret: string; store: Store; employerByAccount: Map<string, string>; now?: () => number }) {
-    if (!options.secret) throw new Error("Webhook secret is required");
-    this.secret = options.secret;
+  // One secret per subscription: the platform's and each employer account's.
+  constructor(options: { secret: string | string[]; store: Store; employerByAccount: Map<string, string>; now?: () => number }) {
+    this.secrets = [options.secret].flat().filter(Boolean);
+    if (!this.secrets.length) throw new Error("Webhook secret is required");
     this.store = options.store;
     this.employerByAccount = options.employerByAccount;
     this.now = options.now ?? Date.now;
@@ -78,7 +79,8 @@ export class WebhookReceiver {
   }
 
   private handle(headers: WebhookHeaders, rawBody: string): WebhookResult {
-    const check = verifySignature(this.secret, headers, rawBody, this.now());
+    const checks = this.secrets.map((secret) => verifySignature(secret, headers, rawBody, this.now()));
+    const check = checks.includes("ok") ? "ok" : checks.includes("stale") ? "stale" : "bad_signature";
     if (check !== "ok") return { http: 400, outcome: check };
 
     let event: WebhookEvent;

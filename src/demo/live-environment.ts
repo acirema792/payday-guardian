@@ -4,6 +4,10 @@ import { AirwallexClient } from "../airwallex/client.ts";
 import type { Explainer } from "../agent/explainer.ts";
 import { type Interpreter, ruleInterpreter } from "../agent/messages.ts";
 import { Store } from "../executor/store.ts";
+import { MetalCliRail } from "../metal/cli.ts";
+import { WebhookReceiver } from "../webhooks/airwallex.ts";
+import { startWebhookServer } from "../webhooks/server.ts";
+import { pointSubscriptions } from "../webhooks/subscriptions.ts";
 import { toMajor, toMinor } from "../policy/money.ts";
 import { sandboxSimulator } from "../sandbox/simulator.ts";
 import { employers as seedEmployers } from "../scenario/seed.ts";
@@ -22,6 +26,8 @@ export interface LiveOptions {
   explainer?: Explainer;
   readingNotes?: (messageId: string) => string[];
   log?: (line: string) => void;
+  // Public HTTPS URL of a tunnel to localhost:4322: subscribes this run to live payout.transfer webhooks.
+  webhookUrl?: string;
   // Allow Contoso/Fabrikam to start with money left over from an earlier run (the story's numbers then differ).
   allowDirtyBaseline?: boolean;
 }
@@ -73,6 +79,27 @@ export async function liveEnvironment(options: LiveOptions = {}): Promise<DemoEn
   }
   log(`Live USD rates: ${Object.entries(rates).map(([c, r]) => `${c} ${Number(r).toPrecision(5)}`).join(", ")}`);
 
+  // Live webhooks: re-point the subscriptions to this run's tunnel and verify every delivery.
+  let webhooks: WebhookReceiver | undefined;
+  if (options.webhookUrl) {
+    const employerByAccount = new Map(employers.map((e) => [e.accountId, e.employerId]));
+    const subscriptions = await pointSubscriptions(platform, ["platform", ...employerByAccount.keys()], options.webhookUrl, log);
+    if (!subscriptions.length) throw new Error("No webhook subscription could be created; run without --webhook-url.");
+    webhooks = new WebhookReceiver({ secret: subscriptions.map((s) => s.secret), store, employerByAccount });
+    await startWebhookServer(webhooks, Number(process.env.WEBHOOK_PORT ?? 4322));
+    log(`Webhooks: ${subscriptions.length} subscriptions (${subscriptions.map((s) => s.scope).join(", ")}) deliver to this run`);
+  }
+
+  // Metal testnet, when npm run metal:setup has run and METAL_RPC_URL is set.
+  const metal = MetalCliRail.fromEnv();
+  if (metal) {
+    const mandate = await metal.status();
+    if (!mandate.bound || mandate.revoked) throw new Error("The Metal mandate is not bound. Run npm run metal:setup.");
+    log(`Metal testnet: ${employers.find((e) => e.employerId === metal.employerId)?.name} account ${metal.account}, mandate spent ${toMajor(mandate.spentMinor, "USD")} of ${toMajor(mandate.budgetMinor, "USD")} USDZ`);
+  } else {
+    log("Metal testnet: not set up on this run (npm run metal:setup and METAL_RPC_URL); a missed cut-off is escalated only.");
+  }
+
   return {
     label: "Airwallex sandbox (live, Kit 6 connected accounts)",
     employers,
@@ -86,5 +113,8 @@ export async function liveEnvironment(options: LiveOptions = {}): Promise<DemoEn
     readingNotes: options.readingNotes,
     explainer: options.explainer,
     fundsSettleTimeoutMs: 90_000,
+    instantRails: metal ? { [metal.employerId]: metal } : undefined,
+    webhooks,
+    webhookWaitMs: webhooks ? 90_000 : undefined,
   };
 }

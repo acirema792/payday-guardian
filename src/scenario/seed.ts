@@ -1,3 +1,4 @@
+import type { InstantAdvanceConfig, InstantRailOptIn } from "../policy/advance.ts";
 import { toMinor } from "../policy/money.ts";
 import type { Contractor, Employer, Priority, PolicyConfig } from "../policy/types.ts";
 import { CORRIDORS, type BeneficiaryTemplate, type CorridorKey } from "./corridors.ts";
@@ -130,3 +131,11 @@ export const policyConfig: PolicyConfig = {
 export function contractorsOf(employerId: string): ContractorProfile[] {
   return contractors.filter((c) => c.employerId === employerId);
 }
+
+// Optional instant rail (Metal testnet): an employer setting caps the advance, and only contractors
+// who opted in through the verified portal, well before payday, can receive one.
+export const instantAdvanceConfig: InstantAdvanceConfig = { token: "USDZ", maxAdvanceMinor: toMinor("50", "USD") };
+
+export const instantRailOptIns: Record<string, Omit<InstantRailOptIn, "address">> = {
+  emp_b_andrea_cruz: { optedInAt: new Date("2026-10-02T15:00:00Z"), channel: "verified_portal" },
+};

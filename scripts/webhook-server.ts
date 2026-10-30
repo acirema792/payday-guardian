@@ -1,42 +1,37 @@
 // Receives Airwallex webhooks for the provisioned employers (data/tenants.json) on
 // http://localhost:4322/webhooks/airwallex. Verifies the signature over the raw body, answers at
 // once, dedupes on event id in data/webhooks.db and prints each payout.transfer event per employer.
-// Airwallex needs a public HTTPS URL: expose this port with a tunnel, then create the subscription in
-// the sandbox web app (Developer > Webhooks) and put its secret in AWX_WEBHOOK_SECRET.
-// Run: npm run webhooks
+// Airwallex needs a public HTTPS URL: expose this port with a tunnel and pass it with --url, which
+// creates (or re-points) the subscriptions by API, one on the platform and one per employer account.
+// Run: npm run webhooks -- --url https://<your tunnel>
 import { mkdirSync } from "node:fs";
-import { createServer } from "node:http";
+import { AirwallexClient } from "../src/airwallex/client.ts";
 import { Store } from "../src/executor/store.ts";
 import { employers } from "../src/scenario/seed.ts";
 import { loadTenants } from "../src/scenario/tenants.ts";
 import { WebhookReceiver } from "../src/webhooks/airwallex.ts";
+import { startWebhookServer, WEBHOOK_PATH } from "../src/webhooks/server.ts";
+import { loadSubscriptions, pointSubscriptions } from "../src/webhooks/subscriptions.ts";
 
 const PORT = Number(process.env.WEBHOOK_PORT ?? 4322);
-const secret = process.env.AWX_WEBHOOK_SECRET;
-if (!secret) {
-  console.error("Set AWX_WEBHOOK_SECRET in .env (the subscription's secret from the sandbox web app).");
-  process.exit(1);
-}
+const urlFlag = process.argv.indexOf("--url");
+const publicUrl = urlFlag > 0 ? process.argv[urlFlag + 1] : undefined;
 
 const tenants = loadTenants();
 const employerByAccount = new Map(employers.filter((e) => tenants[e.employerId]?.accountId).map((e) => [tenants[e.employerId].accountId, e.employerId]));
-mkdirSync("data", { recursive: true });
-const receiver = new WebhookReceiver({ secret, store: new Store("data/webhooks.db"), employerByAccount });
+const subscriptions = publicUrl
+  ? await pointSubscriptions(AirwallexClient.fromEnv(), ["platform", ...employerByAccount.keys()], publicUrl, console.log)
+  : loadSubscriptions();
+const secrets = [...subscriptions.map((s) => s.secret), process.env.AWX_WEBHOOK_SECRET ?? ""].filter(Boolean);
+if (!secrets.length) {
+  console.error("No webhook subscription yet: open a tunnel to this port and run npm run webhooks -- --url https://<tunnel>.");
+  process.exit(1);
+}
 
-createServer((req, res) => {
-  if (req.method !== "POST" || req.url !== "/webhooks/airwallex") {
-    res.writeHead(404).end();
-    return;
-  }
-  const chunks: Buffer[] = [];
-  req.on("data", (c: Buffer) => chunks.push(c));
-  req.on("end", () => {
-    const header = (name: string) => (Array.isArray(req.headers[name]) ? req.headers[name][0] : req.headers[name]);
-    const result = receiver.receive({ timestamp: header("x-timestamp"), signature: header("x-signature") }, Buffer.concat(chunks).toString("utf8"));
-    res.writeHead(result.http).end();
-    const t = result.transfer;
-    console.log(
-      `${new Date().toISOString()} ${result.outcome} ${result.name ?? ""}${t ? ` ${t.employerId} transfer ${t.transferId} ${t.status}${t.failureType ? ` ${t.failureType}` : ""}` : ""}`,
-    );
-  });
-}).listen(PORT, "127.0.0.1", () => console.log(`Webhook receiver on http://localhost:${PORT}/webhooks/airwallex for ${employerByAccount.size} employers`));
+mkdirSync("data", { recursive: true });
+const receiver = new WebhookReceiver({ secret: secrets, store: new Store("data/webhooks.db"), employerByAccount });
+await startWebhookServer(receiver, PORT, (result) => {
+  const t = result.transfer;
+  console.log(`${new Date().toISOString()} ${result.outcome} ${result.name ?? ""}${t ? ` ${t.employerId} transfer ${t.transferId} ${t.status}${t.failureType ? ` ${t.failureType}` : ""}` : ""}`);
+});
+console.log(`Webhook receiver on http://localhost:${PORT}${WEBHOOK_PATH} for ${employerByAccount.size} employers, ${secrets.length} subscription secrets`);
