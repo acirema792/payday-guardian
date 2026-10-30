@@ -41,6 +41,9 @@ The model reads, the code decides, the API moves the money.
 - `src/policy/`: pure decision code, no I/O. Money is bigint minor units (`money.ts`); `toMajor` only at the API boundary. `planner.ts` builds one employer's plan (tenant guard, fraud holds, cut-off routing, fee-inclusive pricing, net FX gap, shortfall priority, platform fee, funding request). `approval.ts` binds approvals to a hash of what is executed
 - `src/airwallex/api.ts`: typed wrappers (balances, beneficiaries, quotes, conversions, transfers, charges) over the `Api` interface that `TenantClient` implements
 - `src/executor/`: `execute.ts` turns an `EmployerPlan` into API calls (quote-locked FX with a slippage guard, approval gate, beneficiary once per employer, transfers with explicit rails, ambiguous-response recovery by request_id, returned-transfer repay, platform fee). `store.ts` is node:sqlite: operation key -> request_id/result (idempotency) and the audit log of every API call
+- `src/policy/advance.ts`: instant advance for a payout that missed its cut-off (opt-in via verified portal older than the fraud window, never for fraud or shortfall holds, capped by `instantAdvanceConfig`, remainder in the next window)
+- `src/metal/`: the optional instant rail. `rail.ts` is the interface (one Metal account per employer, paid only under a mandate); `cli.ts` wraps Metal's own `metal-agent` CLI (pinned 0.3.3; parses its `key value` output, redacts METAL_RPC_URL); `offline.ts` mirrors its refusals (`mandate_payee_not_listed`, `mandate_cap_exceeded`, `mandate_budget_spent`) and once-per-payment-id
+- `src/webhooks/`: `airwallex.ts` verifies and dedupes (any of several subscription secrets); `server.ts` is the HTTP endpoint; `subscriptions.ts` creates subscriptions by API (platform + each employer account), keeps secrets in `data/webhook-subscriptions.json`, re-points them to a new URL with `/webhooks/{id}/update` (URL is the only updatable field)
 - `src/sandbox/simulator.ts`: the only place sandbox simulation endpoints are called
 - `src/sandbox/offline-bank.ts`: deterministic in-memory multi-account bank mirroring measured sandbox behaviour, for rehearsing and recording the demo without provisioned employer accounts
 - `src/webhooks/airwallex.ts`: webhook receiver (HMAC-SHA256 over `x-timestamp` + raw body, 5-minute window, event-id dedupe in the store, routing by `account_id` to a known employer). The offline bank emits signed `payout.transfer.*` events (each delivered twice) and the runner shows them in moment #3; `npm run webhooks` serves a real subscription
@@ -53,6 +56,12 @@ The model reads, the code decides, the API moves the money.
 - `src/demo/`: `runner.ts` is the demo script as code (goal, plan, new information #1 pooled-deposit trap, #2 diversion email, #3 bank return, #4 late top-up after PH cut-off, result); `environment.ts` builds the offline environment. Executions use one runId per batch (`:b1`, `:b2`) so a later batch can convert again
 - `src/scenario/`: `corridors.ts` (beneficiary shapes validated live for US, GB, DE, MX MXN/USD, PH, IN) and `seed.ts` (3 employers x 12 contractors, policy config)
 - `test/`: vitest. `fixtures.ts` holds the shared policy config and employers; `fake-airwallex.ts` is the in-memory API used by executor tests
+
+## Metal testnet facts (from the pinned packages, 2026-10-30)
+
+- Faucet grants 100 USDZ per address (`metal-agent fund <address> --network testnet`); the console Faucet page grants per signed-in user. USDZ pays gas; `mandate pull` is submitted by Metal's facilitator, which pays its gas
+- `account create`, `mandate bind/renew/status/verify/pull` need the user's own RPC endpoint; `key create`, `fund`, `credential create` do not
+- A mandate budget never resets: `mandate renew --replaces` starts a new one. Pull records live under `~/.metal-agent/pulls/<mandate>/`, so a new mandate per run makes the same payment id pay again on the next run
 
 ## Sandbox facts measured live (2026-10-27)
 
@@ -85,4 +94,6 @@ A live webhook subscription is optional (needs a public URL and `AWX_WEBHOOK_SEC
 - `npm run demo:live -- --reader claude`: the full demo on the real sandbox (Kit 6 connected accounts)
 - `npm run smoke:connected`: live Kit 6 money movement on behalf of employer A, plus platform fee and tenant-isolation check
 - `npm run reader:eval`: live check of the Claude reader on labelled messages (costs a few cents)
+- `npm run metal:setup`: the owner's step for the Metal rail (needs METAL_RPC_URL from https://console-testnet.metalntwx.com): Contoso's Metal account, faucet USDZ, Andrea's synthetic wallet, a fresh mandate (renews the previous). Writes `data/metal/` (keys, not committed). Run before each live demo
+- `npm run demo:live -- --reader claude --webhook-url https://<tunnel>`: also verifies live payout.transfer webhooks (the tunnel is the user's to open; the classifier blocks Claude from opening ingress tunnels)
 - `npm run typecheck`, `npm test`
