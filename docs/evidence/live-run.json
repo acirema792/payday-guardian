@@ -334,23 +334,23 @@
       "title": "Initial plan from live balances",
       "lines": [
         "Northwind Labs: pay 12, hold 0",
-        "  fund at payout 175000.00 PHP for USD 2,780.02",
-        "  fund at payout 490000.00 INR for USD 5,214.35",
-        "  convert 45000.00 MXN for USD 2,412.55",
-        "  convert 7150.00 EUR for USD 8,044.77",
-        "  convert 6550.00 GBP for USD 8,832.99",
+        "  fund at payout 175000.00 PHP for USD 2,781.98",
+        "  fund at payout 490000.00 INR for USD 5,222.72",
+        "  convert 45000.00 MXN for USD 2,420.65",
+        "  convert 7150.00 EUR for USD 8,021.46",
+        "  convert 6550.00 GBP for USD 8,823.58",
         "  platform fee: collect",
         "Contoso Health: pay 7, hold 5",
-        "  fund at payout 495000.00 INR for USD 5,267.56",
-        "  convert 47000.00 MXN for USD 2,519.78",
-        "  convert 3400.00 EUR for USD 3,825.49",
-        "  fund at payout 250000.00 PHP for USD 3,971.45",
+        "  fund at payout 495000.00 INR for USD 5,276.01",
+        "  convert 47000.00 MXN for USD 2,528.24",
+        "  convert 3400.00 EUR for USD 3,814.40",
+        "  fund at payout 250000.00 PHP for USD 3,974.25",
         "  hold Grace Kim: not enough of this employer's own money",
         "  hold Olivia Hughes: not enough of this employer's own money",
         "  hold Harry Patel: not enough of this employer's own money",
         "  hold Felix Wagner: not enough of this employer's own money",
         "  hold Andrea Cruz: not enough of this employer's own money",
-        "  funding request to employer: USD 19,903.53",
+        "  funding request to employer: USD 19,894.31",
         "  platform fee: defer",
         "Fabrikam Studio: pay 0, hold 12",
         "  hold Noah Carter: not enough of this employer's own money",
@@ -365,7 +365,7 @@
         "  hold Liza Garcia: not enough of this employer's own money",
         "  hold Vikram Nair: not enough of this employer's own money",
         "  hold Kavya Menon: not enough of this employer's own money",
-        "  funding request to employer: USD 37,680.35",
+        "  funding request to employer: USD 37,666.92",
         "  platform fee: defer"
       ],
       "snapshot": {
@@ -1054,23 +1054,23 @@
       "title": "Revised: Fabrikam pays everyone; Contoso stays limited to its own wallet",
       "lines": [
         "Fabrikam Studio: pay 12, hold 0",
-        "  fund at payout 171000.00 PHP for USD 2,716.47",
-        "  fund at payout 500000.00 INR for USD 5,320.76",
-        "  convert 46000.00 MXN for USD 2,466.17",
-        "  convert 7050.00 EUR for USD 7,932.25",
-        "  convert 6400.00 GBP for USD 8,630.70",
+        "  fund at payout 171000.00 PHP for USD 2,718.39",
+        "  fund at payout 500000.00 INR for USD 5,329.30",
+        "  convert 46000.00 MXN for USD 2,474.45",
+        "  convert 7050.00 EUR for USD 7,909.27",
+        "  convert 6400.00 GBP for USD 8,621.51",
         "  platform fee: collect",
         "Contoso Health: pay 7, hold 5",
-        "  fund at payout 495000.00 INR for USD 5,267.56",
-        "  convert 47000.00 MXN for USD 2,519.78",
-        "  convert 3400.00 EUR for USD 3,825.49",
-        "  fund at payout 250000.00 PHP for USD 3,971.45",
+        "  fund at payout 495000.00 INR for USD 5,276.01",
+        "  convert 47000.00 MXN for USD 2,528.24",
+        "  convert 3400.00 EUR for USD 3,814.40",
+        "  fund at payout 250000.00 PHP for USD 3,974.25",
         "  hold Grace Kim: not enough of this employer's own money",
         "  hold Olivia Hughes: not enough of this employer's own money",
         "  hold Harry Patel: not enough of this employer's own money",
         "  hold Felix Wagner: not enough of this employer's own money",
         "  hold Andrea Cruz: not enough of this employer's own money",
-        "  funding request to employer: USD 19,903.53",
+        "  funding request to employer: USD 19,894.31",
         "  platform fee: defer"
       ],
       "snapshot": {
@@ -1736,13 +1736,13 @@
       "title": "Revised: hold one payout, not the payroll",
       "lines": [
         "Read by claude (claude-opus-5-5): {\"kind\":\"bank_detail_change_request\",\"personName\":\"Maria Garcia\",\"urgent\":true,\"includesNewAccountDetails\":true}",
-        "Claude's summary: An email claiming to be from Maria Garcia asks for her pay to be sent today to a new CLABE account because her old account was closed.",
-        "Red flags: urgent same-day request; sent from personal gmail address; claims old account was closed; new CLABE provided in email; no verification offered",
+        "Claude's summary: An email claiming to be from Maria Garcia asks to send her pay to a new CLABE account today because her old account was closed.",
+        "Red flags: Same-day urgency to redirect pay; Sent from a free webmail address (gmail.com); Claims old account was closed with no verification; New CLABE provided directly in email",
         "Matched to Maria Garcia (Northwind Labs). The account number in the email is not used.",
         "Hold Maria Garcia: bank-detail change requested on payday; request came by email, not the verified portal.",
         "Everyone else at Northwind Labs is still paid (11 payouts).",
         "Verification request goes to the contact on file, not to maria.garcia.payments@gmail.com.",
-        "Note for the ops lead, by claude (claude-opus-5-5): The payroll agent placed a fraud hold on Maria Garcia's MXN 45,000.00 payout from Northwind Labs after an email from maria.garcia.payments@gmail.com at 04:20 asked to pay a new account today. The agent stopped because the bank-detail change was requested on payday and came by email rather than through the verified portal. Call Maria Garcia on the phone number on file; if the account is unchanged, approve paying the account ending 7771 on file, and never pay the account in the email."
+        "Note for the ops lead, by claude (claude-opus-5-5): The agent held Maria Garcia's MXN 45,000.00 payout from Northwind Labs because an email from maria.garcia.payments@gmail.com at 04:20 asked to pay a new account today. The agent stopped because the bank-detail change was requested on payday and came by email rather than through the verified portal. Call Maria Garcia on the phone number on file, and if the account is unchanged, approve paying the account ending 7771 on file; never pay the account in the email."
       ],
       "snapshot": {
         "employers": [
@@ -2088,7 +2088,7 @@
             "employerId": "emp_a",
             "name": "Northwind Labs",
             "balances": {
-              "USD": "4463.66"
+              "USD": "4485.34"
             },
             "contractors": [
               {
@@ -2098,7 +2098,7 @@
                 "currency": "USD",
                 "amount": "4200.00",
                 "status": "sent",
-                "note": "LOCAL transfer 703f62c3"
+                "note": "LOCAL transfer 55dccb73"
               },
               {
                 "id": "emp_a_ethan_brooks",
@@ -2107,7 +2107,7 @@
                 "currency": "USD",
                 "amount": "3900.00",
                 "status": "sent",
-                "note": "LOCAL transfer 2db20ed7"
+                "note": "LOCAL transfer 19812181"
               },
               {
                 "id": "emp_a_tom_reed",
@@ -2116,7 +2116,7 @@
                 "currency": "GBP",
                 "amount": "3200.00",
                 "status": "sent",
-                "note": "LOCAL transfer acf75c8d"
+                "note": "LOCAL transfer a98e26ad"
               },
               {
                 "id": "emp_a_priya_kapoor",
@@ -2125,7 +2125,7 @@
                 "currency": "GBP",
                 "amount": "3350.00",
                 "status": "sent",
-                "note": "LOCAL transfer be0ae4bc"
+                "note": "LOCAL transfer d58a679b"
               },
               {
                 "id": "emp_a_lena_schmidt",
@@ -2134,7 +2134,7 @@
                 "currency": "EUR",
                 "amount": "3500.00",
                 "status": "sent",
-                "note": "LOCAL transfer c0879995"
+                "note": "LOCAL transfer 2377aa35"
               },
               {
                 "id": "emp_a_jonas_weber",
@@ -2143,7 +2143,7 @@
                 "currency": "EUR",
                 "amount": "3650.00",
                 "status": "sent",
-                "note": "LOCAL transfer 54ba96a6"
+                "note": "LOCAL transfer 176af819"
               },
               {
                 "id": "emp_a_maria_garcia",
@@ -2161,7 +2161,7 @@
                 "currency": "USD",
                 "amount": "2500.00",
                 "status": "sent",
-                "note": "SWIFT transfer 93dd27ea"
+                "note": "SWIFT transfer d6f6ce1d"
               },
               {
                 "id": "emp_a_jose_santos",
@@ -2170,7 +2170,7 @@
                 "currency": "PHP",
                 "amount": "90000.00",
                 "status": "sent",
-                "note": "LOCAL transfer deefc52b"
+                "note": "LOCAL transfer e48c299b"
               },
               {
                 "id": "emp_a_bea_reyes",
@@ -2179,7 +2179,7 @@
                 "currency": "PHP",
                 "amount": "85000.00",
                 "status": "sent",
-                "note": "LOCAL transfer b3f52c56"
+                "note": "LOCAL transfer 67cc0bdb"
               },
               {
                 "id": "emp_a_arjun_mehta",
@@ -2188,7 +2188,7 @@
                 "currency": "INR",
                 "amount": "250000.00",
                 "status": "sent",
-                "note": "LOCAL transfer 53d9bdc3"
+                "note": "LOCAL transfer 09ebf2c9"
               },
               {
                 "id": "emp_a_sneha_iyer",
@@ -2197,7 +2197,7 @@
                 "currency": "INR",
                 "amount": "240000.00",
                 "status": "sent",
-                "note": "LOCAL transfer 6a09db9b"
+                "note": "LOCAL transfer 8ec4050f"
               }
             ]
           },
@@ -2205,7 +2205,7 @@
             "employerId": "emp_b",
             "name": "Contoso Health",
             "balances": {
-              "USD": "1000.31"
+              "USD": "991.78"
             },
             "contractors": [
               {
@@ -2224,7 +2224,7 @@
                 "currency": "USD",
                 "amount": "3800.00",
                 "status": "sent",
-                "note": "LOCAL transfer 3278b021"
+                "note": "LOCAL transfer 123c40c2"
               },
               {
                 "id": "emp_b_olivia_hughes",
@@ -2251,7 +2251,7 @@
                 "currency": "EUR",
                 "amount": "3400.00",
                 "status": "sent",
-                "note": "LOCAL transfer 4f31fa21"
+                "note": "LOCAL transfer 694c63d0"
               },
               {
                 "id": "emp_b_felix_wagner",
@@ -2269,7 +2269,7 @@
                 "currency": "MXN",
                 "amount": "47000.00",
                 "status": "sent",
-                "note": "LOCAL transfer fa93008c"
+                "note": "LOCAL transfer ac3d6427"
               },
               {
                 "id": "emp_b_mateo_torres",
@@ -2278,7 +2278,7 @@
                 "currency": "USD",
                 "amount": "2600.00",
                 "status": "sent",
-                "note": "SWIFT transfer 238d542c"
+                "note": "SWIFT transfer a16719b6"
               },
               {
                 "id": "emp_b_andrea_cruz",
@@ -2296,7 +2296,7 @@
                 "currency": "PHP",
                 "amount": "250000.00",
                 "status": "sent",
-                "note": "LOCAL transfer 0a7e43ea"
+                "note": "LOCAL transfer 10f1f7fe"
               },
               {
                 "id": "emp_b_rahul_verma",
@@ -2305,7 +2305,7 @@
                 "currency": "INR",
                 "amount": "260000.00",
                 "status": "sent",
-                "note": "LOCAL transfer 8b8c1a72"
+                "note": "LOCAL transfer 417b1f9d"
               },
               {
                 "id": "emp_b_ananya_rao",
@@ -2314,7 +2314,7 @@
                 "currency": "INR",
                 "amount": "235000.00",
                 "status": "sent",
-                "note": "LOCAL transfer ecee1db0"
+                "note": "LOCAL transfer 5d863654"
               }
             ]
           },
@@ -2322,7 +2322,7 @@
             "employerId": "emp_c",
             "name": "Fabrikam Studio",
             "balances": {
-              "USD": "2318.94"
+              "USD": "2330.05"
             },
             "contractors": [
               {
@@ -2332,7 +2332,7 @@
                 "currency": "USD",
                 "amount": "4300.00",
                 "status": "sent",
-                "note": "LOCAL transfer c2119a71"
+                "note": "LOCAL transfer 8731211a"
               },
               {
                 "id": "emp_c_ava_morgan",
@@ -2341,7 +2341,7 @@
                 "currency": "USD",
                 "amount": "3700.00",
                 "status": "sent",
-                "note": "LOCAL transfer baacd111"
+                "note": "LOCAL transfer 7b80d8db"
               },
               {
                 "id": "emp_c_george_evans",
@@ -2350,7 +2350,7 @@
                 "currency": "GBP",
                 "amount": "3150.00",
                 "status": "sent",
-                "note": "LOCAL transfer 7bdb8b1e"
+                "note": "LOCAL transfer a49c6cdd"
               },
               {
                 "id": "emp_c_amelia_shah",
@@ -2359,7 +2359,7 @@
                 "currency": "GBP",
                 "amount": "3250.00",
                 "status": "sent",
-                "note": "LOCAL transfer 0209653c"
+                "note": "LOCAL transfer 68b2e7eb"
               },
               {
                 "id": "emp_c_max_becker",
@@ -2368,7 +2368,7 @@
                 "currency": "EUR",
                 "amount": "3600.00",
                 "status": "sent",
-                "note": "LOCAL transfer a61b0861"
+                "note": "LOCAL transfer c0154264"
               },
               {
                 "id": "emp_c_sophie_hoffmann",
@@ -2377,7 +2377,7 @@
                 "currency": "EUR",
                 "amount": "3450.00",
                 "status": "sent",
-                "note": "LOCAL transfer ab4cf4ae"
+                "note": "LOCAL transfer 7dda152b"
               },
               {
                 "id": "emp_c_valeria_flores",
@@ -2386,7 +2386,7 @@
                 "currency": "MXN",
                 "amount": "46000.00",
                 "status": "sent",
-                "note": "LOCAL transfer b1bb423c"
+                "note": "LOCAL transfer bce17ab5"
               },
               {
                 "id": "emp_c_santiago_ruiz",
@@ -2395,7 +2395,7 @@
                 "currency": "USD",
                 "amount": "2550.00",
                 "status": "sent",
-                "note": "SWIFT transfer 7f4e4952"
+                "note": "SWIFT transfer a9255dbf"
               },
               {
                 "id": "emp_c_carlo_bautista",
@@ -2404,7 +2404,7 @@
                 "currency": "PHP",
                 "amount": "87000.00",
                 "status": "sent",
-                "note": "LOCAL transfer 567b0d85"
+                "note": "LOCAL transfer a88a3fb7"
               },
               {
                 "id": "emp_c_liza_garcia",
@@ -2413,7 +2413,7 @@
                 "currency": "PHP",
                 "amount": "84000.00",
                 "status": "sent",
-                "note": "LOCAL transfer 454fdeac"
+                "note": "LOCAL transfer ade520c3"
               },
               {
                 "id": "emp_c_vikram_nair",
@@ -2422,7 +2422,7 @@
                 "currency": "INR",
                 "amount": "255000.00",
                 "status": "sent",
-                "note": "LOCAL transfer 5df79861"
+                "note": "LOCAL transfer 9303bfe6"
               },
               {
                 "id": "emp_c_kavya_menon",
@@ -2431,7 +2431,7 @@
                 "currency": "INR",
                 "amount": "245000.00",
                 "status": "sent",
-                "note": "LOCAL transfer 7d8f2103"
+                "note": "LOCAL transfer fb9a9c2a"
               }
             ]
           }
@@ -2444,7 +2444,7 @@
       "title": "Approval: release Maria Garcia's pay to the account on file",
       "lines": [
         "Ops lead: Called Maria Garcia at 04:45 on the phone number on file. Maria did not send the email, and the bank account on file is unchanged.",
-        "Approval requested: release MXN 45,000.00 from Northwind Labs to Maria Garcia's account ending 7771 on file. Evidence: the email and the call log. Bound to SHA-256 dc758159590e…",
+        "Approval requested: release MXN 45,000.00 from Northwind Labs to Maria Garcia's account ending 7771 on file. Evidence: the email and the call log. Bound to SHA-256 72880480978e…",
         "Approved by ops-lead@platform.example (scripted approver).",
         "The same approval checked against the account in the email (ending 7891): rejected, the hash does not match.",
         "The same approval checked against a larger amount: rejected.",
@@ -2457,7 +2457,7 @@
             "employerId": "emp_a",
             "name": "Northwind Labs",
             "balances": {
-              "USD": "2050.50"
+              "USD": "2065.03"
             },
             "contractors": [
               {
@@ -2467,7 +2467,7 @@
                 "currency": "USD",
                 "amount": "4200.00",
                 "status": "sent",
-                "note": "LOCAL transfer 703f62c3"
+                "note": "LOCAL transfer 55dccb73"
               },
               {
                 "id": "emp_a_ethan_brooks",
@@ -2476,7 +2476,7 @@
                 "currency": "USD",
                 "amount": "3900.00",
                 "status": "sent",
-                "note": "LOCAL transfer 2db20ed7"
+                "note": "LOCAL transfer 19812181"
               },
               {
                 "id": "emp_a_tom_reed",
@@ -2485,7 +2485,7 @@
                 "currency": "GBP",
                 "amount": "3200.00",
                 "status": "sent",
-                "note": "LOCAL transfer acf75c8d"
+                "note": "LOCAL transfer a98e26ad"
               },
               {
                 "id": "emp_a_priya_kapoor",
@@ -2494,7 +2494,7 @@
                 "currency": "GBP",
                 "amount": "3350.00",
                 "status": "sent",
-                "note": "LOCAL transfer be0ae4bc"
+                "note": "LOCAL transfer d58a679b"
               },
               {
                 "id": "emp_a_lena_schmidt",
@@ -2503,7 +2503,7 @@
                 "currency": "EUR",
                 "amount": "3500.00",
                 "status": "sent",
-                "note": "LOCAL transfer c0879995"
+                "note": "LOCAL transfer 2377aa35"
               },
               {
                 "id": "emp_a_jonas_weber",
@@ -2512,7 +2512,7 @@
                 "currency": "EUR",
                 "amount": "3650.00",
                 "status": "sent",
-                "note": "LOCAL transfer 54ba96a6"
+                "note": "LOCAL transfer 176af819"
               },
               {
                 "id": "emp_a_maria_garcia",
@@ -2530,7 +2530,7 @@
                 "currency": "USD",
                 "amount": "2500.00",
                 "status": "sent",
-                "note": "SWIFT transfer 93dd27ea"
+                "note": "SWIFT transfer d6f6ce1d"
               },
               {
                 "id": "emp_a_jose_santos",
@@ -2539,7 +2539,7 @@
                 "currency": "PHP",
                 "amount": "90000.00",
                 "status": "sent",
-                "note": "LOCAL transfer deefc52b"
+                "note": "LOCAL transfer e48c299b"
               },
               {
                 "id": "emp_a_bea_reyes",
@@ -2548,7 +2548,7 @@
                 "currency": "PHP",
                 "amount": "85000.00",
                 "status": "sent",
-                "note": "LOCAL transfer b3f52c56"
+                "note": "LOCAL transfer 67cc0bdb"
               },
               {
                 "id": "emp_a_arjun_mehta",
@@ -2557,7 +2557,7 @@
                 "currency": "INR",
                 "amount": "250000.00",
                 "status": "sent",
-                "note": "LOCAL transfer 53d9bdc3"
+                "note": "LOCAL transfer 09ebf2c9"
               },
               {
                 "id": "emp_a_sneha_iyer",
@@ -2566,7 +2566,7 @@
                 "currency": "INR",
                 "amount": "240000.00",
                 "status": "sent",
-                "note": "LOCAL transfer 6a09db9b"
+                "note": "LOCAL transfer 8ec4050f"
               }
             ]
           },
@@ -2574,7 +2574,7 @@
             "employerId": "emp_b",
             "name": "Contoso Health",
             "balances": {
-              "USD": "1000.31"
+              "USD": "991.78"
             },
             "contractors": [
               {
@@ -2593,7 +2593,7 @@
                 "currency": "USD",
                 "amount": "3800.00",
                 "status": "sent",
-                "note": "LOCAL transfer 3278b021"
+                "note": "LOCAL transfer 123c40c2"
               },
               {
                 "id": "emp_b_olivia_hughes",
@@ -2620,7 +2620,7 @@
                 "currency": "EUR",
                 "amount": "3400.00",
                 "status": "sent",
-                "note": "LOCAL transfer 4f31fa21"
+                "note": "LOCAL transfer 694c63d0"
               },
               {
                 "id": "emp_b_felix_wagner",
@@ -2638,7 +2638,7 @@
                 "currency": "MXN",
                 "amount": "47000.00",
                 "status": "sent",
-                "note": "LOCAL transfer fa93008c"
+                "note": "LOCAL transfer ac3d6427"
               },
               {
                 "id": "emp_b_mateo_torres",
@@ -2647,7 +2647,7 @@
                 "currency": "USD",
                 "amount": "2600.00",
                 "status": "sent",
-                "note": "SWIFT transfer 238d542c"
+                "note": "SWIFT transfer a16719b6"
               },
               {
                 "id": "emp_b_andrea_cruz",
@@ -2665,7 +2665,7 @@
                 "currency": "PHP",
                 "amount": "250000.00",
                 "status": "sent",
-                "note": "LOCAL transfer 0a7e43ea"
+                "note": "LOCAL transfer 10f1f7fe"
               },
               {
                 "id": "emp_b_rahul_verma",
@@ -2674,7 +2674,7 @@
                 "currency": "INR",
                 "amount": "260000.00",
                 "status": "sent",
-                "note": "LOCAL transfer 8b8c1a72"
+                "note": "LOCAL transfer 417b1f9d"
               },
               {
                 "id": "emp_b_ananya_rao",
@@ -2683,7 +2683,7 @@
                 "currency": "INR",
                 "amount": "235000.00",
                 "status": "sent",
-                "note": "LOCAL transfer ecee1db0"
+                "note": "LOCAL transfer 5d863654"
               }
             ]
           },
@@ -2691,7 +2691,7 @@
             "employerId": "emp_c",
             "name": "Fabrikam Studio",
             "balances": {
-              "USD": "2318.94"
+              "USD": "2330.05"
             },
             "contractors": [
               {
@@ -2701,7 +2701,7 @@
                 "currency": "USD",
                 "amount": "4300.00",
                 "status": "sent",
-                "note": "LOCAL transfer c2119a71"
+                "note": "LOCAL transfer 8731211a"
               },
               {
                 "id": "emp_c_ava_morgan",
@@ -2710,7 +2710,7 @@
                 "currency": "USD",
                 "amount": "3700.00",
                 "status": "sent",
-                "note": "LOCAL transfer baacd111"
+                "note": "LOCAL transfer 7b80d8db"
               },
               {
                 "id": "emp_c_george_evans",
@@ -2719,7 +2719,7 @@
                 "currency": "GBP",
                 "amount": "3150.00",
                 "status": "sent",
-                "note": "LOCAL transfer 7bdb8b1e"
+                "note": "LOCAL transfer a49c6cdd"
               },
               {
                 "id": "emp_c_amelia_shah",
@@ -2728,7 +2728,7 @@
                 "currency": "GBP",
                 "amount": "3250.00",
                 "status": "sent",
-                "note": "LOCAL transfer 0209653c"
+                "note": "LOCAL transfer 68b2e7eb"
               },
               {
                 "id": "emp_c_max_becker",
@@ -2737,7 +2737,7 @@
                 "currency": "EUR",
                 "amount": "3600.00",
                 "status": "sent",
-                "note": "LOCAL transfer a61b0861"
+                "note": "LOCAL transfer c0154264"
               },
               {
                 "id": "emp_c_sophie_hoffmann",
@@ -2746,7 +2746,7 @@
                 "currency": "EUR",
                 "amount": "3450.00",
                 "status": "sent",
-                "note": "LOCAL transfer ab4cf4ae"
+                "note": "LOCAL transfer 7dda152b"
               },
               {
                 "id": "emp_c_valeria_flores",
@@ -2755,7 +2755,7 @@
                 "currency": "MXN",
                 "amount": "46000.00",
                 "status": "sent",
-                "note": "LOCAL transfer b1bb423c"
+                "note": "LOCAL transfer bce17ab5"
               },
               {
                 "id": "emp_c_santiago_ruiz",
@@ -2764,7 +2764,7 @@
                 "currency": "USD",
                 "amount": "2550.00",
                 "status": "sent",
-                "note": "SWIFT transfer 7f4e4952"
+                "note": "SWIFT transfer a9255dbf"
               },
               {
                 "id": "emp_c_carlo_bautista",
@@ -2773,7 +2773,7 @@
                 "currency": "PHP",
                 "amount": "87000.00",
                 "status": "sent",
-                "note": "LOCAL transfer 567b0d85"
+                "note": "LOCAL transfer a88a3fb7"
               },
               {
                 "id": "emp_c_liza_garcia",
@@ -2782,7 +2782,7 @@
                 "currency": "PHP",
                 "amount": "84000.00",
                 "status": "sent",
-                "note": "LOCAL transfer 454fdeac"
+                "note": "LOCAL transfer ade520c3"
               },
               {
                 "id": "emp_c_vikram_nair",
@@ -2791,7 +2791,7 @@
                 "currency": "INR",
                 "amount": "255000.00",
                 "status": "sent",
-                "note": "LOCAL transfer 5df79861"
+                "note": "LOCAL transfer 9303bfe6"
               },
               {
                 "id": "emp_c_kavya_menon",
@@ -2800,7 +2800,7 @@
                 "currency": "INR",
                 "amount": "245000.00",
                 "status": "sent",
-                "note": "LOCAL transfer 7d8f2103"
+                "note": "LOCAL transfer fb9a9c2a"
               }
             ]
           }
@@ -2821,7 +2821,7 @@
             "employerId": "emp_a",
             "name": "Northwind Labs",
             "balances": {
-              "USD": "2050.50"
+              "USD": "2065.03"
             },
             "contractors": [
               {
@@ -2927,7 +2927,7 @@
             "employerId": "emp_b",
             "name": "Contoso Health",
             "balances": {
-              "USD": "1000.31"
+              "USD": "991.78"
             },
             "contractors": [
               {
@@ -3038,7 +3038,7 @@
             "name": "Fabrikam Studio",
             "balances": {
               "MXN": "46000.00",
-              "USD": "2318.94"
+              "USD": "2330.05"
             },
             "contractors": [
               {
@@ -3150,7 +3150,7 @@
       "lines": [
         "Read by claude (claude-opus-5-5): {\"kind\":\"transfer_returned\",\"personName\":\"Valeria Flores\",\"failureType\":\"BENEFICIARY_BANK_RETURNED\"}",
         "Claude's summary: Airwallex reports that the transfer to Valeria Flores was returned by the beneficiary bank (BENEFICIARY_BANK_RETURNED).",
-        "Re-verified Valeria Flores's bank details and re-paid: repaid (new transfer b7dfbcc1).",
+        "Re-verified Valeria Flores's bank details and re-paid: repaid (new transfer 42f23d33).",
         "Running the repay again returns the same transfer: no duplicate."
       ],
       "snapshot": {
@@ -3159,7 +3159,7 @@
             "employerId": "emp_a",
             "name": "Northwind Labs",
             "balances": {
-              "USD": "2050.50"
+              "USD": "2065.03"
             },
             "contractors": [
               {
@@ -3265,7 +3265,7 @@
             "employerId": "emp_b",
             "name": "Contoso Health",
             "balances": {
-              "USD": "1000.31"
+              "USD": "991.78"
             },
             "contractors": [
               {
@@ -3375,7 +3375,7 @@
             "employerId": "emp_c",
             "name": "Fabrikam Studio",
             "balances": {
-              "USD": "2318.94"
+              "USD": "2330.05"
             },
             "contractors": [
               {
@@ -3433,7 +3433,7 @@
                 "currency": "MXN",
                 "amount": "46000.00",
                 "status": "repaid",
-                "note": "re-paid once, transfer b7dfbcc1"
+                "note": "re-paid once, transfer 42f23d33"
               },
               {
                 "id": "emp_c_santiago_ruiz",
@@ -3487,8 +3487,8 @@
       "lines": [
         "From finance@contoso-health.example: Hi team, Contoso Health here. We have just sent USD 21,000 to cover the rest of this week's payroll. Apologies for the delay.",
         "Read by claude (claude-opus-5-5): {\"kind\":\"funding_notice\",\"employerName\":\"Contoso Health\",\"amountMajor\":\"21000\",\"currency\":\"USD\"}",
-        "Claude's summary: Contoso Health says it has sent USD 21,000 to cover the rest of this week's payroll and apologizes for the delay.",
-        "Checked against the wallet, not the email: Available in the wallet immediately. Contoso now holds USD 22,000.31."
+        "Claude's summary: Contoso Health says it has sent USD 21,000 to cover the remainder of this week's payroll and apologizes for the delay.",
+        "Checked against the wallet, not the email: Available in the wallet immediately. Contoso now holds USD 21,991.78."
       ],
       "snapshot": {
         "employers": [
@@ -3496,7 +3496,7 @@
             "employerId": "emp_a",
             "name": "Northwind Labs",
             "balances": {
-              "USD": "2050.50"
+              "USD": "2065.03"
             },
             "contractors": [
               {
@@ -3602,7 +3602,7 @@
             "employerId": "emp_b",
             "name": "Contoso Health",
             "balances": {
-              "USD": "22000.31"
+              "USD": "21991.78"
             },
             "contractors": [
               {
@@ -3712,7 +3712,7 @@
             "employerId": "emp_c",
             "name": "Fabrikam Studio",
             "balances": {
-              "USD": "2318.94"
+              "USD": "2330.05"
             },
             "contractors": [
               {
@@ -3770,7 +3770,7 @@
                 "currency": "MXN",
                 "amount": "46000.00",
                 "status": "repaid",
-                "note": "re-paid once, transfer b7dfbcc1"
+                "note": "re-paid once, transfer 42f23d33"
               },
               {
                 "id": "emp_c_santiago_ruiz",
@@ -3823,14 +3823,14 @@
       "title": "Revised: pay what can still land today, escalate what cannot",
       "lines": [
         "Contoso Health: pay 4, hold 1",
-        "  convert 3550.00 EUR for USD 3,994.26",
-        "  convert 6400.00 GBP for USD 8,630.70",
+        "  convert 3550.00 EUR for USD 3,982.68",
+        "  convert 6400.00 GBP for USD 8,621.51",
         "  hold Andrea Cruz: PH cut-off passed (LOCAL 06:30 and SWIFT 06:00 UTC)",
         "  platform fee: collect",
         "Contoso Health: 4 sent (4 LOCAL, 0 SWIFT), 1 held, 0 blocked",
         "  platform fee: charged",
         "4 late transfers reached PAID before their local cut-offs.",
-        "Escalate Andrea Cruz. Note for the ops lead, by claude (claude-opus-5-5): The payroll agent stopped Andrea Cruz's PHP 260,000.00 payout from Contoso Health because the employer's funds cleared at 06:40 UTC (confirmed by the top-up email and wallet balance read at that time), after the Philippine cut-offs of LOCAL 06:30 UTC and SWIFT 06:00 UTC had passed. You can approve an instant USD 50.00 advance on Metal testnet to the address Andrea Cruz gave when opting in through the verified portal on 2026-10-02 and pay the remaining PHP 256,852.54 in the next Philippine window. Alternatively, you can pay the full amount in the next Philippine window and tell Andrea Cruz now."
+        "Escalate Andrea Cruz. Note for the ops lead, by claude (claude-opus-5-5): The agent stopped Andrea Cruz's PHP 260,000.00 payout from Contoso Health because Contoso Health's funds cleared at 06:40 UTC, after both Philippine cut-offs had passed (LOCAL at 06:30 UTC and SWIFT at 06:00 UTC), as shown by the 06:40 UTC top-up email and wallet balance read. You can approve an instant USD 50.00 advance on Metal testnet to the address Andrea Cruz gave when opting in through the verified portal on 2026-10-02, with the remaining PHP 256,854.76 paid in the next Philippine window. Alternatively, you can pay the full amount in the next Philippine window and tell Andrea Cruz now."
       ],
       "snapshot": {
         "employers": [
@@ -3838,7 +3838,7 @@
             "employerId": "emp_a",
             "name": "Northwind Labs",
             "balances": {
-              "USD": "2050.50"
+              "USD": "2065.03"
             },
             "contractors": [
               {
@@ -3944,7 +3944,7 @@
             "employerId": "emp_b",
             "name": "Contoso Health",
             "balances": {
-              "USD": "5225.39"
+              "USD": "5234.56"
             },
             "contractors": [
               {
@@ -4050,7 +4050,7 @@
             "employerId": "emp_c",
             "name": "Fabrikam Studio",
             "balances": {
-              "USD": "2318.94"
+              "USD": "2330.05"
             },
             "contractors": [
               {
@@ -4108,7 +4108,7 @@
                 "currency": "MXN",
                 "amount": "46000.00",
                 "status": "repaid",
-                "note": "re-paid once, transfer b7dfbcc1"
+                "note": "re-paid once, transfer 42f23d33"
               },
               {
                 "id": "emp_c_santiago_ruiz",
@@ -4166,31 +4166,31 @@
         "Mandate on Contoso Health's Metal account, enforced on chain: pays only Andrea Cruz, at most 50.00 USDZ per payment and 50.00 USDZ in total (spent 0.00 USDZ).",
         "Probe, bypassing our policy code: 50.00 USDZ to 0x0000…dEaD, an address not on the mandate. Metal refused, nothing sent: mandate_payee_not_listed (the payee is not one the mandate allows)",
         "Probe, bypassing our policy code: 50.01 USDZ to Andrea Cruz, one cent over the cap. Metal refused, nothing sent: mandate_cap_exceeded (the amount is above the mandate's per-payment cap)",
-        "Paid 50.00 USDZ to Andrea Cruz on Metal testnet: transaction 0xbea5…156e https://testnet.metalntwx.com/tx/0xbea56d14c2b9f86857b53737f77a56837a45b2a3059a8251608cce0282f7156e",
+        "Paid 50.00 USDZ to Andrea Cruz on Metal testnet: transaction 0xa616…5a0b https://testnet.metalntwx.com/tx/0xa6161c8823a874b0255d212127ac7b4b395d7eb807b9bca1e100b3bc2f845a0b",
         "Same pull again, same payment id: already paid, nothing sent.",
         "Probe, bypassing our policy code: another 50.00 USDZ to Andrea Cruz under a new payment id. Metal refused, nothing sent: mandate_budget_spent (the amount would take the mandate past its budget)",
         "Verified from the chain alone (mandate verify): yes, 1 payment under this mandate.",
-        "The remaining PHP 256,852.54 goes in the next Philippine LOCAL window; Andrea Cruz is told now."
+        "The remaining PHP 256,854.76 goes in the next Philippine LOCAL window; Andrea Cruz is told now."
       ],
       "data": {
         "metal": {
           "rail": "Metal testnet",
           "account": "0xd97e0bbf4cF241F9E1b91E1E18Bf1A650730b34B",
-          "mandate": "0x01ca7f5c24c343f473f02304eb82a9489698eea417cd026d90a3d7456c65a5ee",
+          "mandate": "0x56a90370e2e442b2da1843b32fe689ad6ddae16e6331c04fa05a9917a6cf99b8",
           "payee": "0xA3aE54Af869eD8769854fa40E5309303F93A31DF",
           "amount": "50.00",
           "paymentId": "payday-2026-11-06:advance:emp_b_andrea_cruz",
           "paid": {
             "outcome": "paid",
-            "transaction": "0xbea56d14c2b9f86857b53737f77a56837a45b2a3059a8251608cce0282f7156e",
-            "explorer": "https://testnet.metalntwx.com/tx/0xbea56d14c2b9f86857b53737f77a56837a45b2a3059a8251608cce0282f7156e",
+            "transaction": "0xa6161c8823a874b0255d212127ac7b4b395d7eb807b9bca1e100b3bc2f845a0b",
+            "explorer": "https://testnet.metalntwx.com/tx/0xa6161c8823a874b0255d212127ac7b4b395d7eb807b9bca1e100b3bc2f845a0b",
             "spentMinor": "5000",
             "again": false
           },
           "again": {
             "outcome": "paid",
-            "transaction": "0xbea56d14c2b9f86857b53737f77a56837a45b2a3059a8251608cce0282f7156e",
-            "explorer": "https://testnet.metalntwx.com/tx/0xbea56d14c2b9f86857b53737f77a56837a45b2a3059a8251608cce0282f7156e",
+            "transaction": "0xa6161c8823a874b0255d212127ac7b4b395d7eb807b9bca1e100b3bc2f845a0b",
+            "explorer": "https://testnet.metalntwx.com/tx/0xa6161c8823a874b0255d212127ac7b4b395d7eb807b9bca1e100b3bc2f845a0b",
             "spentMinor": "5000",
             "again": true
           },
@@ -4223,7 +4223,7 @@
           "verification": {
             "verified": true,
             "payments": [
-              "payment 0xbea56d14c2b9f86857b53737f77a56837a45b2a3059a8251608cce0282f7156e block 9416472: 50 *USDZ to 0xA3aE54Af869eD8769854fa40E5309303F93A31DF, nonce 0x01ca7f5c24c343f473f02304277a059c8f855576e96357f34f6de19b1d1822cc"
+              "payment 0xa6161c8823a874b0255d212127ac7b4b395d7eb807b9bca1e100b3bc2f845a0b block 9764202: 50 *USDZ to 0xA3aE54Af869eD8769854fa40E5309303F93A31DF, nonce 0x56a90370e2e442b2da1843b3b8123f8604fa013f17742930526e0ac750fda599"
             ]
           }
         }
@@ -4234,7 +4234,7 @@
             "employerId": "emp_a",
             "name": "Northwind Labs",
             "balances": {
-              "USD": "2050.50"
+              "USD": "2065.03"
             },
             "contractors": [
               {
@@ -4340,7 +4340,7 @@
             "employerId": "emp_b",
             "name": "Contoso Health",
             "balances": {
-              "USD": "5225.39"
+              "USD": "5234.56"
             },
             "contractors": [
               {
@@ -4414,7 +4414,7 @@
                 "currency": "PHP",
                 "amount": "260000.00",
                 "status": "advanced",
-                "note": "50.00 USDZ advance paid on Metal testnet (0xbea5…156e); PHP 256,852.54 in the next window"
+                "note": "50.00 USDZ advance paid on Metal testnet (0xa616…5a0b); PHP 256,854.76 in the next window"
               },
               {
                 "id": "emp_b_paolo_mendoza",
@@ -4446,7 +4446,7 @@
             "employerId": "emp_c",
             "name": "Fabrikam Studio",
             "balances": {
-              "USD": "2318.94"
+              "USD": "2330.05"
             },
             "contractors": [
               {
@@ -4504,7 +4504,7 @@
                 "currency": "MXN",
                 "amount": "46000.00",
                 "status": "repaid",
-                "note": "re-paid once, transfer b7dfbcc1"
+                "note": "re-paid once, transfer 42f23d33"
               },
               {
                 "id": "emp_c_santiago_ruiz",
@@ -4560,10 +4560,11 @@
         "1 suspected diversion stopped, then released to the account on file after a person approved; 1 escalated because their cut-off had passed (1 given an instant USD 50.00 advance on Metal testnet, the rest in the next window); 1 bank return re-paid once.",
         "10 wallet conversions (net gap only) and 11 payout-linked FX payouts at locked quotes.",
         "Platform fees: 3 collected (charges read back SETTLED), 1 deferred until that employer's wages were covered.",
-        "Audit log: 297 API calls recorded.",
-        "Northwind Labs final balances: USD 2050.50",
-        "Contoso Health final balances: USD 5225.39",
-        "Fabrikam Studio final balances: USD 2318.94"
+        "Reconciled with Airwallex: 35 of 35 payouts read back on their own employer's account, landed, for exactly the amount and currency in the ledger; 0 mismatches.",
+        "Audit log: 332 API calls recorded.",
+        "Northwind Labs final balances: USD 2065.03",
+        "Contoso Health final balances: USD 5234.56",
+        "Fabrikam Studio final balances: USD 2330.05"
       ],
       "data": {
         "contractors": 36,
@@ -4577,16 +4578,20 @@
         "payoutLinkedFx": 11,
         "feesCollected": 3,
         "feesDeferred": 1,
-        "apiCalls": 297,
+        "apiCalls": 332,
+        "reconciled": {
+          "matched": 35,
+          "issues": 0
+        },
         "finalBalances": {
           "Northwind Labs": {
-            "USD": "2050.50"
+            "USD": "2065.03"
           },
           "Contoso Health": {
-            "USD": "5225.39"
+            "USD": "5234.56"
           },
           "Fabrikam Studio": {
-            "USD": "2318.94"
+            "USD": "2330.05"
           }
         }
       },
@@ -4596,7 +4601,7 @@
             "employerId": "emp_a",
             "name": "Northwind Labs",
             "balances": {
-              "USD": "2050.50"
+              "USD": "2065.03"
             },
             "contractors": [
               {
@@ -4702,7 +4707,7 @@
             "employerId": "emp_b",
             "name": "Contoso Health",
             "balances": {
-              "USD": "5225.39"
+              "USD": "5234.56"
             },
             "contractors": [
               {
@@ -4776,7 +4781,7 @@
                 "currency": "PHP",
                 "amount": "260000.00",
                 "status": "advanced",
-                "note": "50.00 USDZ advance paid on Metal testnet (0xbea5…156e); PHP 256,852.54 in the next window"
+                "note": "50.00 USDZ advance paid on Metal testnet (0xa616…5a0b); PHP 256,854.76 in the next window"
               },
               {
                 "id": "emp_b_paolo_mendoza",
@@ -4808,7 +4813,7 @@
             "employerId": "emp_c",
             "name": "Fabrikam Studio",
             "balances": {
-              "USD": "2318.94"
+              "USD": "2330.05"
             },
             "contractors": [
               {
@@ -4866,7 +4871,7 @@
                 "currency": "MXN",
                 "amount": "46000.00",
                 "status": "repaid",
-                "note": "re-paid once, transfer b7dfbcc1"
+                "note": "re-paid once, transfer 42f23d33"
               },
               {
                 "id": "emp_c_santiago_ruiz",
@@ -4926,16 +4931,20 @@
     "payoutLinkedFx": 11,
     "feesCollected": 3,
     "feesDeferred": 1,
-    "apiCalls": 297,
+    "apiCalls": 332,
+    "reconciled": {
+      "matched": 35,
+      "issues": 0
+    },
     "finalBalances": {
       "Northwind Labs": {
-        "USD": "2050.50"
+        "USD": "2065.03"
       },
       "Contoso Health": {
-        "USD": "5225.39"
+        "USD": "5234.56"
       },
       "Fabrikam Studio": {
-        "USD": "2318.94"
+        "USD": "2330.05"
       }
     }
   }

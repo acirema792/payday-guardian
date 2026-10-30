@@ -20,7 +20,7 @@ The Build Phase needs its **own** submission. On the dashboard: Submissions > Bu
 Payday Guardian is an AI payroll agent for contractor platforms on Airwallex. It pays each employer's contractors from that employer's own wallet, prices fees in before it converts currency, and routes each payout to land before its local cut-off. It holds a payout when an email asks to redirect someone's pay, re-pays a bank return exactly once, and escalates to a person only the cases code cannot decide. When a payout misses its cut-off, the person can approve an instant advance on Metal testnet, paid from that employer's own Metal account under a mandate Metal enforces on chain.
 
 ### It ran live
-We ran the full demo on the Airwallex sandbox against **three Kit 6 connected accounts**, with Claude reading the inbound messages. **35 of 36 contractors were paid on payday.** One diversion attempt was stopped, and that payout was released to the account on file after a person approved. One payout was escalated after the Philippine cut-off and got a **USD 50 instant advance on Metal testnet** ([transaction](https://testnet.metalntwx.com/tx/0xbea56d14c2b9f86857b53737f77a56837a45b2a3059a8251608cce0282f7156e)), and one bank return was re-paid exactly once. The audit log of that run is committed: **300 Airwallex API calls, 0 errors, and no employer-scoped call outside the three employer accounts**. The three platform fees read back SETTLED.
+We ran the full demo on the Airwallex sandbox against **three Kit 6 connected accounts**, with Claude reading the inbound messages. **35 of 36 contractors were paid on payday.** One diversion attempt was stopped, and that payout was released to the account on file after a person approved. The 36th missed the Philippine cut-off because the employer's top-up arrived late; it was escalated and got a **USD 50 instant advance on Metal testnet** ([transaction](https://testnet.metalntwx.com/tx/0xa6161c8823a874b0255d212127ac7b4b395d7eb807b9bca1e100b3bc2f845a0b)), and one bank return was re-paid exactly once. The audit log of that run is committed: **335 Airwallex API calls, 0 errors, and no employer-scoped call outside the three employer accounts**. At the close, all 35 payouts were read back from Airwallex and matched the ledger to the cent. The three platform fees read back SETTLED. Deposits and the beneficiary banks' side of each transfer are sandbox simulations (behind one interface); everything else is live API calls.
 
 ### The demo: goal, plan, four pieces of new information, result
 1. **Pooled-deposit trap:** Fabrikam's deposit lands while Contoso is short. Summed across tenants there is USD 103,000, enough to pay Contoso in full with other employers' money. The agent refuses. Contoso pays from its own wallet only, statutory payments first and then the cheapest to fund. The rest are held, and the platform fee is deferred until wages are covered.
@@ -40,7 +40,7 @@ We ran the full demo on the Airwallex sandbox against **three Kit 6 connected ac
   - SWIFT fees priced in before converting
   - net FX gap
   - shortfall order
-  - fee deferral
+  - fee deferral, and a charge limit above which a person approves the exact fee
   - exact funding request
   - instant advances only for a missed cut-off, to an address opted in through the verified portal, capped per employer
 
@@ -53,6 +53,7 @@ We ran the full demo on the Airwallex sandbox against **three Kit 6 connected ac
   - request_id idempotency, with recovery from lost responses
   - fee charges confirmed at SETTLED
   - an audit log of every call
+  - a closing reconciliation: every payout called paid is read back from Airwallex and must match the ledger
 
 ### Airwallex products used
 Connected accounts (create, submit, activate), Global Accounts and deposit simulation, balances, FX quotes and conversions, beneficiary validate and create (US, GB, DE, MX, PH, IN), transfers with LOCAL and SWIFT, transfer simulation (SENT, PAID, FAILED with failure type), charges for the platform fee, and webhooks (`payout.transfer.*`, subscriptions created by API for the platform and each employer account).
@@ -61,7 +62,7 @@ Connected accounts (create, submit, activate), Global Accounts and deposit simul
 One Metal account per employer, like Airwallex. `metal-agent` (pinned 0.3.3): the owner creates the account, funds it from the faucet and binds a mandate (payee, per-payment cap, budget); the agent only runs `mandate status`, `pull --payment-id` and `verify`. Every pull and probe of the live run, with explorer links, is in the evidence.
 
 ### Try it in 60 seconds
-`npm ci && npm run demo && npm run console` runs the whole story on a deterministic offline bank, with no credentials. The console's **Live sandbox** switch shows the committed live run. `npm test` runs 111 tests. Setup for your own sandbox is in the README.
+`npm ci && npm run demo && npm run console` runs the whole story on a deterministic offline bank, with no credentials. The console's **Live sandbox** switch shows the committed live run. `npm test` runs 115 tests. Setup for your own sandbox is in the README.
 
 ### What we learned on the sandbox
 - Deposits into connected accounts clear a few seconds after the simulation call.

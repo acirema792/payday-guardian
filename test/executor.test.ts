@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { collectPlatformFee, conversionSubject, executeEmployerPlan, repayReturnedTransfer, type ExecuteInput } from "../src/executor/execute.ts";
+import { collectPlatformFee, conversionSubject, executeEmployerPlan, feeSubject, repayReturnedTransfer, type ExecuteInput } from "../src/executor/execute.ts";
 import { Store } from "../src/executor/store.ts";
 import { approve } from "../src/policy/approval.ts";
 import { toMinor } from "../src/policy/money.ts";
@@ -227,13 +227,27 @@ describe("returned transfers", () => {
 });
 
 describe("platform fee", () => {
-  const plan = (status: "collect" | "defer"): EmployerPlan => ({
+  const plan = (status: "collect" | "defer", needsApproval = false): EmployerPlan => ({
     employerId: "emp_a",
     accountId: "acct_A",
     payouts: [],
     conversions: [],
-    platformFee: { status, amountMinor: toMinor("49", "USD"), currency: "USD" },
+    platformFee: { status, amountMinor: toMinor("49", "USD"), currency: "USD", needsApproval },
     fundingRequestMinor: 0n,
+  });
+
+  it("charges a fee above the agent's limit only with an approval bound to that exact fee", async () => {
+    const waiting = await collectPlatformFee(fake, plan("collect", true), store, "run_1", "connected");
+    expect(waiting.status).toBe("awaiting_approval");
+    expect(fake.calls).toHaveLength(0);
+
+    const bigger = { ...feeSubject(plan("collect", true), "run_1"), amountMinor: toMinor("490", "USD") };
+    expect((await collectPlatformFee(fake, plan("collect", true), store, "run_1", "connected", undefined, [approve(bigger, "ops")])).status).toBe("awaiting_approval");
+    expect(fake.calls).toHaveLength(0);
+
+    const ok = approve(feeSubject(plan("collect", true), "run_1"), "ops");
+    expect(await collectPlatformFee(fake, plan("collect", true), store, "run_1", "connected", undefined, [ok])).toMatchObject({ status: "charged" });
+    expect(fake.creates("/charges/create")).toHaveLength(1);
   });
 
   it("calls the fee collected only once the charge reads back SETTLED", async () => {

@@ -1,4 +1,4 @@
-import { readBalances } from "../airwallex/api.ts";
+import { readBalances, readTransferBack } from "../airwallex/api.ts";
 import { type ExceptionFacts, templateExplainer } from "../agent/explainer.ts";
 import { type InboundMessage, matchByName } from "../agent/messages.ts";
 import { collectPlatformFee, executeEmployerPlan, type ExecuteInput, type PayoutOutcome, repayReturnedTransfer } from "../executor/execute.ts";
@@ -6,6 +6,7 @@ import { type AdvanceDecision, planInstantAdvance } from "../policy/advance.ts";
 import { approve, type ApprovalSubject, isApproved, subjectHash } from "../policy/approval.ts";
 import { sum, toMajor, toMinor } from "../policy/money.ts";
 import { planEmployerPayroll } from "../policy/planner.ts";
+import { type BankTransfer, type LedgerPayout, reconcile } from "../policy/reconcile.ts";
 import type { EmployerPlan, HoldReason } from "../policy/types.ts";
 import { type ContractorProfile, contractorsOf, instantAdvanceConfig, PAYDAY, policyConfig } from "../scenario/seed.ts";
 import type { DemoEnvironment } from "./environment.ts";
@@ -50,6 +51,7 @@ export interface DemoSummary {
   feesCollected: number;
   feesDeferred: number;
   apiCalls: number;
+  reconciled: { matched: number; issues: number };
   finalBalances: Record<string, Record<string, string>>;
 }
 
@@ -129,6 +131,7 @@ export async function runDemo(env: DemoEnvironment, emit: (e: DemoEvent) => void
   const escalationReasons = new Map<string, HoldReason[]>();
   let heldForFraud = 0;
   let returnsRepaid = 0;
+  const repaidTransfer = new Map<string, string>();
   let walletConversions = 0;
   let payoutLinkedFx = 0;
   let feesCollected = 0;
@@ -229,7 +232,7 @@ export async function runDemo(env: DemoEnvironment, emit: (e: DemoEvent) => void
         ? ({ status: "deferred", detail: "fee already handled for this employer" } as const)
         : await collectPlatformFee(env.platform, p, env.store, runId, env.tenantMode);
     if (fee.status === "charged" || fee.status === "accrued") feesCollected += 1;
-    if (fee.status === "pending" || fee.status === "failed") feeIssues.push(`${env.employers.find((e) => e.employerId === employerId)!.name}: ${fee.detail}`);
+    if (fee.status === "pending" || fee.status === "failed" || fee.status === "awaiting_approval") feeIssues.push(`${env.employers.find((e) => e.employerId === employerId)!.name}: ${fee.detail}`);
     if (fee.status === "deferred" && options.fee !== false) feesDeferred += 1;
     walletConversions += report.conversions.filter((c) => c.status === "converted").length;
 
@@ -438,6 +441,7 @@ export async function runDemo(env: DemoEnvironment, emit: (e: DemoEvent) => void
     const again = await repayReturnedTransfer(input, id);
     if (first.status === "repaid") {
       returnsRepaid += 1;
+      repaidTransfer.set(id, first.transferId);
       await land(id, first.transferId);
       setStatus(id, "repaid", `re-paid once, transfer ${first.transferId.slice(0, 8)}`);
     }
@@ -563,6 +567,21 @@ export async function runDemo(env: DemoEnvironment, emit: (e: DemoEvent) => void
     });
   }
 
+  // Close the day: read every payout we call paid back from Airwallex, on its own employer's
+  // account, and check it against the ledger before reporting it.
+  const ledger: LedgerPayout[] = [...status].flatMap(([id, v]) => {
+    if (v.status !== "paid" && v.status !== "repaid") return [];
+    const c = profiles.get(id)!;
+    const transferId = repaidTransfer.get(id) ?? sent.get(id)?.outcome.transferId;
+    return transferId ? [{ contractorId: id, employerAccountId: employer(c.employerId).accountId, transferId, amountMinor: c.amountMinor, currency: c.currency }] : [];
+  });
+  const bank = new Map<string, BankTransfer>();
+  for (const p of ledger) {
+    const t = await readTransferBack(env.apiFor(profiles.get(p.contractorId)!.employerId), p.transferId);
+    bank.set(p.transferId, { transferId: t.id, status: t.status, amountMinor: t.amountMinor, currency: t.currency });
+  }
+  const closing = reconcile(ledger, bank);
+
   // Result
   const finalBalances: DemoSummary["finalBalances"] = {};
   for (const e of env.employers) {
@@ -583,6 +602,7 @@ export async function runDemo(env: DemoEnvironment, emit: (e: DemoEvent) => void
     feesCollected,
     feesDeferred,
     apiCalls: env.store.auditLog().length,
+    reconciled: { matched: closing.matched, issues: closing.issues.length },
     finalBalances,
   };
   await say("07:00", "result", "Payday report", [
@@ -591,6 +611,8 @@ export async function runDemo(env: DemoEnvironment, emit: (e: DemoEvent) => void
     `${walletConversions} wallet conversions (net gap only) and ${payoutLinkedFx} payout-linked FX payouts at locked quotes.`,
     `Platform fees: ${feesCollected} collected (charges read back SETTLED), ${feesDeferred} deferred until that employer's wages were covered.`,
     ...feeIssues.map((f) => `Fee not confirmed, ${f}`),
+    `Reconciled with Airwallex: ${closing.matched} of ${ledger.length} payouts read back on their own employer's account, landed, for exactly the amount and currency in the ledger; ${closing.issues.length} mismatches.`,
+    ...closing.issues.map((i) => `Reconciliation issue for ${profiles.get(i.contractorId)!.name}: ${JSON.stringify(i)}`),
     `Audit log: ${summary.apiCalls} API calls recorded.`,
     ...Object.entries(finalBalances).map(([name, b]) => `${name} final balances: ${Object.entries(b).map(([c, v]) => `${c} ${v}`).join(", ") || "0"}`),
   ], summary);

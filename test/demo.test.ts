@@ -22,6 +22,7 @@ describe("demo runner (offline bank)", () => {
       returnsRepaid: 1,
       feesCollected: 3, // Northwind, Fabrikam, and Contoso only after its top-up
       feesDeferred: 1,
+      reconciled: { matched: 34, issues: 0 }, // every payout called paid reads back landed, for its exact amount
     });
     // Every employer ends non-negative in every currency: nobody was paid with someone else's money.
     for (const balances of Object.values(summary.finalBalances)) {

@@ -115,6 +115,7 @@ export const policyConfig: PolicyConfig = {
   platformFeeMinor: toMinor("49", "USD"),
   fraudWindowDays: 5,
   autoApproveConversionMinor: toMinor("15000", "USD"),
+  autoChargeMaxMinor: toMinor("100", "USD"),
   rails: {
     US: { localCurrency: "USD", localAvailable: true, localCutoffUtc: "21:00", swiftCutoffUtc: "20:00" },
     GB: { localCurrency: "GBP", localAvailable: true, localCutoffUtc: "22:00", swiftCutoffUtc: "14:00" },

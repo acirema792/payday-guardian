@@ -181,6 +181,13 @@ describe("platform fee", () => {
     expect(plan.platformFee.status).toBe("defer");
   });
 
+  it("needs a person's approval only above the agent's charge limit", () => {
+    const funds = { USD: usd("100000") };
+    expect(planEmployerPayroll(input(employerA, people, funds, { config: withFee })).platformFee.needsApproval).toBe(false);
+    const large = { ...config, platformFeeMinor: usd("250") };
+    expect(planEmployerPayroll(input(employerA, people, funds, { config: large })).platformFee).toMatchObject({ status: "collect", needsApproval: true });
+  });
+
   it("is collected when payroll and fee both fit", () => {
     const plan = planEmployerPayroll(input(employerA, people, { USD: usd("1025") }, { config: withFee }));
     expect(plan.platformFee.status).toBe("collect");

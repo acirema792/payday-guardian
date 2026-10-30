@@ -128,6 +128,8 @@ interface TransferResponse {
   status: string;
   request_id: string;
   failure_type?: string;
+  transfer_amount?: number | string;
+  transfer_currency?: Currency;
 }
 
 const toTransfer = (r: TransferResponse): Transfer => ({ id: r.id, status: r.status, requestId: r.request_id, failureType: r.failure_type });
@@ -163,6 +165,14 @@ export async function createTransfer(
 
 export async function getTransfer(api: Api, id: string): Promise<Transfer> {
   return toTransfer(await api.get<TransferResponse>(`/transfers/${id}`));
+}
+
+// A transfer as the bank reports it, amount included, for the closing reconciliation. Kept apart
+// from Transfer, which the executor stores as JSON.
+export async function readTransferBack(api: Api, id: string): Promise<Transfer & { amountMinor?: bigint; currency?: Currency }> {
+  const r = await api.get<TransferResponse>(`/transfers/${id}`);
+  const amount = r.transfer_amount !== undefined && r.transfer_currency ? { amountMinor: toMinor(String(r.transfer_amount), r.transfer_currency), currency: r.transfer_currency } : {};
+  return { ...toTransfer(r), ...amount };
 }
 
 // Before retrying an ambiguous create, look for the first attempt by its request_id.

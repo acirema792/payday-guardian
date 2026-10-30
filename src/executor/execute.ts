@@ -273,7 +273,19 @@ export async function repayReturnedTransfer(input: ExecuteInput, contractorId: s
 export type FeeOutcome =
   | { status: "charged"; chargeId: string }
   | { status: "pending"; chargeId: string; detail: string }
+  | { status: "awaiting_approval"; subject: ApprovalSubject; detail: string }
   | { status: "accrued" | "deferred" | "failed"; detail: string };
+
+export function feeSubject(plan: EmployerPlan, runId: string): ApprovalSubject {
+  return {
+    action: "platform_fee",
+    employerAccountId: plan.accountId,
+    amountMinor: plan.platformFee.amountMinor,
+    currency: plan.platformFee.currency,
+    counterparty: "platform",
+    evidence: [runId],
+  };
+}
 
 // Charges come back NEW and settle later: read them back before calling the fee collected.
 export interface SettleOptions {
@@ -290,9 +302,16 @@ export async function collectPlatformFee(
   runId: string,
   mode: "connected" | "org-entity",
   settle: SettleOptions = { attempts: 15, waitMs: 2000 },
+  approvals: Approval[] = [],
 ): Promise<FeeOutcome> {
   if (plan.platformFee.status === "defer") return { status: "deferred", detail: "Fee does not fit after wages; deferred" };
   const amount = toMajor(plan.platformFee.amountMinor, plan.platformFee.currency);
+  // Charge authority: the agent charges a fee up to the policy limit on its own; above it, only
+  // with an approval bound to this exact amount, employer and run.
+  const subject = feeSubject(plan, runId);
+  if (plan.platformFee.needsApproval && !approvals.some((a) => isApproved(a, subject))) {
+    return { status: "awaiting_approval", subject, detail: `Fee of ${amount} ${plan.platformFee.currency} is above the agent's charge limit; a person approves` };
+  }
   if (mode === "org-entity") return { status: "accrued", detail: `${amount} ${plan.platformFee.currency} accrued to the platform ledger` };
 
   const key = `${runId}:${plan.employerId}:fee`;

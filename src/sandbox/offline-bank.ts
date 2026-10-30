@@ -207,5 +207,12 @@ export class OfflineBank {
 }
 
 function view(t: BankTransfer) {
-  return { id: t.id, status: t.status, request_id: t.request_id, failure_type: t.failure_type };
+  return {
+    id: t.id,
+    status: t.status,
+    request_id: t.request_id,
+    failure_type: t.failure_type,
+    transfer_amount: Number(toMajor(t.transferMinor, t.transfer_currency)),
+    transfer_currency: t.transfer_currency,
+  };
 }

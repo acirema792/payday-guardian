@@ -45,6 +45,7 @@ export interface PolicyConfig {
   platformFeeMinor: bigint; // charged in the employer's funding currency
   fraudWindowDays: number; // bank-detail changes this close to payday are held
   autoApproveConversionMinor: bigint; // in funding currency; above this a person approves
+  autoChargeMaxMinor: bigint; // platform fee the agent may charge on its own; above this a person approves
   rails: Record<string, CountryRails>;
   // Restricted currencies (e.g. PHP, INR) cannot be converted inside the wallet; each payout is
   // funded from the funding currency at a locked quote instead. Wallet balances in them are not netted.
@@ -80,7 +81,7 @@ export interface EmployerPlan {
   accountId: string;
   payouts: PayoutDecision[];
   conversions: ConversionDecision[];
-  platformFee: { status: "collect" | "defer"; amountMinor: bigint; currency: Currency };
+  platformFee: { status: "collect" | "defer"; amountMinor: bigint; currency: Currency; needsApproval: boolean };
   // Exact amount the employer must add (funding currency) to pay everyone not held for other reasons.
   fundingRequestMinor: bigint;
 }

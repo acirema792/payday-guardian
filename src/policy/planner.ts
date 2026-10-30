@@ -176,6 +176,7 @@ export function planEmployerPayroll(input: PlanInput): EmployerPlan {
       status: collectFee ? "collect" : "defer",
       amountMinor: config.platformFeeMinor,
       currency: employer.fundingCurrency,
+      needsApproval: config.platformFeeMinor > config.autoChargeMaxMinor,
     },
     fundingRequestMinor: shortfall > 0n ? shortfall : 0n,
   };

@@ -4,11 +4,13 @@
 
 Airwallex Agentic Banking Hackathon · Starter Kit 06, Multi-Employer Payroll Executor · Metal testnet instant rail · team VALOR
 
+![The console replaying the live sandbox run: the pooled-deposit trap, the diversion hold, the rejected approval, the bank return, the Metal advance and the payday report](docs/media/hero.gif)
+
 > **Demo video (4:45):** https://youtu.be/jE588gNmAYU — recorded from the live sandbox run
 
 > **Click-through demo, no install:** https://acirema792.github.io/payday-guardian/ — the console replaying the live sandbox run (switch to the offline rehearsal in its header)
 
-> **Proof it ran live:** the full demo on three Kit 6 connected accounts in the Airwallex sandbox, with Claude reading the messages. 35 of 36 contractors were paid on payday. The [audit log](docs/evidence/) has 300 API calls: 0 errors, and no employer call outside the three employer accounts. The missed-cut-off payout got a USD 50 advance on Metal testnet ([transaction](https://testnet.metalntwx.com/tx/0xbea56d14c2b9f86857b53737f77a56837a45b2a3059a8251608cce0282f7156e)), and Metal itself refused a payee off the mandate, one cent over the cap and a payment past the budget.
+> **Proof it ran live:** the full demo on three Kit 6 connected accounts in the Airwallex sandbox, with Claude reading the messages. 35 of 36 contractors were paid on payday; the 36th missed the Philippine cut-off because the employer's top-up arrived late, so a person approved an instant advance and the rest goes in the next window. The [audit log](docs/evidence/) has 335 API calls: 0 errors, and no employer call outside the three employer accounts. At the close, every payout the agent called paid was read back from Airwallex and matched the ledger to the cent (35 of 35). The missed-cut-off payout got a USD 50 advance on Metal testnet ([transaction](https://testnet.metalntwx.com/tx/0xa6161c8823a874b0255d212127ac7b4b395d7eb807b9bca1e100b3bc2f845a0b)), and Metal itself refused a payee off the mandate, one cent over the cap and a payment past the budget.
 
 ## Try it in 60 seconds (no credentials needed)
 
@@ -55,8 +57,8 @@ The demo follows the builder guide's arc: goal, plan, new information, revised d
 | Escalated after the cut-off / given an instant advance on Metal | 2 / 1 | 1 / 1 (on testnet) |
 | Bank returns re-paid once | 1 | 1 |
 | Platform fees charged / deferred | 3 / 1 | 3 / 1 |
-
-| Airwallex API calls / errors | 202 / 0 (in-memory) | **300 / 0** on the sandbox ([evidence](docs/evidence/)) |
+| Payouts read back from Airwallex and reconciled to the ledger | 34 / 34 | **35 / 35** |
+| Airwallex API calls / errors | 236 / 0 (in-memory) | **335 / 0** on the sandbox ([evidence](docs/evidence/)) |
 
 The live run paid one more person because live FX rates differ from the offline bank's fixed rates. At 04:10, Contoso's own money stretched to one more Philippine payout before the cut-off. The policy is the same in both runs; only the rates differ.
 
@@ -94,7 +96,7 @@ flowchart LR
   - SWIFT fees included before converting
   - net FX gap
   - shortfall order (statutory first, then cheapest to fund)
-  - a platform fee that never displaces wages
+  - a platform fee that never displaces wages, which the agent charges on its own only up to a limit (USD 100); above it, only with a person's approval of that exact fee
   - instant advances only for a missed cut-off, only to an address opted in through the verified portal before the fraud window, capped per employer
   - an exact funding request
 
@@ -107,6 +109,18 @@ flowchart LR
   - Every operation has a stored `request_id`. After an ambiguous response (timeout or 5xx), the executor looks the transfer up by `request_id` before retrying, so it never pays twice.
   - A platform fee counts as collected only once the charge reads back `SETTLED`.
   - Every call is written to an audit log.
+  - The day closes with a reconciliation: every payout the agent calls paid is read back from Airwallex on its own employer's account and must have landed, for exactly the amount and currency in the ledger (`src/policy/reconcile.ts`).
+
+## What is live and what is simulated
+
+| Live on the Airwallex sandbox (committed run) | Simulated, because a sandbox has no real counterparty |
+|---|---|
+| Three Kit 6 connected accounts, created, submitted and activated by API | Deposits into the employers' Global Accounts (`/simulation/deposit/create`) |
+| Every balance read, FX quote and conversion, beneficiary validation and creation, transfer and platform-fee charge | The beneficiary banks' side of each transfer: SENT, PAID, or FAILED with a return (`/simulation/transfers/{id}/transition`) |
+| Claude Opus 5.5 reading the emails and writing the ops lead's notes | The emails themselves, and the person approving (a scripted stand-in) |
+| The instant advance, mandate refusals and `mandate verify` on Metal testnet | Andrea's wallet (a synthetic testnet address) |
+
+All simulation calls go through one interface (`src/sandbox/simulator.ts`), so swapping in real banks touches nothing else.
 
 ## How it never pays one employer with another's money
 
@@ -117,7 +131,7 @@ flowchart LR
 
 ## Airwallex integration
 
-Every call is load-bearing. All employer calls are made with `x-on-behalf-of`.
+Every call is load-bearing. All employer calls are made with `x-on-behalf-of`. We used the Airwallex docs MCP server while building to get exact payload fields; the agent itself calls REST, because MCP authenticates as the platform and cannot act on behalf of a connected account.
 
 | Endpoint | Used for |
 |---|---|
@@ -164,7 +178,7 @@ Facts the build depends on, re-tested live (October 2026):
 
 ## Tests
 
-`npm test` runs the vitest suite (111 tests) in about 6 seconds. It covers:
+`npm test` runs the vitest suite (115 tests) in about 8 seconds. It covers:
 
 - money arithmetic
 - fraud and cut-off routing
@@ -172,13 +186,14 @@ Facts the build depends on, re-tested live (October 2026):
 - approval hashing
 - tenant isolation
 - the seed scenario
-- the executor against an in-memory Airwallex: idempotency, lost responses, returns, slippage, charges
+- the executor against an in-memory Airwallex: idempotency, lost responses, returns, slippage, charges, and the charge limit (a fee above it is charged only under an approval for that exact fee)
 - client retry rules
 - the Claude reader's schema mapping and fallback
 - the exception explainer: a note with a number not in the facts is discarded
 - webhook verification (several subscription secrets) and the HTTP endpoint
 - the instant advance policy (opt-in channel and age, never for fraud or shortfall holds, the cap, the remainder) and the Metal rail: the offline mandate's refusals and once-per-payment-id, and parsing of `metal-agent` output
-- the full demo, which must end with every payout landed, held or escalated, and must release the held payout only to the account on file under a matching approval
+- the closing reconciliation (a payout missing at the bank, a different amount, or one not landed is flagged)
+- the full demo, which must end with every payout landed, held or escalated, and reconciled, and must release the held payout only to the account on file under a matching approval
 
 Mutation checks confirmed that the tests fail when the fee rule, the tenant guard, idempotency or terminal transfer states are broken.
 
@@ -202,7 +217,7 @@ docs/evidence/   Live run timeline, full audit log, and checks
 ## Limits and next steps
 
 - **Payroll inputs are seed data.** A real deployment would read them from the platform's HRIS or payroll system.
-- **The approver is scripted in the demo.** Approvals are real (hash-bound and checked before execution, and conversions above USD 15,000 need one), but the person approving is a scripted stand-in; there is no approver UI yet.
+- **The approver is scripted in the demo.** Approvals are real (hash-bound and checked before execution; conversions above USD 15,000 and platform fees above USD 100 need one), but the person approving is a scripted stand-in; there is no approver UI yet.
 - **The committed live run confirms returns by reading the transfer.** The webhook receiver drives moment #3 offline; live subscriptions are created by API, but receiving them needs a public URL (`--webhook-url`), which that run did not have.
 - **The instant advance is capped at USD 50 and runs on testnet.** The faucet funds 100 USDZ per address, so the advance covers part of the payout and the rest goes in the next window. The opt-in is seed data; a real deployment would read it from the verified portal.
 
