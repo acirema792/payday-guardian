@@ -61,6 +61,8 @@ The model reads, the code decides, the API moves the money.
 
 - Faucet grants 100 USDZ per address (`metal-agent fund <address> --network testnet`); the console Faucet page grants per signed-in user. USDZ pays gas; `mandate pull` is submitted by Metal's facilitator, which pays its gas
 - `account create`, `mandate bind/renew/status/verify/pull` need the user's own RPC endpoint; `key create`, `fund`, `credential create` do not
+- `METAL_RPC_URL` is the endpoint's URL (`https://rpc-testnet.metalntwx.com/v1/<endpoint id>`), not its `mrpc_secret_...`; leave "Require a credential" off (the CLI sends no header). `account create` funds the owner address from the faucet; the faucet then rate-limits the next `fund` for ~30 s, so fund the account itself again if the setup only warned
+- Live run 2026-10-30 (`data/live-20261030T073728.db`): 35/36 paid, 300 Airwallex calls, 0 errors; Andrea's 50 USDZ advance paid on testnet (tx 0xbea56d14…), all three probes refused before sending, `mandate verify` yes
 - A mandate budget never resets: `mandate renew --replaces` starts a new one. Pull records live under `~/.metal-agent/pulls/<mandate>/`, so a new mandate per run makes the same payment id pay again on the next run
 
 ## Sandbox facts measured live (2026-10-27)
@@ -78,7 +80,7 @@ The model reads, the code decides, the API moves the money.
 
 ## Open setup items
 
-A live webhook subscription is optional (needs a public URL and `AWX_WEBHOOK_SECRET`); the receiver is built and tested offline.
+Live webhooks are optional: subscriptions are created by API, but receiving them needs a public URL that the user opens (`--webhook-url`). The committed live run has none.
 
 ## Commands
 

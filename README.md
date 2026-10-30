@@ -1,14 +1,14 @@
 # Payday Guardian
 
-**An AI payroll agent for contractor platforms on Airwallex.** It pays each employer's contractors from that employer's own wallet, prices fees in before it converts currency, and routes each payout to land before its local cut-off. It holds a payout when an email asks to redirect someone's pay, re-pays a bank return exactly once, and escalates to a person only the cases code cannot decide.
+**An AI payroll agent for contractor platforms on Airwallex.** It pays each employer's contractors from that employer's own wallet, prices fees in before it converts currency, and routes each payout to land before its local cut-off. It holds a payout when an email asks to redirect someone's pay, re-pays a bank return exactly once, and escalates to a person only the cases code cannot decide. When a payout misses its cut-off, the person can approve an instant advance on Metal testnet, paid from that employer's own Metal account under a mandate Metal enforces on chain.
 
-Airwallex Agentic Banking Hackathon · Starter Kit 06, Multi-Employer Payroll Executor · team VALOR
+Airwallex Agentic Banking Hackathon · Starter Kit 06, Multi-Employer Payroll Executor · Metal testnet instant rail · team VALOR
 
 > **Demo video (4:45):** https://youtu.be/jE588gNmAYU — recorded from the live sandbox run
 
 > **Click-through demo, no install:** https://acirema792.github.io/payday-guardian/ — the console replaying the live sandbox run (switch to the offline rehearsal in its header)
 
-> **Proof it ran live:** the full demo on three Kit 6 connected accounts in the Airwallex sandbox, with Claude reading the messages. 35 of 36 contractors were paid on payday. The [audit log](docs/evidence/) has 297 API calls: 0 errors, and no employer call outside the three employer accounts.
+> **Proof it ran live:** the full demo on three Kit 6 connected accounts in the Airwallex sandbox, with Claude reading the messages. 35 of 36 contractors were paid on payday. The [audit log](docs/evidence/) has 300 API calls: 0 errors, and no employer call outside the three employer accounts. The missed-cut-off payout got a USD 50 advance on Metal testnet ([transaction](https://testnet.metalntwx.com/tx/0xbea56d14c2b9f86857b53737f77a56837a45b2a3059a8251608cce0282f7156e)), and Metal itself refused a payee off the mandate, one cent over the cap and a payment past the budget.
 
 ## Try it in 60 seconds (no credentials needed)
 
@@ -44,18 +44,19 @@ The demo follows the builder guide's arc: goal, plan, new information, revised d
 | 04:20 | **#2** "Please send my pay to this new account today, urgent" | Claude flags the red flags. Code holds only Maria's payout, never uses the account number in the email, and the rest of the payroll runs. Claude writes the ops lead a plain-language note: why the agent stopped and what would release it |
 | 04:50 | A person calls Maria on the number on file: Maria never sent the email | The agent requests an approval bound to a SHA-256 of exactly what will execute (amount, currency, the account on file, employer account, evidence). The same approval is rejected for the email's account and for a larger amount. Maria is paid to the account on file; the fraudster gets nothing |
 | 05:30 | **#3** A bank return on Valeria's MXN payout (an email notice, plus a signed `payout.transfer.failed` webhook offline) | Verifies the webhook's signature and ignores its redelivery. Confirms the return from the API, not the email. Re-validates the beneficiary and re-pays once; running the repay again returns the same transfer |
-| 06:40 | **#4** Contoso's top-up lands after the Philippine cut-offs | Checks the wallet rather than the email, pays everyone whose payout can still land today, and escalates to a person the Philippine payouts whose cut-off has passed |
+| 06:40 | **#4** Contoso's top-up lands after the Philippine cut-offs | Checks the wallet rather than the email, pays everyone whose payout can still land today, and escalates to a person the Philippine payouts whose cut-off has passed. Claude's note offers two options: wait for the next window, or an instant advance |
+| 06:45 | Andrea opted in to instant advances weeks ago, through the verified portal | The ops lead approves a USD 50 advance, bound to a SHA-256 of the amount and the opted-in address. The agent pays it in USDZ on Metal testnet from Contoso's own Metal account, under a mandate that pays only Andrea, at most 50 per payment and 50 in total. Probes that bypass our code show Metal refusing an address off the mandate, one cent over the cap and a payment past the budget. The same pull again pays nothing; `mandate verify` confirms the payment from the chain alone. The rest goes in the next Philippine window |
 | 07:00 | Result | Payday report, final balances per employer, audit log |
 
 | | Offline rehearsal (`npm run demo`) | Live sandbox (`npm run demo:live`) |
 |---|---|---|
 | Paid on payday | 34 / 36 | **35 / 36** |
 | Diversions stopped / released to the account on file after approval | 1 / 1 | 1 / 1 |
-| Escalated after the cut-off | 2 | 1 |
+| Escalated after the cut-off / given an instant advance on Metal | 2 / 1 | 1 / 1 (on testnet) |
 | Bank returns re-paid once | 1 | 1 |
 | Platform fees charged / deferred | 3 / 1 | 3 / 1 |
 
-| Airwallex API calls / errors | 199 / 0 (in-memory) | **297 / 0** on the sandbox ([evidence](docs/evidence/)) |
+| Airwallex API calls / errors | 202 / 0 (in-memory) | **300 / 0** on the sandbox ([evidence](docs/evidence/)) |
 
 The live run paid one more person because live FX rates differ from the offline bank's fixed rates. At 04:10, Contoso's own money stretched to one more Philippine payout before the cut-off. The policy is the same in both runs; only the rates differ.
 
@@ -79,6 +80,8 @@ flowchart LR
   A --> X
   X -- x-on-behalf-of: employer acct --> T[TenantClient]
   T --> AW[(Airwallex<br/>connected accounts)]
+  A --> MR[Metal rail<br/>mandate key only]
+  MR -- pull under the employer's mandate --> MT[(Metal testnet<br/>one account per employer)]
   X --> S[(Store: request ids,<br/>results, audit log)]
 ```
 
@@ -92,6 +95,7 @@ flowchart LR
   - net FX gap
   - shortfall order (statutory first, then cheapest to fund)
   - a platform fee that never displaces wages
+  - instant advances only for a missed cut-off, only to an address opted in through the verified portal before the fraud window, capped per employer
   - an exact funding request
 
   Approvals are bound to a SHA-256 of action, employer account, amount, currency, counterparty and evidence. Execution re-checks the hash against what it is about to send.
@@ -127,6 +131,7 @@ Every call is load-bearing. All employer calls are made with `x-on-behalf-of`.
 | `POST /simulation/transfers/{id}/transition` | The bank's side: SENT, PAID, or FAILED with `BENEFICIARY_BANK_RETURNED` |
 | `POST /charges/create`, `GET /charges/{id}` | Platform fee from the employer's wallet, confirmed at SETTLED |
 | Webhooks (`payout.transfer.*`) | `src/webhooks/airwallex.ts`: HMAC-SHA256 over `x-timestamp` + raw body, 5-minute window, event-id dedupe, events for unknown accounts acknowledged but not acted on. `npm run webhooks` receives a real subscription |
+| Metal testnet (`metal-agent` 0.3.3, pinned) | `account create`, `fund`, `mandate credential create` + `bind`/`renew` (owner's step, `npm run metal:setup`); `mandate status`, `pull --payment-id`, `verify` (the agent, with the mandate key only) |
 
 ## Run it live on your own sandbox
 
@@ -138,7 +143,8 @@ Every call is load-bearing. All employer calls are made with `x-on-behalf-of`.
 6. **Employers:** `npm run provision` creates, submits and activates one connected account per employer with synthetic data, and gives each a USD Global Account. The accounts are recorded in `data/tenants.json`. Wait about 5 minutes before the first FX call (`unconfigured_client_fee`).
 7. **Prove money movement:** `npm run smoke:connected` pays one employer's contractors and charges the fee, and shows the other employers untouched.
 8. **Run the demo live:** `npm run demo:live -- --reader claude`, then `npm run console` and open http://localhost:4321/?run=live. `npm run evidence` regenerates `docs/evidence` from that run. A second live run needs fresh employers first: `npm run provision -- --fresh`.
-9. **Optional, webhooks:** expose port 4322 with a tunnel and create a subscription in Developer > Webhooks. Put its secret in `AWX_WEBHOOK_SECRET`, then run `npm run webhooks`.
+9. **Optional, Metal instant rail:** sign in at https://console-testnet.metalntwx.com, create an RPC endpoint and put its URL (`https://rpc-testnet.metalntwx.com/v1/<endpoint id>`, not its secret) in `METAL_RPC_URL`. `npm run metal:setup` creates Contoso's Metal account, funds it from the faucet, creates the contractor's synthetic wallet and binds a fresh mandate (keys stay in `data/metal/`). The next `npm run demo:live` pays the advance on testnet. Run `metal:setup` again before each live run.
+10. **Optional, live webhooks:** expose port 4322 with your own tunnel and pass its https URL: `npm run demo:live -- --reader claude --webhook-url https://<tunnel>`. The run creates (or re-points) a `payout.transfer.*` subscription for the platform and each employer account by API, keeps the secrets in `data/webhook-subscriptions.json`, and waits for the returned transfer's signed `payout.transfer.failed` event. `npm run webhooks -- --url https://<tunnel>` serves the same subscriptions on their own.
 
 ## What we measured on the sandbox
 
@@ -158,7 +164,7 @@ Facts the build depends on, re-tested live (October 2026):
 
 ## Tests
 
-`npm test` runs the vitest suite (96 tests) in about 6 seconds. It covers:
+`npm test` runs the vitest suite (111 tests) in about 6 seconds. It covers:
 
 - money arithmetic
 - fraud and cut-off routing
@@ -170,7 +176,8 @@ Facts the build depends on, re-tested live (October 2026):
 - client retry rules
 - the Claude reader's schema mapping and fallback
 - the exception explainer: a note with a number not in the facts is discarded
-- webhook verification
+- webhook verification (several subscription secrets) and the HTTP endpoint
+- the instant advance policy (opt-in channel and age, never for fraud or shortfall holds, the cap, the remainder) and the Metal rail: the offline mandate's refusals and once-per-payment-id, and parsing of `metal-agent` output
 - the full demo, which must end with every payout landed, held or escalated, and must release the held payout only to the account on file under a matching approval
 
 Mutation checks confirmed that the tests fail when the fee rule, the tenant guard, idempotency or terminal transfer states are broken.
@@ -183,7 +190,8 @@ src/tenant/      TenantClient / TenantRegistry: one Airwallex account per employ
 src/policy/      Pure decision code: planner, fraud, routing, money, approvals
 src/executor/    Plan -> API calls; node:sqlite store for idempotency and audit
 src/agent/       Inbound message reading: Claude reader and rule-based fallback
-src/webhooks/    Airwallex webhook verification, dedupe and tenant routing
+src/webhooks/    Airwallex webhook verification, dedupe, tenant routing; subscriptions by API
+src/metal/       Instant rail on Metal testnet: mandate-bound pulls via metal-agent, offline mirror
 src/sandbox/     The only place simulation endpoints are called; offline bank
 src/scenario/    Corridors (validated live) and the 3 x 12 seed scenario
 src/demo/        The demo as code, offline and live environments
@@ -195,8 +203,8 @@ docs/evidence/   Live run timeline, full audit log, and checks
 
 - **Payroll inputs are seed data.** A real deployment would read them from the platform's HRIS or payroll system.
 - **The approver is scripted in the demo.** Approvals are real (hash-bound and checked before execution, and conversions above USD 15,000 need one), but the person approving is a scripted stand-in; there is no approver UI yet.
-- **The live run confirms returns by reading the transfer.** The webhook receiver is built and tested, and it drives moment #3 offline. A live subscription needs a public URL.
-- **Escalations name the option, not the rail.** For a missed cut-off they offer an instant stablecoin rail (Metal testnet) as one choice for the person deciding, but that rail is not built.
+- **The committed live run confirms returns by reading the transfer.** The webhook receiver drives moment #3 offline; live subscriptions are created by API, but receiving them needs a public URL (`--webhook-url`), which that run did not have.
+- **The instant advance is capped at USD 50 and runs on testnet.** The faucet funds 100 USDZ per address, so the advance covers part of the payout and the rest goes in the next window. The opt-in is seed data; a real deployment would read it from the verified portal.
 
 ## License
 

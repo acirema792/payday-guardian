@@ -8,7 +8,7 @@
   :root {
     --bg: #f6f7f9; --panel: #ffffff; --ink: #14171f; --muted: #5b6474; --line: #e3e6eb; --accent: #4b3bd6;
     --planned: #3b82f6; --short: #d97706; --fraud: #dc2626; --sent: #6366f1; --paid: #16a34a; --returned: #ea580c;
-    --repaid: #0d9488; --escalated: #9333ea; --pending: #9aa3b2; --blocked: #64748b;
+    --repaid: #0d9488; --escalated: #9333ea; --advanced: #db2777; --pending: #9aa3b2; --blocked: #64748b;
     --chip-bg: #f2f4f7;
   }
   @media (prefers-color-scheme: dark) {
@@ -46,6 +46,7 @@
   .step .lines li.flag { color: var(--fraud); }
   .step .lines li.note { margin: 6px 0; padding: 8px 12px; border-left: 3px solid var(--accent); background: var(--chip-bg); border-radius: 6px; }
   .step .lines li.ok { color: var(--paid); }
+  .step .lines a { color: var(--accent); word-break: break-all; }
   .board { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 18px; }
   .employer { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px; }
   .employer h3 { margin: 0; font-size: 15px; }
@@ -99,10 +100,12 @@
   const STATUS = {
     pending: ["Pending", "--pending"], planned: ["Will pay", "--planned"], short: ["Short of funds", "--short"],
     held_fraud: ["Held: fraud check", "--fraud"], sent: ["Sent", "--sent"], paid: ["Paid", "--paid"],
-    returned: ["Returned", "--returned"], repaid: ["Re-paid", "--repaid"], escalated: ["Escalated", "--escalated"], blocked: ["Blocked", "--blocked"],
+    returned: ["Returned", "--returned"], repaid: ["Re-paid", "--repaid"], escalated: ["Escalated", "--escalated"], advanced: ["Instant advance (Metal)", "--advanced"], blocked: ["Blocked", "--blocked"],
   };
   const flag = (cc) => String.fromCodePoint(...[...cc].map((c) => 0x1f1e6 + c.charCodeAt(0) - 65));
   const fmt = (n, c, cents = false) => `${c} ${Number(n).toLocaleString("en-US", { minimumFractionDigits: cents ? 2 : 0, maximumFractionDigits: 2 })}`;
+  // Explorer links in the timeline (e.g. a Metal testnet transaction) open in a new tab.
+  const linkify = (html) => html.replace(/https:\/\/[^\s<]+/g, (u) => `<a href="${u}" target="_blank" rel="noopener">${u.length > 60 ? `${u.slice(0, 57)}…` : u}</a>`);
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 
   let run, index = 0, timer = null, previous = new Map();
@@ -118,7 +121,8 @@
     if (/^Read by /.test(line)) return "code";
     if (/^Red flags|^Hold /.test(line)) return "flag";
     if (/Note for the ops lead/.test(line)) return "note";
-    if (/: rejected|^Approved by|paid to the account/.test(line)) return "ok";
+    if (/^Probe, /.test(line)) return "code";
+    if (/: rejected|^Approved by|paid to the account|^Paid .* USDZ|already paid, nothing sent|^Verified from the chain/.test(line)) return "ok";
     if (/^\s/.test(line)) return "indent";
     return "";
   }
@@ -132,7 +136,7 @@
       stats = `<div class="stats">
         <div class="stat"><div class="n">${s.paidOnPayday}/${s.contractors}</div><div class="l">paid on payday, each from its own employer</div></div>
         <div class="stat"><div class="n">${s.heldForFraud}</div><div class="l">${s.releasedAfterApproval ? "diversion stopped; paid to the account on file after approval" : "held as suspected payroll diversion"}</div></div>
-        <div class="stat"><div class="n">${s.escalatedCutoff}</div><div class="l">escalated: cut-off already passed</div></div>
+        <div class="stat"><div class="n">${s.escalatedCutoff}</div><div class="l">escalated: cut-off already passed${s.instantAdvances ? `; ${s.instantAdvances} given an instant advance on Metal` : ""}</div></div>
         <div class="stat"><div class="n">${s.returnsRepaid}</div><div class="l">bank return re-paid exactly once</div></div>
         <div class="stat"><div class="n">${s.walletConversions + s.payoutLinkedFx}</div><div class="l">FX at locked quotes (net gap only)</div></div>
         <div class="stat"><div class="n">${s.apiCalls}</div><div class="l">API calls in the audit log</div></div>
@@ -141,7 +145,7 @@
     document.getElementById("step").innerHTML =
       `<span class="phase ${e.phase}" style="margin-left:0">${e.phase.replace("_", " ")}</span> <span class="time" style="color:var(--muted)">${e.at.slice(11, 16)} UTC</span>
        <h2>${esc(e.title)}</h2>
-       <ul class="lines">${e.lines.map((l) => `<li class="${lineClass(l)}">${esc(l)}</li>`).join("")}</ul>${stats}`;
+       <ul class="lines">${e.lines.map((l) => `<li class="${lineClass(l)}">${linkify(esc(l))}</li>`).join("")}</ul>${stats}`;
 
     const board = document.getElementById("board");
     const snap = e.snapshot;

@@ -21,6 +21,10 @@ if (!rpc) {
   console.error("METAL_RPC_URL is not set. Sign in at https://console-testnet.metalntwx.com, create an endpoint, and add METAL_RPC_URL=<endpoint> to .env.");
   process.exit(1);
 }
+if (!/^https:\/\//.test(rpc)) {
+  console.error("METAL_RPC_URL must be the endpoint's URL (https://rpc-testnet.metalntwx.com/v1/<endpoint id>), not its secret. Copy the endpoint URL from the Metal console.");
+  process.exit(1);
+}
 const redact = (text: string) => text.split(rpc).join("<METAL_RPC_URL>");
 
 function cli(args: string[], chain = true): Promise<ReturnType<typeof parseLines>> {

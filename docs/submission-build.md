@@ -14,20 +14,21 @@ The Build Phase needs its **own** submission. On the dashboard: Submissions > Bu
 **Click-through demo (no install):** https://acirema792.github.io/payday-guardian/
 **Repository:** https://github.com/acirema792/payday-guardian · **Live run evidence:** https://github.com/acirema792/payday-guardian/tree/main/docs/evidence
 
-**Track:** Multi-Tenant Platforms, Starter Kit 06 (Multi-Employer Payroll Executor).
+**Track:** Multi-Tenant Platforms, Starter Kit 06 (Multi-Employer Payroll Executor), with an instant rail on Metal testnet.
 
 ### What it is
-Payday Guardian is an AI payroll agent for contractor platforms on Airwallex. It pays each employer's contractors from that employer's own wallet, prices fees in before it converts currency, and routes each payout to land before its local cut-off. It holds a payout when an email asks to redirect someone's pay, re-pays a bank return exactly once, and escalates to a person only the cases code cannot decide.
+Payday Guardian is an AI payroll agent for contractor platforms on Airwallex. It pays each employer's contractors from that employer's own wallet, prices fees in before it converts currency, and routes each payout to land before its local cut-off. It holds a payout when an email asks to redirect someone's pay, re-pays a bank return exactly once, and escalates to a person only the cases code cannot decide. When a payout misses its cut-off, the person can approve an instant advance on Metal testnet, paid from that employer's own Metal account under a mandate Metal enforces on chain.
 
 ### It ran live
-We ran the full demo on the Airwallex sandbox against **three Kit 6 connected accounts**, with Claude reading the inbound messages. **35 of 36 contractors were paid on payday.** One diversion attempt was stopped, and that payout was released to the account on file after a person approved. One payout was escalated after the Philippine cut-off, and one bank return was re-paid exactly once. The audit log of that run is committed: **297 Airwallex API calls, 0 errors, and no employer-scoped call outside the three employer accounts**. The three platform fees read back SETTLED.
+We ran the full demo on the Airwallex sandbox against **three Kit 6 connected accounts**, with Claude reading the inbound messages. **35 of 36 contractors were paid on payday.** One diversion attempt was stopped, and that payout was released to the account on file after a person approved. One payout was escalated after the Philippine cut-off and got a **USD 50 instant advance on Metal testnet** ([transaction](https://testnet.metalntwx.com/tx/0xbea56d14c2b9f86857b53737f77a56837a45b2a3059a8251608cce0282f7156e)), and one bank return was re-paid exactly once. The audit log of that run is committed: **300 Airwallex API calls, 0 errors, and no employer-scoped call outside the three employer accounts**. The three platform fees read back SETTLED.
 
 ### The demo: goal, plan, four pieces of new information, result
 1. **Pooled-deposit trap:** Fabrikam's deposit lands while Contoso is short. Summed across tenants there is USD 103,000, enough to pay Contoso in full with other employers' money. The agent refuses. Contoso pays from its own wallet only, statutory payments first and then the cheapest to fund. The rest are held, and the platform fee is deferred until wages are covered.
 2. **Diversion email:** "send my pay to this new account today, urgent". Claude lists the red flags. Code holds only that one payout and never uses the account number in the email, and everyone else is paid. Claude writes the ops lead a plain-language note: why the agent stopped and what would release it.
    **Human approval:** after a call-back to the number on file, a person approves releasing the payout to the account on file. The approval is a SHA-256 of exactly what executes: amount, currency, account, employer and evidence. The same approval is rejected for the email's account and for a larger amount. The fraudster gets nothing.
 3. **Bank return:** a signed `payout.transfer.failed` webhook is verified (HMAC-SHA256) and its redelivery ignored. The return is confirmed from the API, not the email. The beneficiary is re-validated and the payout re-paid once; running the repay again returns the same transfer.
-4. **Late top-up after the Philippine cut-offs:** the agent checks that the money has cleared into the wallet before relying on the email. It pays every payout that can still land today and escalates the rest to a person.
+4. **Late top-up after the Philippine cut-offs:** the agent checks that the money has cleared into the wallet before relying on the email. It pays every payout that can still land today and escalates the rest to a person, with Claude's note offering two options: wait for the next window, or an instant advance.
+   **Instant advance on Metal:** Andrea opted in weeks earlier through the verified portal. The ops lead approves USD 50, bound to a SHA-256 of the amount and the opted-in address. The agent pays it in USDZ on Metal testnet from Contoso's own Metal account, under a mandate that pays only Andrea, at most 50 per payment and 50 in total. It holds the mandate key, never the owner's key. Probes that bypass our policy code show Metal itself refusing an address off the mandate, one cent over the cap and a payment past the budget; the same pull again pays nothing; `mandate verify` confirms the payment from the chain alone. The rest goes in the next Philippine window.
 
 ### Design: the model reads, the code decides, the API moves the money
 - **Claude Opus 5.5 reads** emails and bank notices into a schema-validated reading, with no tools and no credentials, falling back to a rule-based reader. Our eval passes 7/7, including a prompt-injection email.
@@ -41,6 +42,7 @@ We ran the full demo on the Airwallex sandbox against **three Kit 6 connected ac
   - shortfall order
   - fee deferral
   - exact funding request
+  - instant advances only for a missed cut-off, to an address opted in through the verified portal, capped per employer
 
   Approvals are bound to a SHA-256 hash of the amount, currency, counterparty, employer account and evidence.
 - **The executor moves money on Airwallex** with `x-on-behalf-of` on every employer call:
@@ -53,10 +55,13 @@ We ran the full demo on the Airwallex sandbox against **three Kit 6 connected ac
   - an audit log of every call
 
 ### Airwallex products used
-Connected accounts (create, submit, activate), Global Accounts and deposit simulation, balances, FX quotes and conversions, beneficiary validate and create (US, GB, DE, MX, PH, IN), transfers with LOCAL and SWIFT, transfer simulation (SENT, PAID, FAILED with failure type), charges for the platform fee, and webhooks (`payout.transfer.*`).
+Connected accounts (create, submit, activate), Global Accounts and deposit simulation, balances, FX quotes and conversions, beneficiary validate and create (US, GB, DE, MX, PH, IN), transfers with LOCAL and SWIFT, transfer simulation (SENT, PAID, FAILED with failure type), charges for the platform fee, and webhooks (`payout.transfer.*`, subscriptions created by API for the platform and each employer account).
+
+### Metal
+One Metal account per employer, like Airwallex. `metal-agent` (pinned 0.3.3): the owner creates the account, funds it from the faucet and binds a mandate (payee, per-payment cap, budget); the agent only runs `mandate status`, `pull --payment-id` and `verify`. Every pull and probe of the live run, with explorer links, is in the evidence.
 
 ### Try it in 60 seconds
-`npm ci && npm run demo && npm run console` runs the whole story on a deterministic offline bank, with no credentials. The console's **Live sandbox** switch shows the committed live run. `npm test` runs 96 tests. Setup for your own sandbox is in the README.
+`npm ci && npm run demo && npm run console` runs the whole story on a deterministic offline bank, with no credentials. The console's **Live sandbox** switch shows the committed live run. `npm test` runs 111 tests. Setup for your own sandbox is in the README.
 
 ### What we learned on the sandbox
 - Deposits into connected accounts clear a few seconds after the simulation call.
