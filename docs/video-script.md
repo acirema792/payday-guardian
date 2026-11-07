@@ -1,6 +1,6 @@
 # Demo video
 
-**Watch:** https://youtu.be/jE588gNmAYU (4:45, Unlisted). Recorded from the live run in [docs/evidence](evidence/): Airwallex sandbox (three Kit 6 connected accounts) and Metal testnet.
+**Watch:** https://youtu.be/IvPSarvIO9g (4:44, Unlisted). Recorded from the live run in [docs/evidence](evidence/): Airwallex sandbox (three Kit 6 connected accounts) and Metal testnet.
 
 Frames are the real console (`npm run console`, `?run=live`) and title cards, rendered at 1920×1080 with headless Chrome. The narration is Kokoro-82M (open-source neural text-to-speech, voice af_heart), run locally, captioned on screen and assembled with ffmpeg. The narration numbers are read from the committed evidence, so they match the data.
 

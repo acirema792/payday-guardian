@@ -1,4 +1,4 @@
-# HackerEarth Build Phase submission (saved as a draft on 2026-10-29; Oscar submits)
+# HackerEarth Build Phase submission (draft last saved 2026-11-07; Oscar submits)
 
 The Build Phase needs its **own** submission. On the dashboard: Submissions > Build Phase > New Submission. The form has four fields and **no video field**, so the video link goes at the top of the description.
 
@@ -6,11 +6,11 @@ The Build Phase needs its **own** submission. On the dashboard: Submissions > Bu
   `Payday Guardian: tenant-safe multi-employer payroll agent on Airwallex (Kit 6)`
 - **Parent Submission:** `Payday Guardian — Multi-Employer Payroll Agent (on time, tenant-isolated, fraud-aware)`
 - **Repository URL:** `https://github.com/acirema792/payday-guardian` (must be public, or shared with the judges, before submitting)
-- **Description:** everything below the line. Paste it into the editor and re-apply bold, headings and links if the paste loses them.
+- **Description:** everything below the line. Paste it into the editor and re-apply bold, headings and links if the paste loses them. The form silently refuses to save a description much over 8,000 characters of text (about 8,060 saved; about 8,480 did not), so keep it this length.
 
 ---
 
-**Demo video (4:45, recorded from the live sandbox run):** https://youtu.be/jE588gNmAYU
+**Demo video (4:44, recorded from the live sandbox run):** https://youtu.be/IvPSarvIO9g
 **Click-through demo (no install):** https://acirema792.github.io/payday-guardian/
 **Repository:** https://github.com/acirema792/payday-guardian · **Live run evidence:** https://github.com/acirema792/payday-guardian/tree/main/docs/evidence
 
@@ -25,7 +25,7 @@ We ran the full demo on the Airwallex sandbox against **three Kit 6 connected ac
 ### The demo: goal, plan, four pieces of new information, result
 1. **Pooled-deposit trap:** Fabrikam's deposit lands while Contoso is short. Summed across tenants there is USD 93,000, enough to pay Contoso in full with other employers' money. The agent refuses. Contoso pays from its own wallet only: statutory wages first, then the earliest cut-off, then the cheapest to fund. The rest are held, and the platform fee is deferred until wages are covered.
 2. **Diversion email:** "send my pay to this new account today, urgent". Claude lists the red flags. Code holds only that one payout and never uses the account number in the email, and everyone else is paid. Claude writes the ops lead a plain-language note: why the agent stopped and what would release it.
-   **Human approval:** after a call-back to the number on file, a person approves releasing the payout to the account on file. The approval is a SHA-256 of exactly what executes: this payday, the amount, the full bank details on file, the employer and the evidence, and the executor re-checks it before sending. The same approval fails for the email's account, a larger amount, next week's payday, 12 hours later, and when the agent signs it itself. The fraudster gets nothing.
+   **Human approval:** after a call-back to the number on file, a person approves releasing the payout to the account on file. The approval is a SHA-256 of exactly what executes: this payday, the amount, the full bank details on file, the employer and the evidence, and the executor re-checks it before sending. The same approval fails for the email's account, a larger amount, next week's payday, 12 hours later, and with the agent's own identity as approver. The fraudster gets nothing.
 3. **Bank return:** a signed `payout.transfer.failed` webhook is verified (HMAC-SHA256) and its redelivery ignored (in the offline run; live subscriptions are created by API but the committed live run had no public URL). The return is confirmed from the API, not the email. The beneficiary is re-validated and the payout re-paid once; running the repay again returns the same transfer.
 4. **Late top-up after the Philippine cut-offs:** Contoso's own money went first to its statutory Indian wages (the agent does not stake statutory pay on a promised top-up), then to the earliest cut-off; Andrea's payout no longer fit before 06:30, and the top-up lands at 06:40. The agent checks that the money has cleared into the wallet before relying on the email. It pays every payout that can still land today and escalates the rest to a person, with Claude's note offering two options: wait for the next window, or an instant advance.
    **Instant advance on Metal:** Andrea opted in weeks earlier through the verified portal. The ops lead approves USD 50, bound to a SHA-256 of the amount and the opted-in address. The agent pays it in USDZ on Metal testnet from Contoso's own Metal account, under a mandate that pays only Andrea, at most 50 per payment and 50 in total. It holds the mandate key, never the owner's key. Probes that bypass our policy code show Metal itself refusing an address off the mandate, one cent over the cap and a payment past the budget; the same pull again pays nothing; `mandate verify` confirms the payment from the chain alone. The rest goes in the next Philippine window.
@@ -66,12 +66,5 @@ The closing reconciliation found a transfer the sandbox had acknowledged as PAID
 
 ### Try it in 60 seconds
 `npm ci && npm run demo && npm run console` runs the whole story on a deterministic offline bank, with no credentials. The console's **Live sandbox** switch shows the committed live run. `npm test` runs 138 tests. Setup for your own sandbox is in the README.
-
-### What we learned on the sandbox
-- Deposits into connected accounts clear a few seconds after the simulation call.
-- PHP and INR wallet conversions fail, while payout-linked FX works.
-- A SWIFT USD payout costs a flat USD 15.
-- A failed transfer reads back as CANCELLED with its failure type.
-- Each corridor has its own routing quirks (the CLABE goes in `account_number`, IN needs IFSC as `bank_code`, PH needs a SWIFT code).
 
 Built solo by Oscar Ariza (team VALOR).

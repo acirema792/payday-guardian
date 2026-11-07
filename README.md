@@ -6,7 +6,7 @@ Airwallex Agentic Banking Hackathon · Starter Kit 06, Multi-Employer Payroll Ex
 
 ![The console replaying the live sandbox run: the pooled-deposit trap, the diversion hold, the rejected approval, the bank return, the Metal advance and the payday report](docs/media/hero.gif)
 
-- **Demo video (4:45):** https://youtu.be/jE588gNmAYU, recorded from the live sandbox run
+- **Demo video (4:44):** https://youtu.be/IvPSarvIO9g, recorded from the live sandbox run
 - **Click-through demo, no install:** https://acirema792.github.io/payday-guardian/ replays the live run (the offline rehearsal is one click away in its header)
 - **Proof it ran live** ([docs/evidence](docs/evidence/)): on three Kit 6 connected accounts, 35 of 36 contractors were paid on payday and 35 / 35 payouts read back from Airwallex matched the ledger to the cent. The audit log has 450 API calls, 0 error responses, and no employer call outside the three employer accounts. The one payout that missed its cut-off got a USD 50 advance on Metal testnet ([transaction](https://testnet.metalntwx.com/tx/0x265f023a9aeebf2913ec893ab92c085b892dcafab53058a69b8632dd22210265)) after Metal itself refused a payee off the mandate, one cent over the cap and a payment past the budget.
 
