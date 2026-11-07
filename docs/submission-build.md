@@ -20,37 +20,37 @@ The Build Phase needs its **own** submission. On the dashboard: Submissions > Bu
 Payday Guardian is an AI payroll agent for contractor platforms on Airwallex. It pays each employer's contractors from that employer's own wallet, prices fees in before it converts currency, and routes each payout to land before its local cut-off. It holds a payout when an email asks to redirect someone's pay, re-pays a bank return exactly once, and escalates to a person only the cases code cannot decide. When a payout misses its cut-off, the person can approve an instant advance on Metal testnet, paid from that employer's own Metal account under a mandate Metal enforces on chain.
 
 ### It ran live
-We ran the full demo on the Airwallex sandbox against **three Kit 6 connected accounts**, with Claude reading the inbound messages. **35 of 36 contractors were paid on payday.** One diversion attempt was stopped, and that payout was released to the account on file after a person approved. The 36th missed the Philippine cut-off because the employer's top-up arrived late; it was escalated and got a **USD 50 instant advance on Metal testnet** ([transaction](https://testnet.metalntwx.com/tx/0xa6161c8823a874b0255d212127ac7b4b395d7eb807b9bca1e100b3bc2f845a0b)), and one bank return was re-paid exactly once. The audit log of that run is committed: **335 Airwallex API calls, 0 errors, and no employer-scoped call outside the three employer accounts**. At the close, all 35 payouts were read back from Airwallex and matched the ledger to the cent. The three platform fees read back SETTLED. Deposits and the beneficiary banks' side of each transfer are sandbox simulations (behind one interface); everything else is live API calls.
+We ran the full demo on the Airwallex sandbox against **three Kit 6 connected accounts**, with Claude reading the inbound messages. **35 of 36 contractors were paid on payday.** One diversion attempt was stopped, and that payout was released to the account on file after a person approved. The 36th missed the Philippine cut-off because the employer's own money ran out first and its top-up arrived after the cut-off; it was escalated and got a **USD 50 instant advance on Metal testnet** ([transaction](https://testnet.metalntwx.com/tx/0x265f023a9aeebf2913ec893ab92c085b892dcafab53058a69b8632dd22210265)), and one bank return was re-paid exactly once. The audit log of that run is committed: **450 Airwallex API calls, 0 error responses, and no employer-scoped call outside the three employer accounts**. At the close, all 35 payouts were read back from Airwallex, PAID, and matched the ledger to the cent (the table is in the evidence). The three platform fees read back SETTLED. Deposits and the beneficiary banks' side of each transfer are sandbox simulations (behind one interface); everything else is live API calls.
 
 ### The demo: goal, plan, four pieces of new information, result
-1. **Pooled-deposit trap:** Fabrikam's deposit lands while Contoso is short. Summed across tenants there is USD 103,000, enough to pay Contoso in full with other employers' money. The agent refuses. Contoso pays from its own wallet only, statutory payments first and then the cheapest to fund. The rest are held, and the platform fee is deferred until wages are covered.
+1. **Pooled-deposit trap:** Fabrikam's deposit lands while Contoso is short. Summed across tenants there is USD 93,000, enough to pay Contoso in full with other employers' money. The agent refuses. Contoso pays from its own wallet only: statutory wages first, then the earliest cut-off, then the cheapest to fund. The rest are held, and the platform fee is deferred until wages are covered.
 2. **Diversion email:** "send my pay to this new account today, urgent". Claude lists the red flags. Code holds only that one payout and never uses the account number in the email, and everyone else is paid. Claude writes the ops lead a plain-language note: why the agent stopped and what would release it.
-   **Human approval:** after a call-back to the number on file, a person approves releasing the payout to the account on file. The approval is a SHA-256 of exactly what executes: amount, currency, account, employer and evidence. The same approval is rejected for the email's account and for a larger amount. The fraudster gets nothing.
-3. **Bank return:** a signed `payout.transfer.failed` webhook is verified (HMAC-SHA256) and its redelivery ignored. The return is confirmed from the API, not the email. The beneficiary is re-validated and the payout re-paid once; running the repay again returns the same transfer.
-4. **Late top-up after the Philippine cut-offs:** the agent checks that the money has cleared into the wallet before relying on the email. It pays every payout that can still land today and escalates the rest to a person, with Claude's note offering two options: wait for the next window, or an instant advance.
+   **Human approval:** after a call-back to the number on file, a person approves releasing the payout to the account on file. The approval is a SHA-256 of exactly what executes: this payday, the amount, the full bank details on file, the employer and the evidence, and the executor re-checks it before sending. The same approval fails for the email's account, a larger amount, next week's payday, 12 hours later, and when the agent signs it itself. The fraudster gets nothing.
+3. **Bank return:** a signed `payout.transfer.failed` webhook is verified (HMAC-SHA256) and its redelivery ignored (in the offline run; live subscriptions are created by API but the committed live run had no public URL). The return is confirmed from the API, not the email. The beneficiary is re-validated and the payout re-paid once; running the repay again returns the same transfer.
+4. **Late top-up after the Philippine cut-offs:** Contoso's own money went first to its statutory Indian wages (the agent does not stake statutory pay on a promised top-up), then to the earliest cut-off; Andrea's payout no longer fit before 06:30, and the top-up lands at 06:40. The agent checks that the money has cleared into the wallet before relying on the email. It pays every payout that can still land today and escalates the rest to a person, with Claude's note offering two options: wait for the next window, or an instant advance.
    **Instant advance on Metal:** Andrea opted in weeks earlier through the verified portal. The ops lead approves USD 50, bound to a SHA-256 of the amount and the opted-in address. The agent pays it in USDZ on Metal testnet from Contoso's own Metal account, under a mandate that pays only Andrea, at most 50 per payment and 50 in total. It holds the mandate key, never the owner's key. Probes that bypass our policy code show Metal itself refusing an address off the mandate, one cent over the cap and a payment past the budget; the same pull again pays nothing; `mandate verify` confirms the payment from the chain alone. The rest goes in the next Philippine window.
 
 ### Design: the model reads, the code decides, the API moves the money
-- **Claude Opus 5.5 reads** emails and bank notices into a schema-validated reading, with no tools and no credentials, falling back to a rule-based reader. Our eval passes 7/7, including a prompt-injection email.
-- **Claude explains** each exception to the person who must act. Code supplies the facts and the allowed options, and a note containing any number not in the facts is discarded.
+- **Claude Opus 5.5 reads** emails and bank notices into a schema-validated reading, with no tools and no credentials, falling back to a rule-based reader.
+- **Claude explains** each exception to the person who must act. Code supplies the facts and the allowed options, and a note containing any number or currency not in the facts, look-alike digits or an amount in words is discarded.
 - **Pure, unit-tested policy code decides**:
   - tenant guard
   - fraud holds
   - cut-off-aware LOCAL/SWIFT choice
   - SWIFT fees priced in before converting
   - net FX gap
-  - shortfall order
-  - fee deferral, and a charge limit above which a person approves the exact fee
+  - shortfall order: statutory, then earliest cut-off, then cheapest
+  - a fee that waits for every wage still owed, and a charge limit above which a person approves the exact fee
   - exact funding request
-  - instant advances only for a missed cut-off, to an address opted in through the verified portal, capped per employer
+  - instant advances only for a missed cut-off, on a payout the employer has funded, to an address opted in through the verified portal, capped per contractor per payday
 
-  Approvals are bound to a SHA-256 hash of the amount, currency, counterparty, employer account and evidence.
+  Approvals are bound to a SHA-256 hash of the amount, currency, counterparty, employer account and evidence (pay period included), expire after 12 hours, are refused when the approver is the agent's own identity, and are re-checked by the executor.
 - **The executor moves money on Airwallex** with `x-on-behalf-of` on every employer call:
   - quote-locked FX with a slippage guard
   - beneficiaries validated then created once
   - explicit rails
   - payout-linked FX for PHP and INR
-  - request_id idempotency, with recovery from lost responses
+  - request_id idempotency, with recovery from lost responses; payouts and the fee once per pay period across batches
   - fee charges confirmed at SETTLED
   - an audit log of every call
   - a closing reconciliation: every payout called paid is read back from Airwallex and must match the ledger
@@ -61,8 +61,11 @@ Connected accounts (create, submit, activate), Global Accounts and deposit simul
 ### Metal
 One Metal account per employer, like Airwallex. `metal-agent` (pinned 0.3.3): the owner creates the account, funds it from the faucet and binds a mandate (payee, per-payment cap, budget); the agent only runs `mandate status`, `pull --payment-id` and `verify`. Every pull and probe of the live run, with explorer links, is in the evidence.
 
+### What our own checks caught on the live sandbox
+The closing reconciliation found a transfer the sandbox had acknowledged as PAID but left at SENT, and one transition answered with a 500; transitions are now read back and retried. A top-up that stayed PENDING was never trusted: the agent planned with what the wallet held and refused an advance on an unfunded payout. The redacted logs of those runs are in [docs/evidence/incidents](https://github.com/acirema792/payday-guardian/tree/main/docs/evidence/incidents).
+
 ### Try it in 60 seconds
-`npm ci && npm run demo && npm run console` runs the whole story on a deterministic offline bank, with no credentials. The console's **Live sandbox** switch shows the committed live run. `npm test` runs 115 tests. Setup for your own sandbox is in the README.
+`npm ci && npm run demo && npm run console` runs the whole story on a deterministic offline bank, with no credentials. The console's **Live sandbox** switch shows the committed live run. `npm test` runs 138 tests. Setup for your own sandbox is in the README.
 
 ### What we learned on the sandbox
 - Deposits into connected accounts clear a few seconds after the simulation call.

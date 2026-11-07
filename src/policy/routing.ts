@@ -10,6 +10,13 @@ function minutesUtc(hhmm: string): number {
   return Number(match[1]) * 60 + Number(match[2]);
 }
 
+// The cut-off of the rail a payout goes on; no cut-off configured counts as end of day.
+export function cutoffMinutes(contractor: Contractor, method: TransferMethod, config: PolicyConfig): number {
+  const rails = config.rails[contractor.country];
+  const cutoff = method === "LOCAL" ? rails?.localCutoffUtc : rails?.swiftCutoffUtc;
+  return cutoff ? minutesUtc(cutoff) : 24 * 60;
+}
+
 function beforeCutoff(now: Date, cutoff: string | undefined): boolean {
   if (!cutoff) return true;
   return now.getUTCHours() * 60 + now.getUTCMinutes() <= minutesUtc(cutoff);

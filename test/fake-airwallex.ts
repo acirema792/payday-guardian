@@ -11,6 +11,7 @@ interface FakeTransfer {
 
 // In-memory stand-in for the endpoints the executor uses. Records every call.
 export class FakeAirwallex implements Api {
+  accountId = "acct_A"; // the employer account this fake is scoped to
   calls: { method: string; path: string; body?: any; query?: any }[] = [];
   transfers: FakeTransfer[] = [];
   conversions = new Map<string, Record<string, unknown>>();
@@ -24,6 +25,9 @@ export class FakeAirwallex implements Api {
   invalidBeneficiaryNames = new Set<string>();
   // Next transfers/create succeeds on the server but the response is lost.
   loseNextTransferResponse = false;
+  // Next transfers/create is rejected outright with this code; its request_id stays used, as on the sandbox.
+  rejectNextTransfer: string | undefined;
+  private rejectedRequestIds = new Set<string>();
   private seq = 0;
 
   private id(prefix: string) {
@@ -73,7 +77,15 @@ export class FakeAirwallex implements Api {
         return { conversion_id: this.id("conv"), status: "SETTLED", sell_amount: Math.round(sell * 100) / 100 } as T;
       }
       case "/transfers/create": {
-        if (this.transfers.some((t) => t.request_id === body.request_id)) throw new AirwallexError(400, "duplicate_request_id", {}, path);
+        if (this.transfers.some((t) => t.request_id === body.request_id) || this.rejectedRequestIds.has(body.request_id)) {
+          throw new AirwallexError(400, "duplicate_request_id", {}, path);
+        }
+        if (this.rejectNextTransfer) {
+          const code = this.rejectNextTransfer;
+          this.rejectNextTransfer = undefined;
+          this.rejectedRequestIds.add(body.request_id);
+          throw new AirwallexError(400, code, {}, path);
+        }
         const t: FakeTransfer = { id: this.id("tr"), request_id: body.request_id, status: "PROCESSING", body };
         this.transfers.push(t);
         if (this.loseNextTransferResponse) {

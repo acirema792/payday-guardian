@@ -47,6 +47,12 @@ export class Store {
     return requestId;
   }
 
+  // After a definitive rejection nothing was created, so the next attempt may use a new request_id.
+  // Never call this after an ambiguous response.
+  forget(key: string): void {
+    this.db.prepare("DELETE FROM operations WHERE key = ? AND result IS NULL").run(key);
+  }
+
   result<T>(key: string): T | undefined {
     const row = this.db.prepare("SELECT result FROM operations WHERE key = ?").get(key) as { result: string | null } | undefined;
     return row?.result ? (JSON.parse(row.result) as T) : undefined;

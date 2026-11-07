@@ -16,6 +16,9 @@ export interface Contractor {
   // Last change to bank details, and how the change was requested.
   bankDetailsChangedAt?: Date;
   bankDetailsChangeChannel?: InstructionChannel;
+  // A person verified the change out of band and released the fraud hold. The payout is planned,
+  // but executes only under an approval for exactly that payout (evidence ids bound into it).
+  releasedHold?: { evidence: string[] };
 }
 
 export interface Employer {
@@ -64,6 +67,7 @@ export interface PayoutDecision {
   method?: TransferMethod;
   feeMinor: bigint;
   holdReasons: HoldReason[];
+  approvalRequired?: { action: "release_hold"; evidence: string[] };
 }
 
 export interface ConversionDecision {

@@ -1,16 +1,14 @@
 # Payday Guardian
 
-**An AI payroll agent for contractor platforms on Airwallex.** It pays each employer's contractors from that employer's own wallet, prices fees in before it converts currency, and routes each payout to land before its local cut-off. It holds a payout when an email asks to redirect someone's pay, re-pays a bank return exactly once, and escalates to a person only the cases code cannot decide. When a payout misses its cut-off, the person can approve an instant advance on Metal testnet, paid from that employer's own Metal account under a mandate Metal enforces on chain.
+**A payroll agent for contractor platforms on Airwallex.** It pays each employer's contractors from that employer's own wallet, stops a payroll-diversion attempt without stopping payroll, and closes the day by reconciling every payout with Airwallex. Claude reads and explains, tested policy code decides, and Airwallex moves the money. When a payout misses its cut-off, a person can approve an instant advance on Metal testnet, paid under a mandate Metal enforces on chain.
 
 Airwallex Agentic Banking Hackathon · Starter Kit 06, Multi-Employer Payroll Executor · Metal testnet instant rail · team VALOR
 
 ![The console replaying the live sandbox run: the pooled-deposit trap, the diversion hold, the rejected approval, the bank return, the Metal advance and the payday report](docs/media/hero.gif)
 
-> **Demo video (4:45):** https://youtu.be/jE588gNmAYU — recorded from the live sandbox run
-
-> **Click-through demo, no install:** https://acirema792.github.io/payday-guardian/ — the console replaying the live sandbox run (switch to the offline rehearsal in its header)
-
-> **Proof it ran live:** the full demo on three Kit 6 connected accounts in the Airwallex sandbox, with Claude reading the messages. 35 of 36 contractors were paid on payday; the 36th missed the Philippine cut-off because the employer's top-up arrived late, so a person approved an instant advance and the rest goes in the next window. The [audit log](docs/evidence/) has 335 API calls: 0 errors, and no employer call outside the three employer accounts. At the close, every payout the agent called paid was read back from Airwallex and matched the ledger to the cent (35 of 35). The missed-cut-off payout got a USD 50 advance on Metal testnet ([transaction](https://testnet.metalntwx.com/tx/0xa6161c8823a874b0255d212127ac7b4b395d7eb807b9bca1e100b3bc2f845a0b)), and Metal itself refused a payee off the mandate, one cent over the cap and a payment past the budget.
+- **Demo video (4:45):** https://youtu.be/jE588gNmAYU, recorded from the live sandbox run
+- **Click-through demo, no install:** https://acirema792.github.io/payday-guardian/ replays the live run (the offline rehearsal is one click away in its header)
+- **Proof it ran live** ([docs/evidence](docs/evidence/)): on three Kit 6 connected accounts, 35 of 36 contractors were paid on payday and 35 / 35 payouts read back from Airwallex matched the ledger to the cent. The audit log has 450 API calls, 0 error responses, and no employer call outside the three employer accounts. The one payout that missed its cut-off got a USD 50 advance on Metal testnet ([transaction](https://testnet.metalntwx.com/tx/0x265f023a9aeebf2913ec893ab92c085b892dcafab53058a69b8632dd22210265)) after Metal itself refused a payee off the mandate, one cent over the cap and a payment past the budget.
 
 ## Try it in 60 seconds (no credentials needed)
 
@@ -22,45 +20,54 @@ npm run demo      # the full payday story on a deterministic offline bank
 npm run console   # http://localhost:4321
 ```
 
-The console steps through the payday timeline and shows each employer's wallet and all 36 payouts, coloured by status. **Live sandbox** in its header switches to the committed live run, so you can inspect it without an Airwallex account.
-
-`npm test` runs the test suite (typecheck with `npm run typecheck`).
+The console steps through the payday and shows each employer's wallet and all 36 payouts, coloured by status. **Live sandbox** in its header switches to the committed live run. `npm test` runs 138 tests.
 
 ## The problem
 
 Contractor and EOR platforms pay many people in many countries for many employers. Every payday the ops team makes the same high-stakes calls under time pressure:
 
-- **Whose money?** Funding arrives late or partially. Summing balances across tenants says "enough money" for a batch the short employer cannot fund, and paying Employer B's people with Employer C's money is a compliance breach.
+- **Whose money?** Funding arrives late or partially. Summing balances across tenants says "enough money" for a batch the short employer cannot fund, and paying Employer B's people with Employer C's money is a client-money breach.
 - **Which rail, and in time?** Each country has its own rail, fee and cut-off. If SWIFT fees aren't priced in before converting, the last payout fails. If a cut-off is missed, wages arrive late.
 - **Is this request real?** "My account changed, pay me at this new one today, it's urgent" is how payroll diversion fraud starts.
 - **Did it land?** Banks return payouts. A careless retry pays twice.
 
 ## What the agent does on payday
 
-The demo follows the builder guide's arc: goal, plan, new information, revised decision, result. Every number comes from policy code and the bank. Claude reads the messages and explains the exceptions.
+The demo follows the builder guide's arc: goal, plan, new information, revised decision, result. Times are the scenario's clock (payday 2026-11-06, UTC); cut-offs are illustrative policy settings, not Airwallex guarantees.
 
-| Time (UTC) | New information | What Payday Guardian decides |
+| Time | New information | What Payday Guardian decides |
 |---|---|---|
-| 04:00 | Payday for 3 employers × 12 contractors in the US, UK, Germany, Mexico, the Philippines and India | Plans each employer separately. Each plan includes fees, nets FX against what the wallet already holds, picks a LOCAL or SWIFT rail per contractor from the cut-offs, and lists exactly what to request from a short employer |
-| 04:10 | **#1** Fabrikam's deposit lands while Contoso is still short | A pooled ledger would now see USD 103,000 and pay Contoso in full, partly with other employers' money. The agent pays Fabrikam in full and keeps Contoso within its own wallet: statutory and cheapest-to-fund payouts first, the rest held, the platform fee deferred |
-| 04:20 | **#2** "Please send my pay to this new account today, urgent" | Claude flags the red flags. Code holds only Maria's payout, never uses the account number in the email, and the rest of the payroll runs. Claude writes the ops lead a plain-language note: why the agent stopped and what would release it |
-| 04:50 | A person calls Maria on the number on file: Maria never sent the email | The agent requests an approval bound to a SHA-256 of exactly what will execute (amount, currency, the account on file, employer account, evidence). The same approval is rejected for the email's account and for a larger amount. Maria is paid to the account on file; the fraudster gets nothing |
+| 04:00 | Payday for 3 employers × 12 contractors in the US, UK, Germany, Mexico, the Philippines and India | Plans each employer separately: fees priced in, FX netted against what the wallet already holds, a LOCAL or SWIFT rail per contractor from the cut-offs, and an exact funding request for a short employer |
+| 04:10 | **#1** Fabrikam's deposit lands while Contoso is still short | A pooled ledger would now see USD 93,000 and pay Contoso in full with other employers' money. The agent pays Fabrikam in full and keeps Contoso within its own wallet: statutory wages first, then the earliest cut-off, then the cheapest to fund. The rest wait, and the platform fee is deferred |
+| 04:20 | **#2** "Please send my pay to this new account today, urgent" | Claude lists the red flags. Code holds only Maria's payout and never uses the account in the email; the rest of payroll runs. Claude writes the ops lead a plain-language note: why the agent stopped and what would release it |
+| 04:50 | A person calls Maria on the number on file: she never sent the email | The agent requests an approval bound to a SHA-256 of what will execute: this payday, the amount, the full bank details on file, the employer account and the evidence. The executor re-checks it before sending. The same approval fails for the email's account, a larger amount, next week's payday, 12 hours later, and with the agent's own identity as approver. Maria is paid to the account on file |
 | 05:30 | **#3** A bank return on Valeria's MXN payout (an email notice, plus a signed `payout.transfer.failed` webhook offline) | Verifies the webhook's signature and ignores its redelivery. Confirms the return from the API, not the email. Re-validates the beneficiary and re-pays once; running the repay again returns the same transfer |
-| 06:40 | **#4** Contoso's top-up lands after the Philippine cut-offs | Checks the wallet rather than the email, pays everyone whose payout can still land today, and escalates to a person the Philippine payouts whose cut-off has passed. Claude's note offers two options: wait for the next window, or an instant advance |
-| 06:45 | Andrea opted in to instant advances weeks ago, through the verified portal | The ops lead approves a USD 50 advance, bound to a SHA-256 of the amount and the opted-in address. The agent pays it in USDZ on Metal testnet from Contoso's own Metal account, under a mandate that pays only Andrea, at most 50 per payment and 50 in total. Probes that bypass our code show Metal refusing an address off the mandate, one cent over the cap and a payment past the budget. The same pull again pays nothing; `mandate verify` confirms the payment from the chain alone. The rest goes in the next Philippine window |
-| 07:00 | Result | Payday report, final balances per employer, audit log |
+| 06:40 | **#4** Contoso's top-up, more than its funding request, lands after the Philippine cut-offs | At 04:30 Contoso's own money went first to its statutory Indian wages (the agent does not stake statutory pay on a promised top-up), then to the earliest cut-off, and Andrea's payout no longer fit before 06:30. The top-up cleared 25 seconds after it was sent. The agent checks the wallet, not the email, pays everyone whose payout can still land today, and escalates Andrea's payout to a person. Claude's note offers two options: wait for the next window, or an instant advance |
+| 06:45 | Andrea opted in to instant advances weeks ago, through the verified portal | The ops lead approves USD 50, bound to the amount and the opted-in address. The agent pays it in USDZ on Metal testnet from Contoso's own Metal account, under a mandate that pays only Andrea, at most 50. The rest goes in the next Philippine window |
+| 07:00 | Close of the day | Every payout the agent calls paid is read back from Airwallex: it must be PAID, for exactly the amount and currency in the ledger. Then the payday report and the audit log |
 
 | | Offline rehearsal (`npm run demo`) | Live sandbox (`npm run demo:live`) |
 |---|---|---|
-| Paid on payday | 34 / 36 | **35 / 36** |
+| Paid on payday | 35 / 36 | **35 / 36** |
 | Diversions stopped / released to the account on file after approval | 1 / 1 | 1 / 1 |
-| Escalated after the cut-off / given an instant advance on Metal | 2 / 1 | 1 / 1 (on testnet) |
+| Escalated after the cut-off / given an instant advance on Metal | 1 / 1 | 1 / 1 (on testnet) |
 | Bank returns re-paid once | 1 | 1 |
-| Platform fees charged / deferred | 3 / 1 | 3 / 1 |
-| Payouts read back from Airwallex and reconciled to the ledger | 34 / 34 | **35 / 35** |
-| Airwallex API calls / errors | 236 / 0 (in-memory) | **335 / 0** on the sandbox ([evidence](docs/evidence/)) |
+| Platform fees charged, one per employer | 3 (1 deferred first, until wages were covered) | 3 (1 deferred first, until wages were covered) |
+| Payouts read back from Airwallex and reconciled to the ledger | 35 / 35 | **35 / 35** |
+| Airwallex API calls / error responses | 242 / 0 (in-memory) | **450 / 0** on the sandbox ([evidence](docs/evidence/)) |
 
-The live run paid one more person because live FX rates differ from the offline bank's fixed rates. At 04:10, Contoso's own money stretched to one more Philippine payout before the cut-off. The policy is the same in both runs; only the rates differ.
+Both runs follow the same policy; amounts differ slightly because the live run converts at Airwallex's quotes and the offline bank at fixed rates.
+
+## What is live and what is simulated
+
+| Live on the Airwallex sandbox (committed run) | Simulated, because a sandbox has no real counterparty |
+|---|---|
+| Three Kit 6 connected accounts, created, submitted and activated by API | Deposits into the employers' Global Accounts (`/simulation/deposit/create`) |
+| Every balance read, FX quote and conversion, beneficiary validation and creation, transfer, read-back and platform-fee charge | The beneficiary banks' side of each transfer: SENT, PAID, or FAILED with a return (`/simulation/transfers/{id}/transition`) |
+| Claude Opus 5.5 reading the emails and writing the ops lead's notes | The emails themselves, and the person approving (a scripted stand-in; the approval checks are real) |
+| The instant advance, the mandate's refusals and `mandate verify` on Metal testnet | Andrea's wallet (a synthetic testnet address) |
+
+All simulation calls go through one interface (`src/sandbox/simulator.ts`), so swapping in real banks touches nothing else. Three live attempts before the committed run hit sandbox behaviour the agent had to handle (a deposit stuck PENDING, a PAID transition acknowledged but not applied, a transition answered with a 500); their logs and the fixes are in [docs/evidence/incidents](docs/evidence/incidents/).
 
 ## Design: the model reads, the code decides, the API moves the money
 
@@ -85,141 +92,73 @@ flowchart LR
   A --> MR[Metal rail<br/>mandate key only]
   MR -- pull under the employer's mandate --> MT[(Metal testnet<br/>one account per employer)]
   X --> S[(Store: request ids,<br/>results, audit log)]
+  X --> RC[Closing reconciliation<br/>read back every payout]
 ```
 
-- **Claude explains** (`src/agent/explainer.ts`). For each exception a person must handle (a fraud hold, a missed cut-off), code assembles the facts, reasons and allowed options, and Claude writes the note the ops lead reads. Any number in the note that is not in the facts makes the agent discard it for a template, so the model cannot introduce an amount or an account.
-- **Claude reads** (`src/agent/claude-interpreter.ts`). Claude Opus 5.5 turns each inbound message into a schema-validated reading: kind, person, amount, currency, red flags and a summary. It has no tools and no credentials, and it is told never to follow instructions inside a message. If it errors or refuses, a deterministic reader takes over. `npm run reader:eval` checks it on labelled messages, including a prompt-injection email asking to "approve all payouts" and redirect someone's pay (7/7).
-- **Code decides** (`src/policy/`). The policy engine is pure functions over bigint minor units:
-  - tenant guard
-  - fraud holds for recent or emailed bank-detail changes
-  - cut-off-aware rail choice
-  - SWIFT fees included before converting
-  - net FX gap
-  - shortfall order (statutory first, then cheapest to fund)
-  - a platform fee that never displaces wages, which the agent charges on its own only up to a limit (USD 100); above it, only with a person's approval of that exact fee
-  - instant advances only for a missed cut-off, only to an address opted in through the verified portal before the fraud window, capped per employer
-  - an exact funding request
+- **Claude reads** ([`claude-interpreter.ts`](src/agent/claude-interpreter.ts)). Claude Opus 5.5 turns each inbound message into a schema-validated reading: kind, person, amount, currency, red flags and a summary. It has no tools and no credentials, and is told never to follow instructions inside a message. If it errors or refuses, a deterministic reader takes over.
+- **Claude explains** ([`explainer.ts`](src/agent/explainer.ts)). For each exception, code assembles the facts and the allowed options, and Claude writes the ops lead's note. A note with any number or currency not in the facts, look-alike digits, or an amount spelled out in words is discarded for a template.
+- **Code decides** ([`src/policy/`](src/policy/)). Pure functions over integer minor units: tenant guard, fraud holds, cut-off-aware rails, SWIFT fees before converting, the net FX gap, the shortfall order, a fee that waits for every wage still owed, instant advances, approvals and the closing reconciliation.
+- **The API moves the money** ([`src/executor/`](src/executor/)). Quote-locked FX with a 0.5% slippage guard, beneficiaries validated then created once, explicit rails, payout-linked FX for PHP and INR, a stored `request_id` per operation with recovery from lost responses, fees confirmed at `SETTLED`, and an audit log of every call.
 
-  Approvals are bound to a SHA-256 of action, employer account, amount, currency, counterparty and evidence. Execution re-checks the hash against what it is about to send.
-- **The API moves the money** (`src/executor/`).
-  - FX is quote-locked, with a 0.5% slippage guard against the planned rate.
-  - Each contractor's beneficiary is validated, then created once.
-  - Transfers set `transfer_method` explicitly.
-  - PHP and INR are funded with payout-linked FX.
-  - Every operation has a stored `request_id`. After an ambiguous response (timeout or 5xx), the executor looks the transfer up by `request_id` before retrying, so it never pays twice.
-  - A platform fee counts as collected only once the charge reads back `SETTLED`.
-  - Every call is written to an audit log.
-  - The day closes with a reconciliation: every payout the agent calls paid is read back from Airwallex on its own employer's account and must have landed, for exactly the amount and currency in the ledger (`src/policy/reconcile.ts`).
+## Kit 06 rules, and where they live
 
-## What is live and what is simulated
+| Rule (builder guide) | Enforced in | Pinned by |
+|---|---|---|
+| One connected account per employer; never another employer's balance | [`TenantRegistry`/`TenantClient`](src/tenant/adapter.ts); the planner throws on a foreign balance ([`planner.ts`](src/policy/planner.ts)); the executor refuses a plan on another account ([`execute.ts`](src/executor/execute.ts)) | [`tenant.test.ts`](test/tenant.test.ts), [`planner.test.ts`](test/planner.test.ts), [`executor.test.ts`](test/executor.test.ts), and the audit log |
+| `x-on-behalf-of` on every employer call | [`adapter.ts`](src/tenant/adapter.ts) (no way to name another account per call) | [`tenant.test.ts`](test/tenant.test.ts) |
+| Price SWIFT fees before converting | [`planner.ts`](src/policy/planner.ts), [`routing.ts`](src/policy/routing.ts) | [`planner.test.ts`](test/planner.test.ts) |
+| Set `transfer_method` explicitly | [`api.ts`](src/airwallex/api.ts) | [`executor.test.ts`](test/executor.test.ts) |
+| Drive each transfer to a terminal state | [`simulator.ts`](src/sandbox/simulator.ts) (reads back and retries a transition the sandbox did not apply) | [`simulator.test.ts`](test/simulator.test.ts), [`demo.test.ts`](test/demo.test.ts) |
+| Platform fee by `charges/create`, with a rule for when the agent may charge | Fee only after every wage still owed, up to USD 100 on the agent's own authority, above that only under an approval of that exact fee ([`planner.ts`](src/policy/planner.ts), [`execute.ts`](src/executor/execute.ts)) | [`planner.test.ts`](test/planner.test.ts), [`executor.test.ts`](test/executor.test.ts) |
+| Reuse a `request_id` only to retry the same operation | [`store.ts`](src/executor/store.ts); payouts and the fee once per pay period, across batches | [`executor.test.ts`](test/executor.test.ts) |
+| Approvals bound to amount, currency, counterparty and evidence | [`approval.ts`](src/policy/approval.ts): plus pay period, expiry and no self-approval; re-checked by the executor | [`approval.test.ts`](test/approval.test.ts), [`executor.test.ts`](test/executor.test.ts) |
+| Webhooks: HMAC over `x-timestamp` + raw body, dedupe on event id | [`webhooks/airwallex.ts`](src/webhooks/airwallex.ts) | [`webhooks.test.ts`](test/webhooks.test.ts) |
+| Simulations behind one interface | [`simulator.ts`](src/sandbox/simulator.ts) | |
 
-| Live on the Airwallex sandbox (committed run) | Simulated, because a sandbox has no real counterparty |
-|---|---|
-| Three Kit 6 connected accounts, created, submitted and activated by API | Deposits into the employers' Global Accounts (`/simulation/deposit/create`) |
-| Every balance read, FX quote and conversion, beneficiary validation and creation, transfer and platform-fee charge | The beneficiary banks' side of each transfer: SENT, PAID, or FAILED with a return (`/simulation/transfers/{id}/transition`) |
-| Claude Opus 5.5 reading the emails and writing the ops lead's notes | The emails themselves, and the person approving (a scripted stand-in) |
-| The instant advance, mandate refusals and `mandate verify` on Metal testnet | Andrea's wallet (a synthetic testnet address) |
+## Metal: an instant rail with limits enforced on chain
 
-All simulation calls go through one interface (`src/sandbox/simulator.ts`), so swapping in real banks touches nothing else.
+One Metal account per employer, like Airwallex. The owner (the employer's admin) creates Contoso's Metal account, funds it from the faucet and binds a **mandate**: one payee (Andrea's opted-in address), a per-payment cap of 50 USDZ and a total budget of 50 USDZ. The agent holds only the mandate key, never the owner key, and can only run `mandate status`, `mandate pull --payment-id` and `mandate verify` ([`src/metal/`](src/metal/), `metal-agent` 0.3.3 pinned).
+
+In the live run, three probes bypassed our own policy code and went straight to Metal: a payee not on the mandate, 50.01 USDZ (one cent over the cap), and a second payment past the budget. Metal refused all three and nothing was sent. The approved 50 USDZ advance paid once; the same `--payment-id` again paid nothing; `mandate verify` confirmed the payment from the chain alone. Every pull is in [docs/evidence](docs/evidence/) with explorer links.
+
+Our policy decides *whether* an advance is allowed (a missed cut-off only, an opt-in through the verified portal older than the fraud window, a payout the employer has already funded, the employer's cap). Metal enforces *who and how much*, even if our code were compromised.
 
 ## How it never pays one employer with another's money
 
-1. **One account per employer.** `TenantRegistry` maps each employer to exactly one Airwallex connected account and rejects duplicates. Every employer-scoped call goes through `TenantClient`, which sends `x-on-behalf-of` on every call, simulations included.
-2. **The planner refuses foreign money.** `planEmployerPayroll` throws `TenantIsolationError` if it is handed a balance or contractor from another tenant. It never sees a combined balance.
-3. **Funding is checked against the wallet, not the email.** A top-up email counts only once the money has cleared into that employer's own wallet.
-4. **Proven from the log.** The evidence export checks the audit log of the live run. It found no employer-scoped call outside the three employer accounts, and the only platform-level calls are the three fee charges.
+1. **One account per employer.** `TenantRegistry` maps each employer to exactly one Airwallex connected account. Every employer-scoped call goes through `TenantClient`, which sends `x-on-behalf-of` on every call, simulations included.
+2. **The planner refuses foreign money.** `planEmployerPayroll` throws `TenantIsolationError` if handed another tenant's balance or contractor. It never sees a combined balance.
+3. **The executor refuses a mismatched account.** A plan for one employer cannot execute on another employer's `TenantClient`.
+4. **Funding is checked against the wallet, not the email.** A top-up email counts only once the money has cleared into that employer's own wallet.
+5. **Proven from the log.** The evidence export checks the live audit log: no employer-scoped call outside the three employer accounts; the only platform-level calls are the fee charges.
 
 ## Airwallex integration
 
-Every call is load-bearing. All employer calls are made with `x-on-behalf-of`. We used the Airwallex docs MCP server while building to get exact payload fields; the agent itself calls REST, because MCP authenticates as the platform and cannot act on behalf of a connected account.
+Every call is load-bearing, and every employer call carries `x-on-behalf-of`. We used the Airwallex docs MCP server while building to get exact payload fields; the agent calls REST, because MCP authenticates as the platform and cannot act on behalf of a connected account.
 
 | Endpoint | Used for |
 |---|---|
 | `POST /accounts/create`, `/accounts/{id}/submit`, `/simulation/accounts/{id}/update_status` | Provision each employer as a Kit 6 connected account (`npm run provision`) |
 | `POST /global_accounts/create`, `/simulation/deposit/create` | Employer funding, including the mid-run deposit and the late top-up |
-| `GET /balances/current` | Each employer's own wallet, read before every plan and after every conversion |
+| `GET /balances/current` | Each employer's own wallet, read before every plan and after each deposit |
 | `POST /fx/quotes/create`, `/fx/conversions/create` | Locked-rate conversion of the net gap only |
 | `POST /beneficiaries/validate`, `/beneficiaries/create` | Validate then create each contractor once (US ABA, GB sort code, DE IBAN, MX CLABE, MX USD SWIFT, PH SWIFT code, IN IFSC) |
 | `POST /transfers/create` | Payouts with explicit LOCAL/SWIFT and, for PHP/INR, `source_currency` + `quote_id` |
-| `GET /transfers`, `GET /transfers/{id}` | Recover from lost responses by `request_id`; confirm a return before re-paying |
-| `POST /simulation/transfers/{id}/transition` | The bank's side: SENT, PAID, or FAILED with `BENEFICIARY_BANK_RETURNED` |
+| `GET /transfers`, `GET /transfers/{id}` | Recover from lost responses by `request_id`; confirm a return before re-paying; the closing reconciliation |
+| `POST /simulation/transfers/{id}/transition` | The bank's side: SENT, PAID, or FAILED with `BENEFICIARY_BANK_RETURNED`, each read back |
 | `POST /charges/create`, `GET /charges/{id}` | Platform fee from the employer's wallet, confirmed at SETTLED |
-| Webhooks (`payout.transfer.*`) | `src/webhooks/airwallex.ts`: HMAC-SHA256 over `x-timestamp` + raw body, 5-minute window, event-id dedupe, events for unknown accounts acknowledged but not acted on. `npm run webhooks` receives a real subscription |
-| Metal testnet (`metal-agent` 0.3.3, pinned) | `account create`, `fund`, `mandate credential create` + `bind`/`renew` (owner's step, `npm run metal:setup`); `mandate status`, `pull --payment-id`, `verify` (the agent, with the mandate key only) |
+| Webhooks (`payout.transfer.*`) | HMAC-SHA256 over `x-timestamp` + raw body, 5-minute window, event-id dedupe; subscriptions created by API for the platform and each employer account |
+| Metal testnet (`metal-agent` 0.3.3) | Owner: `account create`, `fund`, mandate `bind`/`renew` (`npm run metal:setup`). Agent: `mandate status`, `pull --payment-id`, `verify` |
 
-## Run it live on your own sandbox
-
-1. **Node 24+** and `npm ci`.
-2. **Sandbox account:** sign up at https://www.sandbox.airwallex.com. Name the business `Sandbox Business` or `New Business Sandbox`; other names stay In review.
-3. **API key:** in the sandbox web app, go to Developer > API keys > New scoped key. Then `cp .env.example .env` and fill in `AWX_CLIENT_ID` and `AWX_API_KEY`. Add `ANTHROPIC_API_KEY` for the Claude reader.
-4. **Platform access:** Kit 6 needs Connected Accounts and Platform Payments, which are not self-serve. Email devhelp@airwallex.com with your sandbox email and Client ID.
-5. **Check:** `npm run check` logs in and reports global accounts, balances and connected-account access. It changes nothing.
-6. **Employers:** `npm run provision` creates, submits and activates one connected account per employer with synthetic data, and gives each a USD Global Account. The accounts are recorded in `data/tenants.json`. Wait about 5 minutes before the first FX call (`unconfigured_client_fee`).
-7. **Prove money movement:** `npm run smoke:connected` pays one employer's contractors and charges the fee, and shows the other employers untouched.
-8. **Run the demo live:** `npm run demo:live -- --reader claude`, then `npm run console` and open http://localhost:4321/?run=live. `npm run evidence` regenerates `docs/evidence` from that run. A second live run needs fresh employers first: `npm run provision -- --fresh`.
-9. **Optional, Metal instant rail:** sign in at https://console-testnet.metalntwx.com, create an RPC endpoint and put its URL (`https://rpc-testnet.metalntwx.com/v1/<endpoint id>`, not its secret) in `METAL_RPC_URL`. `npm run metal:setup` creates Contoso's Metal account, funds it from the faucet, creates the contractor's synthetic wallet and binds a fresh mandate (keys stay in `data/metal/`). The next `npm run demo:live` pays the advance on testnet. Run `metal:setup` again before each live run.
-10. **Optional, live webhooks:** expose port 4322 with your own tunnel and pass its https URL: `npm run demo:live -- --reader claude --webhook-url https://<tunnel>`. The run creates (or re-points) a `payout.transfer.*` subscription for the platform and each employer account by API, keeps the secrets in `data/webhook-subscriptions.json`, and waits for the returned transfer's signed `payout.transfer.failed` event. `npm run webhooks -- --url https://<tunnel>` serves the same subscriptions on their own.
-
-## What we measured on the sandbox
-
-Facts the build depends on, re-tested live (October 2026):
-
-- Deposits into connected accounts become available a few seconds after the simulation call returns. The agent waits for the funds to clear and reports how long it took.
-- Wallet conversions into PHP and INR fail with `unable_to_resolve_valid_value_date`; a USD-funded transfer with a locked `quote_id` works. MXN, GBP and EUR conversions work.
-- A SWIFT USD payout costs a flat USD 15 (`amount_payer_pays` 45 for a 30 USD transfer).
-- A transfer moved to FAILED reads back as CANCELLED with its `failure_type`.
-- Corridor quirks:
-  - MX MXN puts the CLABE in `account_number` with no routing type.
-  - IN uses `account_routing_type1: "bank_code"` with the IFSC.
-  - PH needs a `swift_code`.
-  - DE validates for both LOCAL (SEPA) and SWIFT.
-- Connected account submit also needs `identifications.primary` for the business person.
-- Charges are created NEW or PENDING and settle shortly after.
-
-## Tests
-
-`npm test` runs the vitest suite (115 tests) in about 8 seconds. It covers:
-
-- money arithmetic
-- fraud and cut-off routing
-- the planner, including the cross-currency shortfall order and the deferred fee
-- approval hashing
-- tenant isolation
-- the seed scenario
-- the executor against an in-memory Airwallex: idempotency, lost responses, returns, slippage, charges, and the charge limit (a fee above it is charged only under an approval for that exact fee)
-- client retry rules
-- the Claude reader's schema mapping and fallback
-- the exception explainer: a note with a number not in the facts is discarded
-- webhook verification (several subscription secrets) and the HTTP endpoint
-- the instant advance policy (opt-in channel and age, never for fraud or shortfall holds, the cap, the remainder) and the Metal rail: the offline mandate's refusals and once-per-payment-id, and parsing of `metal-agent` output
-- the closing reconciliation (a payout missing at the bank, a different amount, or one not landed is flagged)
-- the full demo, which must end with every payout landed, held or escalated, and reconciled, and must release the held payout only to the account on file under a matching approval
-
-Mutation checks confirmed that the tests fail when the fee rule, the tenant guard, idempotency or terminal transfer states are broken.
-
-## Project layout
-
-```
-src/airwallex/   REST client (token per account, retries) and typed API wrappers
-src/tenant/      TenantClient / TenantRegistry: one Airwallex account per employer
-src/policy/      Pure decision code: planner, fraud, routing, money, approvals
-src/executor/    Plan -> API calls; node:sqlite store for idempotency and audit
-src/agent/       Inbound message reading: Claude reader and rule-based fallback
-src/webhooks/    Airwallex webhook verification, dedupe, tenant routing; subscriptions by API
-src/metal/       Instant rail on Metal testnet: mandate-bound pulls via metal-agent, offline mirror
-src/sandbox/     The only place simulation endpoints are called; offline bank
-src/scenario/    Corridors (validated live) and the 3 x 12 seed scenario
-src/demo/        The demo as code, offline and live environments
-console/         Single-file console for the timeline
-docs/evidence/   Live run timeline, full audit log, and checks
-```
+**More:** [docs/engineering.md](docs/engineering.md) has setup for your own sandbox, the sandbox behaviour we measured, what the 138 tests cover, and the project layout.
 
 ## Limits and next steps
 
-- **Payroll inputs are seed data.** A real deployment would read them from the platform's HRIS or payroll system.
-- **The approver is scripted in the demo.** Approvals are real (hash-bound and checked before execution; conversions above USD 15,000 and platform fees above USD 100 need one), but the person approving is a scripted stand-in; there is no approver UI yet.
-- **The committed live run confirms returns by reading the transfer.** The webhook receiver drives moment #3 offline; live subscriptions are created by API, but receiving them needs a public URL (`--webhook-url`), which that run did not have.
-- **The instant advance is capped at USD 50 and runs on testnet.** The faucet funds 100 USDZ per address, so the advance covers part of the payout and the rest goes in the next window. The opt-in is seed data; a real deployment would read it from the verified portal.
+- **Payroll inputs are seed data.** A real deployment reads them from the platform's HRIS or payroll system.
+- **The approver is scripted in the demo.** The checks are real (hash-bound, re-checked by the executor, expiring after 12 hours, and refused when the approver is the agent's own identity; conversions above USD 15,000 and fees above USD 100 also need one), but approvers are not yet authenticated: an approver app with its own signing key is next.
+- **Live webhooks were not received in the committed run.** The receiver drives moment #3 offline; live subscriptions are created by API, but receiving them needs a public URL (`--webhook-url`).
+- **The instant advance is capped at USD 50 and runs on testnet.** The opt-in is seed data, and the next-window remainder is reported, not yet scheduled.
+- **The closing reconciliation runs one way.** It reads back every payout the ledger has; listing each account's transfers to catch one the ledger lacks is next.
+- **Webhook secrets are not tied to one account each.** Any of our subscriptions' secrets verifies an event; the event is still routed only to the employer whose account it names.
 
 ## License
 

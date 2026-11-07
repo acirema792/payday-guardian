@@ -5,7 +5,6 @@ import type { Currency } from "./money.ts";
 
 export interface LedgerPayout {
   contractorId: string;
-  employerAccountId: string;
   transferId: string;
   amountMinor: bigint;
   currency: Currency;
@@ -20,6 +19,7 @@ export interface BankTransfer {
 
 export type ReconcileIssue =
   | { contractorId: string; code: "missing_at_bank"; transferId: string }
+  | { contractorId: string; code: "amount_unreported"; transferId: string }
   | { contractorId: string; code: "amount_mismatch"; expected: string; actual: string }
   | { contractorId: string; code: "not_landed"; status: string };
 
@@ -28,7 +28,8 @@ export interface Reconciliation {
   issues: ReconcileIssue[];
 }
 
-const LANDED = new Set(["PAID", "SENT"]);
+// Only PAID counts: SENT has left Airwallex but not reached the beneficiary bank.
+const LANDED = new Set(["PAID"]);
 
 export function reconcile(ledger: LedgerPayout[], bank: Map<string, BankTransfer | undefined>): Reconciliation {
   const issues: ReconcileIssue[] = [];
@@ -39,9 +40,13 @@ export function reconcile(ledger: LedgerPayout[], bank: Map<string, BankTransfer
       issues.push({ contractorId: p.contractorId, code: "missing_at_bank", transferId: p.transferId });
       continue;
     }
-    // The bank may omit the amount on a read; when it reports one, it must be exactly ours.
-    if ((t.amountMinor !== undefined && t.amountMinor !== p.amountMinor) || (t.currency !== undefined && t.currency !== p.currency)) {
-      issues.push({ contractorId: p.contractorId, code: "amount_mismatch", expected: `${p.currency} ${p.amountMinor}`, actual: `${t.currency ?? "?"} ${t.amountMinor ?? "?"}` });
+    // A match needs the bank's own amount: a read that omits it proves nothing.
+    if (t.amountMinor === undefined || t.currency === undefined) {
+      issues.push({ contractorId: p.contractorId, code: "amount_unreported", transferId: p.transferId });
+      continue;
+    }
+    if (t.amountMinor !== p.amountMinor || t.currency !== p.currency) {
+      issues.push({ contractorId: p.contractorId, code: "amount_mismatch", expected: `${p.currency} ${p.amountMinor}`, actual: `${t.currency} ${t.amountMinor}` });
       continue;
     }
     if (!LANDED.has(t.status)) {

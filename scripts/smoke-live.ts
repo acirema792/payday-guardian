@@ -60,7 +60,7 @@ const plan = planEmployerPayroll({
   now: new Date(),
   config,
 });
-const input = { runId, plan, profiles: new Map(team.map((p) => [p.id, p])), api: tenant, store };
+const input = { runId, plan, profiles: new Map(team.map((p) => [p.id, p])), api: tenant, store, limits: policyConfig };
 
 console.log(`Run ${runId} on ${accountId}`);
 console.log("Plan:", plan.payouts.map((p) => `${p.contractor.name} ${p.status} ${p.method ?? ""}`).join(" | "));

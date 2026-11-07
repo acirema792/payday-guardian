@@ -1,10 +1,10 @@
 import { readBalances, readTransferBack } from "../airwallex/api.ts";
 import { type ExceptionFacts, templateExplainer } from "../agent/explainer.ts";
 import { type InboundMessage, matchByName } from "../agent/messages.ts";
-import { collectPlatformFee, executeEmployerPlan, type ExecuteInput, type PayoutOutcome, repayReturnedTransfer } from "../executor/execute.ts";
+import { collectPlatformFee, executeEmployerPlan, type ExecuteInput, payPeriodOf, type PayoutOutcome, releaseSubject, repayReturnedTransfer } from "../executor/execute.ts";
 import { type AdvanceDecision, planInstantAdvance } from "../policy/advance.ts";
-import { approve, type ApprovalSubject, isApproved, subjectHash } from "../policy/approval.ts";
-import { sum, toMajor, toMinor } from "../policy/money.ts";
+import { AGENT_ID, approve, type Approval, type ApprovalSubject, isApproved, subjectHash } from "../policy/approval.ts";
+import { sellAmountFor, sum, toMajor, toMinor } from "../policy/money.ts";
 import { planEmployerPayroll } from "../policy/planner.ts";
 import { type BankTransfer, type LedgerPayout, reconcile } from "../policy/reconcile.ts";
 import type { EmployerPlan, HoldReason } from "../policy/types.ts";
@@ -51,7 +51,7 @@ export interface DemoSummary {
   feesCollected: number;
   feesDeferred: number;
   apiCalls: number;
-  reconciled: { matched: number; issues: number };
+  reconciled: { matched: number; issues: number; payouts: { contractor: string; employer: string; transferId: string; ledger: string; bank: string; status: string }[] };
   finalBalances: Record<string, Record<string, string>>;
 }
 
@@ -80,7 +80,7 @@ export const inbox = {
     channel: "email",
     from: "finance@contoso-health.example",
     subject: "Remaining payroll funds",
-    body: "Hi team, Contoso Health here. We have just sent USD 21,000 to cover the rest of this week's payroll. Apologies for the delay.",
+    body: "Hi team, Contoso Health here. We have just sent USD 32,000 to cover the rest of this week's payroll. Apologies for the delay.",
     receivedAt: at("06:40"),
   },
 } satisfies Record<string, InboundMessage>;
@@ -125,6 +125,7 @@ function describePlan(name: string, plan: EmployerPlan): string[] {
 
 export async function runDemo(env: DemoEnvironment, emit: (e: DemoEvent) => void): Promise<DemoSummary> {
   const changeRequests = new Map<string, { at: Date; channel: "email" | "chat" }>();
+  const releasedHolds = new Map<string, string[]>(); // contractor -> evidence a person released the hold on
   let heldForRelease: ContractorProfile | undefined;
   const sent = new Map<string, { runId: string; outcome: Extract<PayoutOutcome, { status: "sent" }> }>();
   const escalations: string[] = [];
@@ -132,6 +133,7 @@ export async function runDemo(env: DemoEnvironment, emit: (e: DemoEvent) => void
   let heldForFraud = 0;
   let returnsRepaid = 0;
   const repaidTransfer = new Map<string, string>();
+  const advancesPaid = new Map<string, bigint>(); // contractor -> USD advanced this payday
   let walletConversions = 0;
   let payoutLinkedFx = 0;
   let feesCollected = 0;
@@ -187,7 +189,8 @@ export async function runDemo(env: DemoEnvironment, emit: (e: DemoEvent) => void
       .filter((c) => !sent.has(c.id))
       .map((c) => {
         const req = changeRequests.get(c.id);
-        return req ? { ...c, bankDetailsChangedAt: req.at, bankDetailsChangeChannel: req.channel } : c;
+        const evidence = releasedHolds.get(c.id);
+        return req ? { ...c, bankDetailsChangedAt: req.at, bankDetailsChangeChannel: req.channel, ...(evidence ? { releasedHold: { evidence } } : {}) } : c;
       });
 
 
@@ -221,16 +224,16 @@ export async function runDemo(env: DemoEnvironment, emit: (e: DemoEvent) => void
     });
   }
 
-  async function execute(employerId: string, time: string, runId: string, options: { only?: string; fee?: boolean } = {}): Promise<string[]> {
+  async function execute(employerId: string, time: string, runId: string, options: { only?: string; fee?: boolean; approvals?: Approval[] } = {}): Promise<string[]> {
     const full = await plan(employerId, time);
     // A release batch pays only the released payout; the employer's fee was already settled.
     const p = options.only ? { ...full, payouts: full.payouts.filter((d) => d.contractor.id === options.only) } : full;
-    const input: ExecuteInput = { runId, plan: p, profiles, api: env.apiFor(employerId), store: env.store };
+    const input: ExecuteInput = { runId, plan: p, profiles, api: env.apiFor(employerId), store: env.store, approvals: options.approvals, now: at(time), limits: policyConfig };
     const report = await executeEmployerPlan(input);
     const fee =
       options.fee === false
         ? ({ status: "deferred", detail: "fee already handled for this employer" } as const)
-        : await collectPlatformFee(env.platform, p, env.store, runId, env.tenantMode);
+        : await collectPlatformFee(env.platform, p, env.store, runId, env.tenantMode, { chargeLimitMinor: policyConfig.autoChargeMaxMinor, now: at(time) });
     if (fee.status === "charged" || fee.status === "accrued") feesCollected += 1;
     if (fee.status === "pending" || fee.status === "failed" || fee.status === "awaiting_approval") feeIssues.push(`${env.employers.find((e) => e.employerId === employerId)!.name}: ${fee.detail}`);
     if (fee.status === "deferred" && options.fee !== false) feesDeferred += 1;
@@ -346,32 +349,31 @@ export async function runDemo(env: DemoEnvironment, emit: (e: DemoEvent) => void
     const c = heldForRelease;
     const e = employer(c.employerId);
     const evidence = [inbox.diversion.id, callLog.id];
-    const releaseSubject = (counterparty: string): ApprovalSubject => ({
-      action: "release_hold", employerAccountId: e.accountId, amountMinor: c.amountMinor, currency: c.currency, counterparty, evidence,
-    });
-    const onFile = `${c.id}:${accountOnFile(c)}`;
-    const requested = releaseSubject(onFile);
+    const period = payPeriodOf(`payday-${PAYDAY}:r1`);
+    // The subject is built the way the executor builds it from what it is about to send.
+    const requested = releaseSubject(e.accountId, c, c.amountMinor, c.currency, [period, ...evidence]);
     const approval = approve(requested, DEMO_APPROVER, at("04:50"));
     const emailAccount = /CLABE\s+(\d+)/.exec(inbox.diversion.body)?.[1] ?? "unknown";
+    const toEmailAccount = { ...c, corridor: { ...c.corridor, bankDetails: { ...c.corridor.bankDetails, account_number: emailAccount } } };
+    const verdict = (ok: boolean, no: string) => (ok ? "ACCEPTED (CHECK)" : no);
     const lines = [
       `${callLog.by}: ${callLog.note}`,
-      `Approval requested: release ${money(c.amountMinor, c.currency)} from ${e.name} to ${c.name}'s ${accountOnFile(c)}. Evidence: the email and the call log. Bound to SHA-256 ${subjectHash(requested).slice(0, 12)}…`,
+      `Approval requested: release ${money(c.amountMinor, c.currency)} from ${e.name} to ${c.name}'s ${accountOnFile(c)}, this payday only. Evidence: the email and the call log. Bound to SHA-256 ${subjectHash(requested).slice(0, 12)}…`,
       `Approved by ${DEMO_APPROVER}.`,
-      `The same approval checked against the account in the email (ending ${emailAccount.slice(-4)}): ${isApproved(approval, releaseSubject(`${c.id}:account ending ${emailAccount.slice(-4)}`)) ? "ACCEPTED (CHECK)" : "rejected, the hash does not match"}.`,
-      `The same approval checked against a larger amount: ${isApproved(approval, { ...requested, amountMinor: requested.amountMinor + 1n }) ? "ACCEPTED (CHECK)" : "rejected"}.`,
+      `The same approval checked against the account in the email (ending ${emailAccount.slice(-4)}): ${verdict(isApproved(approval, releaseSubject(e.accountId, toEmailAccount, c.amountMinor, c.currency, [period, ...evidence])), "rejected, the hash does not match")}.`,
+      `The same approval checked against a larger amount: ${verdict(isApproved(approval, { ...requested, amountMinor: requested.amountMinor + 1n }), "rejected")}.`,
+      `The same approval on next week's payday, or 12 hours later: ${verdict(isApproved(approval, releaseSubject(e.accountId, c, c.amountMinor, c.currency, ["payday-next", ...evidence])) || isApproved(approval, requested, { now: new Date(at("04:50").getTime() + 12 * 3600_000 + 1) }), "rejected")}. An approval the agent signs itself: ${verdict(isApproved(approve(requested, AGENT_ID, at("04:50")), requested, { now: at("04:50") }), "rejected")}.`,
     ];
-    // Release only if the approval matches exactly what is about to execute.
-    if (isApproved(approval, releaseSubject(onFile))) {
-      changeRequests.delete(c.id);
-      lines.push(...(await execute(c.employerId, "04:50", `payday-${PAYDAY}:r1`, { only: c.id, fee: false })));
-      const s = sent.get(c.id);
-      if (s) {
-        await env.simulator.transitionTransfer(env.apiFor(c.employerId), s.outcome.transferId, "SENT");
-        await env.simulator.transitionTransfer(env.apiFor(c.employerId), s.outcome.transferId, "PAID");
-        setStatus(c.id, "paid", `released after call-back; paid to the ${accountOnFile(c)}`);
-        releasedAfterApproval += 1;
-        lines.push(`${c.name} paid to the ${accountOnFile(c)}. The account in the email never received anything.`);
-      }
+    // The executor pays the released payout only if an approval matches exactly what it is about to send.
+    releasedHolds.set(c.id, evidence);
+    lines.push(...(await execute(c.employerId, "04:50", `payday-${PAYDAY}:r1`, { only: c.id, fee: false, approvals: [approval] })));
+    const s = sent.get(c.id);
+    if (s) {
+      await env.simulator.transitionTransfer(env.apiFor(c.employerId), s.outcome.transferId, "SENT");
+      await env.simulator.transitionTransfer(env.apiFor(c.employerId), s.outcome.transferId, "PAID");
+      setStatus(c.id, "paid", `released after call-back; paid to the ${accountOnFile(c)}`);
+      releasedAfterApproval += 1;
+      lines.push(`${c.name} paid to the ${accountOnFile(c)}. The account in the email never received anything.`);
     }
     await say("04:50", "approval", `Approval: release ${c.name}'s pay to the account on file`, lines);
   }
@@ -436,6 +438,7 @@ export async function runDemo(env: DemoEnvironment, emit: (e: DemoEvent) => void
       profiles,
       api: env.apiFor(e),
       store: env.store,
+      limits: policyConfig,
     };
     const first = await repayReturnedTransfer(input, id);
     const again = await repayReturnedTransfer(input, id);
@@ -454,7 +457,7 @@ export async function runDemo(env: DemoEnvironment, emit: (e: DemoEvent) => void
 
   // New information #4: Contoso's top-up lands after the PH cut-offs
   const topUp = await env.interpreter.interpret(inbox.topUp);
-  const contosoCleared = await depositAndWait(contoso.employerId, contoso.globalAccountId, "21000", `${contoso.name} top-up`);
+  const contosoCleared = await depositAndWait(contoso.employerId, contoso.globalAccountId, "32000", `${contoso.name} top-up`);
   const balanceNow = (await readBalances(env.apiFor(contoso.employerId))).USD ?? 0n;
   const late = await plan(contoso.employerId, "06:40");
   await say("06:40", "new_info", "#4 Contoso's top-up arrives at 06:40 UTC", [
@@ -473,6 +476,8 @@ export async function runDemo(env: DemoEnvironment, emit: (e: DemoEvent) => void
   }
   if (lateSent.length) lateLines.push(`${lateSent.length} late transfers reached PAID before their local cut-offs.`);
   const advances = new Map<string, Extract<AdvanceDecision, { status: "offer" }>>();
+  // Each offer is checked against what the employer holds after the payouts already offered.
+  const committedUsd = new Map<string, bigint>();
   for (const id of escalations) {
     const c = profiles.get(id)!;
     const rail = env.instantRails?.[c.employerId];
@@ -485,15 +490,24 @@ export async function runDemo(env: DemoEnvironment, emit: (e: DemoEvent) => void
       payday: at("00:00"),
       fraudWindowDays: policyConfig.fraudWindowDays,
       config: instantAdvanceConfig,
+      employerAvailableUsdMinor: ((await readBalances(env.apiFor(c.employerId))).USD ?? 0n) - (committedUsd.get(c.employerId) ?? 0n),
+      alreadyAdvancedMinor: advancesPaid.get(id) ?? 0n,
     });
     const window = `the next ${COUNTRY_ADJECTIVE[c.country] ?? c.country} window`;
-    if (advance.status === "offer") advances.set(id, advance);
+    if (advance.status === "offer") {
+      advances.set(id, advance);
+      const payoutUsd = c.currency === "USD" ? c.amountMinor : sellAmountFor(c.amountMinor, c.currency, "USD", env.rates[c.currency]);
+      committedUsd.set(c.employerId, (committedUsd.get(c.employerId) ?? 0n) + payoutUsd);
+    }
     const note = await explainer.explain({
       kind: "cutoff_escalation",
       person: c.name,
       employer: employer(c.employerId).name,
       amount: money(c.amountMinor, c.currency),
-      reasons: ["the employer's funds cleared at 06:40 UTC", "the Philippine cut-offs passed (LOCAL 06:30 UTC, SWIFT 06:00 UTC)"],
+      reasons: [
+        contosoCleared === null ? "the employer's top-up had not reached its wallet when the cut-offs passed" : "the employer's funds cleared at 06:40 UTC",
+        "the Philippine cut-offs passed (LOCAL 06:30 UTC, SWIFT 06:00 UTC)",
+      ],
       evidence: ["top-up email at 06:40 UTC", "wallet balance read at 06:40 UTC"],
       options:
         advance.status === "offer" && rail && optIn
@@ -520,7 +534,7 @@ export async function runDemo(env: DemoEnvironment, emit: (e: DemoEvent) => void
     const e = employer(c.employerId);
     const rail = env.instantRails![c.employerId];
     const optIn = rail.optIns[id];
-    const evidence = [inbox.topUp.id, `optin:${id}:${optIn.optedInAt.toISOString()}`];
+    const evidence = [payPeriodOf(`payday-${PAYDAY}:advance`), inbox.topUp.id, `optin:${id}:${optIn.optedInAt.toISOString()}`];
     const subject = (counterparty: string, amountMinor = advance.advanceMinor): ApprovalSubject => ({
       action: "instant_advance", employerAccountId: rail.account, amountMinor, currency: instantAdvanceConfig.token, counterparty, evidence,
     });
@@ -545,11 +559,12 @@ export async function runDemo(env: DemoEnvironment, emit: (e: DemoEvent) => void
     let paid: Awaited<ReturnType<typeof rail.pull>> | undefined;
     let again: Awaited<ReturnType<typeof rail.pull>> | undefined;
     let verification: Awaited<ReturnType<typeof rail.verify>> | undefined;
-    if (isApproved(approval, subject(`${id}:${advance.address}`))) {
+    if (isApproved(approval, subject(`${id}:${advance.address}`), { now: at("06:45") })) {
       paid = await rail.pull(advance.address, advance.advanceMinor, paymentId);
       if (paid.outcome === "paid") {
         instantAdvances += 1;
         advancedMinor += advance.advanceMinor;
+        advancesPaid.set(id, (advancesPaid.get(id) ?? 0n) + advance.advanceMinor);
         lines.push(`Paid ${usdz(advance.advanceMinor)} to ${c.name} on ${rail.label}: transaction ${short(paid.transaction)}${paid.explorer ? ` ${paid.explorer}` : ""}`);
         again = await rail.pull(advance.address, advance.advanceMinor, paymentId);
         lines.push(`Same pull again, same payment id: ${again.outcome === "paid" && again.again && again.transaction === paid.transaction ? "already paid, nothing sent" : "CHECK"}.`);
@@ -573,7 +588,7 @@ export async function runDemo(env: DemoEnvironment, emit: (e: DemoEvent) => void
     if (v.status !== "paid" && v.status !== "repaid") return [];
     const c = profiles.get(id)!;
     const transferId = repaidTransfer.get(id) ?? sent.get(id)?.outcome.transferId;
-    return transferId ? [{ contractorId: id, employerAccountId: employer(c.employerId).accountId, transferId, amountMinor: c.amountMinor, currency: c.currency }] : [];
+    return transferId ? [{ contractorId: id, transferId, amountMinor: c.amountMinor, currency: c.currency }] : [];
   });
   const bank = new Map<string, BankTransfer>();
   for (const p of ledger) {
@@ -581,6 +596,18 @@ export async function runDemo(env: DemoEnvironment, emit: (e: DemoEvent) => void
     bank.set(p.transferId, { transferId: t.id, status: t.status, amountMinor: t.amountMinor, currency: t.currency });
   }
   const closing = reconcile(ledger, bank);
+  // What was compared, so the evidence shows the bank's own amounts, not just the verdict.
+  const reconciliation = ledger.map((p) => {
+    const t = bank.get(p.transferId);
+    return {
+      contractor: profiles.get(p.contractorId)!.name,
+      employer: employer(profiles.get(p.contractorId)!.employerId).name,
+      transferId: p.transferId,
+      ledger: `${p.currency} ${toMajor(p.amountMinor, p.currency)}`,
+      bank: t?.amountMinor !== undefined && t.currency ? `${t.currency} ${toMajor(t.amountMinor, t.currency)}` : "not reported",
+      status: t?.status ?? "missing",
+    };
+  });
 
   // Result
   const finalBalances: DemoSummary["finalBalances"] = {};
@@ -602,7 +629,7 @@ export async function runDemo(env: DemoEnvironment, emit: (e: DemoEvent) => void
     feesCollected,
     feesDeferred,
     apiCalls: env.store.auditLog().length,
-    reconciled: { matched: closing.matched, issues: closing.issues.length },
+    reconciled: { matched: closing.matched, issues: closing.issues.length, payouts: reconciliation },
     finalBalances,
   };
   await say("07:00", "result", "Payday report", [

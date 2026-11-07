@@ -15,6 +15,7 @@ function input(overrides: Partial<AdvanceInput> = {}): AdvanceInput {
     payday: PAYDAY,
     fraudWindowDays: 5,
     config: { token: "USDZ", maxAdvanceMinor: toMinor("50", "USD") },
+    employerAvailableUsdMinor: toMinor("5000", "USD"), // the payout (USD 4,550) is funded
     ...overrides,
   };
 }
@@ -51,5 +52,15 @@ describe("instant advance policy", () => {
 
   it("offers nothing when the employer allows no advance", () => {
     expect(planInstantAdvance(input({ config: { token: "USDZ", maxAdvanceMinor: 0n } })).status).toBe("none");
+  });
+
+  it("never pays around a shortfall: the employer must already hold the payout", () => {
+    expect(planInstantAdvance(input({ employerAvailableUsdMinor: toMinor("4549.99", "USD") }))).toMatchObject({ status: "none", reason: expect.stringMatching(/not funded/) });
+    expect(planInstantAdvance(input({ employerAvailableUsdMinor: toMinor("4550", "USD") })).status).toBe("offer");
+  });
+
+  it("caps the total advanced to one contractor in a payday", () => {
+    expect(planInstantAdvance(input({ alreadyAdvancedMinor: toMinor("50", "USD") }))).toMatchObject({ status: "none", reason: expect.stringMatching(/already used/) });
+    expect(planInstantAdvance(input({ alreadyAdvancedMinor: toMinor("30", "USD") }))).toMatchObject({ status: "offer", advanceMinor: toMinor("20", "USD") });
   });
 });

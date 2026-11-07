@@ -121,13 +121,26 @@ describe("shortfall priority", () => {
 describe("shortfall ordering across currencies", () => {
   it("compares payouts by cost in the funding currency, not by raw amount", () => {
     // 30,000 MXN is a bigger number than 2,000 USD but costs only 1,650 USD at 0.055
-    const mxRails = { ...config.rails, MX: { localCurrency: "MXN", localAvailable: true, localCutoffUtc: "23:00", swiftCutoffUtc: "20:00" } };
+    // Same cut-off as the US rail, so only cost decides
+    const mxRails = { ...config.rails, MX: { localCurrency: "MXN", localAvailable: true, localCutoffUtc: "21:00", swiftCutoffUtc: "20:00" } };
     const people = [
       contractor({ id: "usd", employerId: employerA.employerId, amountMinor: usd("2000") }),
       contractor({ id: "mxn", employerId: employerA.employerId, country: "MX", currency: "MXN", amountMinor: toMinor("30000", "MXN") }),
     ];
     const plan = planEmployerPayroll(input(employerA, people, { USD: usd("2000") }, { rates: { MXN: "0.055" }, config: { ...config, rails: mxRails } }));
     expect(statusOf(plan)).toEqual({ usd: "hold", mxn: "pay" });
+  });
+});
+
+describe("shortfall ordering by cut-off", () => {
+  it("funds the payout whose window closes first, even when it costs more", () => {
+    // PH LOCAL closes at 06:00, US at 21:00: a US payout can still land if funds arrive later today
+    const people = [
+      contractor({ id: "usd", employerId: employerA.employerId, amountMinor: usd("1000") }),
+      contractor({ id: "php", employerId: employerA.employerId, country: "PH", currency: "PHP", amountMinor: toMinor("100000", "PHP") }),
+    ];
+    const plan = planEmployerPayroll(input(employerA, people, { USD: usd("1800") }, { rates: { PHP: "0.0175" }, now: new Date("2026-11-06T04:30:00Z") }));
+    expect(statusOf(plan)).toEqual({ usd: "hold", php: "pay" });
   });
 });
 
@@ -186,6 +199,19 @@ describe("platform fee", () => {
     expect(planEmployerPayroll(input(employerA, people, funds, { config: withFee })).platformFee.needsApproval).toBe(false);
     const large = { ...config, platformFeeMinor: usd("250") };
     expect(planEmployerPayroll(input(employerA, people, funds, { config: large })).platformFee).toMatchObject({ status: "collect", needsApproval: true });
+  });
+
+  it("is deferred while a payout held for fraud is still owed, so a release cannot come up short", () => {
+    const two = [
+      contractor({ id: "x", employerId: employerA.employerId, amountMinor: usd("1000") }),
+      contractor({ id: "maria", employerId: employerA.employerId, amountMinor: usd("500"), bankDetailsChangedAt: new Date("2026-11-05T18:00:00Z"), bankDetailsChangeChannel: "email" }),
+    ];
+    const plan = (cash: string) => planEmployerPayroll(input(employerA, two, { USD: usd(cash) }, { config: withFee }));
+    // 1,100 pays x and would cover the 25 fee, but not Maria if she is released after the call-back
+    expect(statusOf(plan("1100"))).toEqual({ x: "pay", maria: "hold" });
+    expect(plan("1100").platformFee.status).toBe("defer");
+    expect(plan("1524.99").platformFee.status).toBe("defer");
+    expect(plan("1525").platformFee.status).toBe("collect");
   });
 
   it("is collected when payroll and fee both fit", () => {

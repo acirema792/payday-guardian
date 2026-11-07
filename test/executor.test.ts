@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { collectPlatformFee, conversionSubject, executeEmployerPlan, feeSubject, repayReturnedTransfer, type ExecuteInput } from "../src/executor/execute.ts";
+import { collectPlatformFee, conversionSubject, executeEmployerPlan, feeSubject, releaseSubject, repayReturnedTransfer, type ExecuteInput } from "../src/executor/execute.ts";
 import { Store } from "../src/executor/store.ts";
-import { approve } from "../src/policy/approval.ts";
+import { AGENT_ID, approve } from "../src/policy/approval.ts";
 import { toMinor } from "../src/policy/money.ts";
 import { planEmployerPayroll } from "../src/policy/planner.ts";
 import type { EmployerPlan } from "../src/policy/types.ts";
@@ -57,9 +57,11 @@ function setup(profiles: ContractorProfile[], usd: string, overrides: Partial<Ex
     now: MORNING,
     config: testConfig,
   });
-  const input: ExecuteInput = { runId: "run_1", plan, profiles: new Map(profiles.map((p) => [p.id, p])), api: fake, store, ...overrides };
+  const input: ExecuteInput = { runId: "run_1", plan, profiles: new Map(profiles.map((p) => [p.id, p])), api: fake, store, limits: testConfig, ...overrides };
   return { plan, input };
 }
+
+const LIMIT = toMinor("100", "USD"); // the agent may charge a platform fee up to this on its own
 
 const team = () => [profile("Ana", "US_USD", "1000"), profile("Lena", "DE_EUR", "1000"), profile("Diego", "MX_USD", "500")];
 
@@ -93,6 +95,41 @@ describe("executor", () => {
     expect(again.payouts.every((p) => p.status === "sent")).toBe(true);
   });
 
+  it("a later batch in the same pay period never pays anyone twice", async () => {
+    const { input } = setup(team(), "5000", { runId: "payday-2026-11-06:b1" });
+    await executeEmployerPlan(input);
+    const later = await executeEmployerPlan({ ...input, runId: "payday-2026-11-06:b2" });
+    expect(fake.creates("/transfers/create")).toHaveLength(3);
+    expect(later.payouts.every((p) => p.status === "sent")).toBe(true);
+    // The next pay period is a new payroll
+    await executeEmployerPlan({ ...input, runId: "payday-2026-11-13:b1" });
+    expect(fake.creates("/transfers/create")).toHaveLength(6);
+  });
+
+  it("refuses to execute one employer's plan on another employer's account", async () => {
+    const { input } = setup(team(), "5000");
+    Object.assign(fake, { accountId: "acct_B" });
+    await expect(executeEmployerPlan(input)).rejects.toThrow(/cannot execute on acct_B/);
+    expect(fake.calls).toHaveLength(0);
+  });
+
+  it("pays in a later batch a payout the bank rejected outright, with a new request_id", async () => {
+    const { input } = setup([profile("Ana", "US_USD", "1000")], "5000", { runId: "payday-2026-11-06:b1" });
+    fake.rejectNextTransfer = "balance_insufficient";
+    expect((await executeEmployerPlan(input)).payouts[0]).toMatchObject({ status: "blocked", detail: expect.stringMatching(/rejected/) });
+    const later = await executeEmployerPlan({ ...input, runId: "payday-2026-11-06:b2" });
+    expect(later.payouts[0].status).toBe("sent");
+    expect(fake.creates("/transfers/create")).toHaveLength(2); // the rejected attempt and the payment
+  });
+
+  it("never reports a different amount as sent: a changed amount in the same pay period goes to a person", async () => {
+    const { input } = setup([profile("Ana", "US_USD", "1000")], "5000", { runId: "payday-2026-11-06:b1" });
+    await executeEmployerPlan(input);
+    const raised = setup([profile("Ana", "US_USD", "1200")], "5000", { runId: "payday-2026-11-06:b2" }).input;
+    expect((await executeEmployerPlan(raised)).payouts[0]).toMatchObject({ status: "blocked", detail: expect.stringMatching(/Already sent USD 1000.00/) });
+    expect(fake.creates("/transfers/create")).toHaveLength(1);
+  });
+
   it("recovers a transfer whose response was lost instead of paying again", async () => {
     const { input } = setup([profile("Ana", "US_USD", "1000")], "5000");
     fake.loseNextTransferResponse = true;
@@ -120,6 +157,14 @@ describe("executor", () => {
       const report = await executeEmployerPlan(input);
       expect(report.conversions[0].status).toBe("awaiting_approval");
       expect(report.payouts[0].status).toBe("awaiting_approval");
+      expect(fake.creates("/fx/quotes/create")).toHaveLength(0);
+    });
+
+    it("applies the conversion limit itself, even if the plan says no approval is needed", async () => {
+      const { plan, input } = setup(big(), "30000");
+      const unflagged = { ...plan, conversions: plan.conversions.map((c) => ({ ...c, needsApproval: false })) };
+      const report = await executeEmployerPlan({ ...input, plan: unflagged, limits: testConfig });
+      expect(report.conversions[0].status).toBe("awaiting_approval");
       expect(fake.creates("/fx/quotes/create")).toHaveLength(0);
     });
 
@@ -162,7 +207,7 @@ describe("executor", () => {
         now: new Date("2026-11-06T05:00:00Z"),
         config: { ...testConfig, ...linkedConfig },
       });
-      return { plan, input: { runId: "run_1", plan, profiles: new Map(people.map((p) => [p.id, p])), api: fake, store } as ExecuteInput };
+      return { plan, input: { runId: "run_1", plan, profiles: new Map(people.map((p) => [p.id, p])), api: fake, store, limits: testConfig } as ExecuteInput };
     }
 
     it("funds each payout from USD at its own locked quote, with no wallet conversion", async () => {
@@ -190,6 +235,38 @@ describe("executor", () => {
     const { input } = setup([profile("Ana", "US_USD", "1000")], "5000");
     const report = await executeEmployerPlan(input);
     expect(report.payouts[0]).toMatchObject({ status: "blocked" });
+    expect(fake.creates("/transfers/create")).toHaveLength(0);
+  });
+});
+
+describe("released fraud holds", () => {
+  const changed = { bankDetailsChangedAt: new Date("2026-11-05T18:00:00Z"), bankDetailsChangeChannel: "email" as const };
+  const maria = () => profile("Maria", "MX_MXN", "4500", { ...changed, releasedHold: { evidence: ["email_1", "call_1"] } });
+  const at = new Date("2026-11-06T04:50:00Z");
+  const run = (approvals: ReturnType<typeof approve>[]) => {
+    const { input } = setup([maria()], "5000", { runId: "payday-2026-11-06:r1", approvals, now: at });
+    return executeEmployerPlan(input);
+  };
+  const subject = (p = maria(), evidence = ["payday-2026-11-06", "email_1", "call_1"]) => releaseSubject("acct_A", p, p.amountMinor, "MXN", evidence);
+
+  it("pays a released payout only under an approval for exactly that payout, account and payday", async () => {
+    expect((await run([])).payouts[0].status).toBe("awaiting_approval");
+    const emailAccount = { ...maria(), corridor: { ...maria().corridor, bankDetails: { ...maria().corridor.bankDetails, account_number: "012180001234567891" } } };
+    expect((await run([approve(subject(emailAccount), "ops", at)])).payouts[0].status).toBe("awaiting_approval");
+    expect((await run([approve(subject(maria(), ["payday-2026-10-30", "email_1", "call_1"]), "ops", at)])).payouts[0].status).toBe("awaiting_approval");
+    expect((await run([approve(subject(), AGENT_ID, at)])).payouts[0].status).toBe("awaiting_approval");
+    expect((await run([approve(subject(), "ops", new Date("2026-11-05T16:00:00Z"))])).payouts[0].status).toBe("awaiting_approval");
+    expect(fake.creates("/transfers/create")).toHaveLength(0);
+
+    expect((await run([approve(subject(), "ops", at)])).payouts[0].status).toBe("sent");
+    expect(fake.creates("/transfers/create")).toHaveLength(1);
+  });
+
+  it("pays nothing if the account on file changes after the approval", async () => {
+    const approval = approve(subject(), "ops", at);
+    const swapped = { ...maria(), corridor: { ...maria().corridor, bankDetails: { ...maria().corridor.bankDetails, account_number: "012180001234567891" } } };
+    const { input } = setup([swapped], "5000", { runId: "payday-2026-11-06:r1", approvals: [approval], now: at });
+    expect((await executeEmployerPlan(input)).payouts[0].status).toBe("awaiting_approval");
     expect(fake.creates("/transfers/create")).toHaveLength(0);
   });
 });
@@ -237,49 +314,61 @@ describe("platform fee", () => {
   });
 
   it("charges a fee above the agent's limit only with an approval bound to that exact fee", async () => {
-    const waiting = await collectPlatformFee(fake, plan("collect", true), store, "run_1", "connected");
+    const waiting = await collectPlatformFee(fake, plan("collect", true), store, "run_1", "connected", { chargeLimitMinor: LIMIT });
     expect(waiting.status).toBe("awaiting_approval");
     expect(fake.calls).toHaveLength(0);
 
     const bigger = { ...feeSubject(plan("collect", true), "run_1"), amountMinor: toMinor("490", "USD") };
-    expect((await collectPlatformFee(fake, plan("collect", true), store, "run_1", "connected", undefined, [approve(bigger, "ops")])).status).toBe("awaiting_approval");
+    expect((await collectPlatformFee(fake, plan("collect", true), store, "run_1", "connected", { chargeLimitMinor: LIMIT, approvals: [approve(bigger, "ops")] })).status).toBe("awaiting_approval");
     expect(fake.calls).toHaveLength(0);
 
     const ok = approve(feeSubject(plan("collect", true), "run_1"), "ops");
-    expect(await collectPlatformFee(fake, plan("collect", true), store, "run_1", "connected", undefined, [ok])).toMatchObject({ status: "charged" });
+    expect(await collectPlatformFee(fake, plan("collect", true), store, "run_1", "connected", { chargeLimitMinor: LIMIT, approvals: [ok] })).toMatchObject({ status: "charged" });
     expect(fake.creates("/charges/create")).toHaveLength(1);
+  });
+
+  it("applies the charge limit itself, even if the plan says no approval is needed", async () => {
+    const big = { ...plan("collect"), platformFee: { status: "collect" as const, amountMinor: toMinor("900", "USD"), currency: "USD", needsApproval: false } };
+    expect((await collectPlatformFee(fake, big, store, "run_1", "connected", { chargeLimitMinor: LIMIT })).status).toBe("awaiting_approval");
+    expect(fake.calls).toHaveLength(0);
   });
 
   it("calls the fee collected only once the charge reads back SETTLED", async () => {
     fake.chargeStatus = "PENDING";
-    const pending = await collectPlatformFee(fake, plan("collect"), store, "run_1", "connected", { attempts: 2, waitMs: 0 });
+    const pending = await collectPlatformFee(fake, plan("collect"), store, "run_1", "connected", { chargeLimitMinor: LIMIT, settle: { attempts: 2, waitMs: 0 } });
     expect(pending.status).toBe("pending");
     fake.chargeStatus = "SETTLED";
-    const settled = await collectPlatformFee(fake, plan("collect"), store, "run_1", "connected", { attempts: 2, waitMs: 0 });
+    const settled = await collectPlatformFee(fake, plan("collect"), store, "run_1", "connected", { chargeLimitMinor: LIMIT, settle: { attempts: 2, waitMs: 0 } });
     expect(settled).toMatchObject({ status: "charged" });
     expect(fake.creates("/charges/create")).toHaveLength(1);
   });
 
   it("reports a charge that ends in another status as failed", async () => {
     fake.chargeStatus = "FAILED";
-    expect((await collectPlatformFee(fake, plan("collect"), store, "run_1", "connected", { attempts: 2, waitMs: 0 })).status).toBe("failed");
+    expect((await collectPlatformFee(fake, plan("collect"), store, "run_1", "connected", { chargeLimitMinor: LIMIT, settle: { attempts: 2, waitMs: 0 } })).status).toBe("failed");
   });
 
   it("charges a connected account once, even if collection runs twice", async () => {
-    const first = await collectPlatformFee(fake, plan("collect"), store, "run_1", "connected");
-    const second = await collectPlatformFee(fake, plan("collect"), store, "run_1", "connected");
+    const first = await collectPlatformFee(fake, plan("collect"), store, "run_1", "connected", { chargeLimitMinor: LIMIT });
+    const second = await collectPlatformFee(fake, plan("collect"), store, "run_1", "connected", { chargeLimitMinor: LIMIT });
     expect(first).toEqual(second);
     expect(fake.creates("/charges/create")).toHaveLength(1);
     expect(fake.creates("/charges/create")[0].body).toMatchObject({ source: "acct_A", amount: "49.00", reason: "professional_business_services" });
   });
 
+  it("charges the fee once per pay period, whichever batch collects it", async () => {
+    await collectPlatformFee(fake, plan("collect"), store, "payday-2026-11-06:b1", "connected", { chargeLimitMinor: LIMIT });
+    await collectPlatformFee(fake, plan("collect"), store, "payday-2026-11-06:b2", "connected", { chargeLimitMinor: LIMIT });
+    expect(fake.creates("/charges/create")).toHaveLength(1);
+  });
+
   it("accrues the fee in the ledger in org-entity mode", async () => {
-    expect((await collectPlatformFee(fake, plan("collect"), store, "run_1", "org-entity")).status).toBe("accrued");
+    expect((await collectPlatformFee(fake, plan("collect"), store, "run_1", "org-entity", { chargeLimitMinor: LIMIT })).status).toBe("accrued");
     expect(fake.calls).toHaveLength(0);
   });
 
   it("does not charge a deferred fee", async () => {
-    expect((await collectPlatformFee(fake, plan("defer"), store, "run_1", "connected")).status).toBe("deferred");
+    expect((await collectPlatformFee(fake, plan("defer"), store, "run_1", "connected", { chargeLimitMinor: LIMIT })).status).toBe("deferred");
     expect(fake.calls).toHaveLength(0);
   });
 });

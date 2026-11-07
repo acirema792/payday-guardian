@@ -49,6 +49,13 @@ describe("webhook signature", () => {
     const old = delivery(failed, { timestamp: NOW - 6 * 60_000 });
     expect(verifySignature(SECRET, old.headers, old.rawBody, NOW)).toBe("stale");
   });
+
+  it("refuses a signed timestamp that is not a number, and reads one in seconds as seconds", () => {
+    const body = JSON.stringify(failed);
+    expect(verifySignature(SECRET, { timestamp: "soon", signature: signWebhook(SECRET, "soon", body) }, body, NOW)).toBe("stale");
+    const seconds = String(Math.floor(NOW / 1000));
+    expect(verifySignature(SECRET, { timestamp: seconds, signature: signWebhook(SECRET, seconds, body) }, body, NOW)).toBe("ok");
+  });
 });
 
 describe("webhook receiver", () => {

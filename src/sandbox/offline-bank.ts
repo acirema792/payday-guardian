@@ -79,6 +79,7 @@ export class OfflineBank {
   // Employer-scoped API, as TenantClient would give.
   api(accountId: string): Api {
     return {
+      accountId,
       get: async <T>(path: string, query?: Record<string, string | number | undefined>) => this.get(accountId, path, query) as T,
       post: async <T>(path: string, body: any) => this.post(accountId, path, body) as T,
     };

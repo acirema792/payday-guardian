@@ -1,0 +1,156 @@
+
+> payday-guardian@0.1.0 demo:live
+> node --env-file=.env scripts/demo.ts --live --reader claude
+
+[setup] Northwind Labs: wallet USD 0.00
+[setup] Northwind Labs: deposited USD 40000.00 to reach the story's starting balance (cleared in 0s)
+[setup] Contoso Health: wallet USD 0.00
+[setup] Contoso Health: deposited USD 13000.00 to reach the story's starting balance (cleared in 1s)
+[setup] Fabrikam Studio: wallet USD 0.00
+[setup] Live USD rates: GBP 1.3470, EUR 1.1242, MXN 0.054441, PHP 0.016112, INR 0.010805
+[setup] Metal testnet: Contoso Health account 0xd97e0bbf4cF241F9E1b91E1E18Bf1A650730b34B, mandate spent 0.00 of 50.00 USDZ
+Payday Guardian demo on Airwallex sandbox (live, Kit 6 connected accounts), reader: claude (claude-opus-5-5)
+
+04:00 UTC  GOAL  Pay 36 contractors for 3 employers in 6 countries today
+           Each payout from its own employer's money, before the local cut-off, and never to a fraudster.
+           Policy code decides amounts, priorities, rails and holds; the agent reads messages and explains.
+
+04:00 UTC  PLAN  Initial plan from live balances
+           Northwind Labs: pay 12, hold 0
+             fund at payout 175000.00 PHP for USD 2,819.64
+             fund at payout 490000.00 INR for USD 5,294.42
+             convert 7150.00 EUR for USD 8,038.35
+             convert 6550.00 GBP for USD 8,822.80
+             convert 45000.00 MXN for USD 2,449.85
+             platform fee: collect
+           Contoso Health: pay 4, hold 8
+             fund at payout 495000.00 INR for USD 5,348.44
+             fund at payout 250000.00 PHP for USD 4,028.06
+             hold Grace Kim: not enough of this employer's own money
+             hold Marcus Hill: not enough of this employer's own money
+             hold Olivia Hughes: not enough of this employer's own money
+             hold Harry Patel: not enough of this employer's own money
+             hold Clara Fischer: not enough of this employer's own money
+             hold Felix Wagner: not enough of this employer's own money
+             hold Lucia Hernandez: not enough of this employer's own money
+             hold Andrea Cruz: not enough of this employer's own money
+             funding request to employer: USD 30,122.67
+             platform fee: defer
+           Fabrikam Studio: pay 0, hold 12
+             hold Noah Carter: not enough of this employer's own money
+             hold Ava Morgan: not enough of this employer's own money
+             hold George Evans: not enough of this employer's own money
+             hold Amelia Shah: not enough of this employer's own money
+             hold Max Becker: not enough of this employer's own money
+             hold Sophie Hoffmann: not enough of this employer's own money
+             hold Valeria Flores: not enough of this employer's own money
+             hold Santiago Ruiz: not enough of this employer's own money
+             hold Carlo Bautista: not enough of this employer's own money
+             hold Liza Garcia: not enough of this employer's own money
+             hold Vikram Nair: not enough of this employer's own money
+             hold Kavya Menon: not enough of this employer's own money
+             funding request to employer: USD 37,822.63
+             platform fee: defer
+
+04:10 UTC  NEW INFORMATION  #1 Fabrikam's funding lands; Contoso is still short
+           Fabrikam Studio deposit received: USD 40000. Available in the wallet immediately.
+           A pooled ledger would now see USD 93,000.00 and pay Contoso in full, partly with other employers' money.
+
+04:10 UTC  REVISED DECISION  Revised: Fabrikam pays everyone; Contoso stays limited to its own wallet
+           Fabrikam Studio: pay 12, hold 0
+             fund at payout 171000.00 PHP for USD 2,755.19
+             fund at payout 500000.00 INR for USD 5,402.46
+             convert 7050.00 EUR for USD 7,925.93
+             convert 6400.00 GBP for USD 8,620.75
+             convert 46000.00 MXN for USD 2,504.30
+             platform fee: collect
+           Contoso Health: pay 4, hold 8
+             fund at payout 495000.00 INR for USD 5,348.44
+             fund at payout 250000.00 PHP for USD 4,028.06
+             hold Grace Kim: not enough of this employer's own money
+             hold Marcus Hill: not enough of this employer's own money
+             hold Olivia Hughes: not enough of this employer's own money
+             hold Harry Patel: not enough of this employer's own money
+             hold Clara Fischer: not enough of this employer's own money
+             hold Felix Wagner: not enough of this employer's own money
+             hold Lucia Hernandez: not enough of this employer's own money
+             hold Andrea Cruz: not enough of this employer's own money
+             funding request to employer: USD 30,122.67
+             platform fee: defer
+
+04:20 UTC  NEW INFORMATION  #2 Email: "please send my pay to this new account today, urgent"
+           From maria.garcia.payments@gmail.com: Hi, it's Maria. My bank account was closed, please send my pay to this new account today, it's urgent. CLABE 012180001234567891. Thanks, Maria Garcia
+
+04:20 UTC  REVISED DECISION  Revised: hold one payout, not the payroll
+           Read by claude (claude-opus-5-5): {"kind":"bank_detail_change_request","personName":"Maria Garcia","urgent":true,"includesNewAccountDetails":true}
+           Claude's summary: An email claiming to be from Maria Garcia asks to redirect her pay today to a new CLABE account, citing a closed bank account and urgency.
+           Red flags: urgent same-day request to change payout account; sent from personal gmail address; claims old bank account was closed; new CLABE provided directly in email; no verification or reference details
+           Matched to Maria Garcia (Northwind Labs). The account number in the email is not used.
+           Hold Maria Garcia: bank-detail change requested on payday; request came by email, not the verified portal.
+           Everyone else at Northwind Labs is still paid (11 payouts).
+           Verification request goes to the contact on file, not to maria.garcia.payments@gmail.com.
+           Note for the ops lead, by claude (claude-opus-5-5): The agent held Maria Garcia's MXN 45,000.00 payout from Northwind Labs after an email from maria.garcia.payments@gmail.com at 04:20 asked to pay a new account today. It stopped because the bank-detail change was requested on payday and came by email rather than through the verified portal. Call Maria Garcia on the phone number on file, and if the account is unchanged, approve payment to the account ending 7771 on file, but never pay the account in the email.
+
+04:30 UTC  ACTION  Payroll batch executed on Airwallex
+           Northwind Labs: 11 sent (10 LOCAL, 1 SWIFT), 1 held, 0 blocked
+             platform fee: charged
+           Contoso Health: 4 sent (3 LOCAL, 1 SWIFT), 8 held, 0 blocked
+             platform fee: deferred
+           Fabrikam Studio: 12 sent (11 LOCAL, 1 SWIFT), 0 held, 0 blocked
+             platform fee: charged
+
+04:50 UTC  APPROVAL  Approval: release Maria Garcia's pay to the account on file
+           Ops lead: Called Maria Garcia at 04:45 on the phone number on file. Maria did not send the email, and the bank account on file is unchanged.
+           Approval requested: release MXN 45,000.00 from Northwind Labs to Maria Garcia's account ending 7771 on file, this payday only. Evidence: the email and the call log. Bound to SHA-256 43030428ee63…
+           Approved by ops-lead@platform.example (scripted approver).
+           The same approval checked against the account in the email (ending 7891): rejected, the hash does not match.
+           The same approval checked against a larger amount: rejected.
+           The same approval on next week's payday, or 12 hours later: rejected. An approval the agent signs itself: rejected.
+           Northwind Labs: 1 sent (1 LOCAL, 0 SWIFT), 0 held, 0 blocked
+           Maria Garcia paid to the account ending 7771 on file. The account in the email never received anything.
+
+05:30 UTC  NEW INFORMATION  #3 Bank return on Valeria Flores's MXN payout
+           Airwallex: Your transfer to Valeria Flores was returned by the beneficiary bank: BENEFICIARY_BANK_RETURNED.
+           No webhook subscription on this run: the return is confirmed from GET /transfers/{id} before anything is re-paid.
+
+05:30 UTC  REVISED DECISION  Revised: re-verify and re-pay once
+           Read by claude (claude-opus-5-5): {"kind":"transfer_returned","personName":"Valeria Flores","failureType":"BENEFICIARY_BANK_RETURNED"}
+           Claude's summary: Airwallex reports that the transfer to Valeria Flores was returned by the beneficiary bank (BENEFICIARY_BANK_RETURNED).
+           Re-verified Valeria Flores's bank details and re-paid: repaid (new transfer 9adfd87a).
+           Running the repay again returns the same transfer: no duplicate.
+
+06:40 UTC  NEW INFORMATION  #4 Contoso's top-up arrives at 06:40 UTC
+           From finance@contoso-health.example: Hi team, Contoso Health here. We have just sent USD 32,000 to cover the rest of this week's payroll. Apologies for the delay.
+           Read by claude (claude-opus-5-5): {"kind":"funding_notice","employerName":"Contoso Health","amountMajor":"32000","currency":"USD"}
+           Claude's summary: Contoso Health says it has sent USD 32,000 to cover the rest of this week's payroll and apologizes for the delay.
+           Checked against the wallet, not the email: Not yet available in the wallet when the window closed; planning with what is there. Contoso now holds USD 1,008.51.
+
+06:40 UTC  REVISED DECISION  Revised: pay what can still land today, escalate what cannot
+           Contoso Health: pay 0, hold 8
+             hold Grace Kim: not enough of this employer's own money
+             hold Marcus Hill: not enough of this employer's own money
+             hold Olivia Hughes: not enough of this employer's own money
+             hold Harry Patel: not enough of this employer's own money
+             hold Clara Fischer: not enough of this employer's own money
+             hold Felix Wagner: not enough of this employer's own money
+             hold Lucia Hernandez: not enough of this employer's own money
+             hold Andrea Cruz: PH cut-off passed (LOCAL 06:30 and SWIFT 06:00 UTC)
+             funding request to employer: USD 25,933.48
+             platform fee: defer
+           Contoso Health: 0 sent (0 LOCAL, 0 SWIFT), 8 held, 0 blocked
+             platform fee: deferred
+           Escalate Andrea Cruz. Note for the ops lead, by claude (claude-opus-5-5): The agent stopped Andrea Cruz's PHP 260,000.00 payout from Contoso Health because the employer's funds cleared at 06:40 UTC, as shown by the top-up email and wallet balance read at that time. By then, both Philippine cut-offs had passed (LOCAL at 06:30 UTC and SWIFT at 06:00 UTC). You can either pay Andrea Cruz in the next Philippine window and tell Andrea Cruz now, or use an instant rail if Andrea Cruz has opted in.
+             No instant advance for Andrea Cruz: the employer has not funded this payout yet.
+
+07:00 UTC  RESULT  Payday report
+           28/36 contractors paid on payday (77.8%), every one from their own employer's wallet.
+           1 suspected diversion stopped, then released to the account on file after a person approved; 1 escalated because their cut-off had passed; 1 bank return re-paid once.
+           6 wallet conversions (net gap only) and 11 payout-linked FX payouts at locked quotes.
+           Platform fees: 2 collected (charges read back SETTLED), 2 deferred until that employer's wages were covered.
+           Reconciled with Airwallex: 28 of 28 payouts read back on their own employer's account, landed, for exactly the amount and currency in the ledger; 0 mismatches.
+           Audit log: 315 API calls recorded.
+           Northwind Labs final balances: USD 1910.96
+           Contoso Health final balances: USD 1008.51
+           Fabrikam Studio final balances: USD 2177.39
+
+Timeline written to data/demo-run-live.json

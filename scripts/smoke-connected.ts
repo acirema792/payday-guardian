@@ -48,7 +48,7 @@ const plan = planEmployerPayroll({
   config: { ...policyConfig, platformFeeMinor: toMinor("5", "USD"), rails: Object.fromEntries(Object.entries(policyConfig.rails).map(([k, v]) => [k, { ...v, localCutoffUtc: "23:59", swiftCutoffUtc: "23:59" }])) },
 });
 const runId = `kit6-${Date.now()}`;
-const report = await executeEmployerPlan({ runId, plan, profiles: new Map(team.map((p) => [p.id, p])), api: a, store });
+const report = await executeEmployerPlan({ runId, plan, profiles: new Map(team.map((p) => [p.id, p])), api: a, store, limits: policyConfig });
 console.log("Conversions:", JSON.stringify(report.conversions));
 for (const p of report.payouts) console.log("Payout:", JSON.stringify(p));
 console.log("Northwind after payroll (the EUR conversion must have landed here, not on the platform):", show(await readBalances(a)));
@@ -59,7 +59,7 @@ for (const p of report.payouts) {
   await sandboxSimulator.transitionTransfer(a, p.transferId, "PAID");
 }
 
-const fee = await collectPlatformFee(platformApi(platform), plan, store, runId, "connected");
+const fee = await collectPlatformFee(platformApi(platform), plan, store, runId, "connected", { chargeLimitMinor: policyConfig.autoChargeMaxMinor });
 console.log("Platform fee:", JSON.stringify(fee));
 if (fee.status === "charged") {
   for (let i = 0; i < 10; i++) {

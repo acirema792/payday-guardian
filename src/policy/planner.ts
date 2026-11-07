@@ -1,6 +1,6 @@
 import { type Currency, sellAmountFor } from "./money.ts";
 import { fraudHolds } from "./fraud.ts";
-import { route } from "./routing.ts";
+import { cutoffMinutes, route } from "./routing.ts";
 import type {
   ConversionDecision,
   Contractor,
@@ -29,7 +29,11 @@ interface Candidate {
   contractor: Contractor;
   method: TransferMethod;
   feeMinor: bigint;
+  cutoffMinutes: number; // the chosen rail's cut-off today, minutes after 00:00 UTC
+  approvalRequired?: PayoutDecision["approvalRequired"];
 }
+
+const FRAUD_HOLDS = new Set(["bank_details_changed_recently", "unverified_instruction_channel"]);
 
 interface Need {
   obligations: Map<Currency, bigint>; // per currency, before netting
@@ -82,11 +86,13 @@ function fundingCost(c: Candidate, input: PlanInput): bigint {
   return sellAmountFor(owed, c.contractor.currency, funding, rate);
 }
 
-// Statutory wages first, then the cheapest payouts in funding currency (pays the most people when
-// cash is short), then id so the plan is deterministic.
+// When cash is short: statutory wages first, then the earliest cut-off (a payout with a later
+// window can still land if funds arrive later), then the cheapest in funding currency (pays the
+// most people), then id so the plan is deterministic.
 function byPriority(input: PlanInput) {
   return (a: Candidate, b: Candidate): number => {
     if (a.contractor.priority !== b.contractor.priority) return a.contractor.priority === "statutory" ? -1 : 1;
+    if (a.cutoffMinutes !== b.cutoffMinutes) return a.cutoffMinutes - b.cutoffMinutes;
     const costA = fundingCost(a, input);
     const costB = fundingCost(b, input);
     if (costA !== costB) return costA < costB ? -1 : 1;
@@ -112,14 +118,23 @@ export function planEmployerPayroll(input: PlanInput): EmployerPlan {
   const decisions = new Map<string, PayoutDecision>();
   const candidates: Candidate[] = [];
   for (const contractor of contractors) {
-    const holds = fraudHolds(contractor, input.payday, config.fraudWindowDays);
+    const fraud = fraudHolds(contractor, input.payday, config.fraudWindowDays);
+    // A released fraud hold is planned, but still needs its approval at execution.
+    const released = contractor.releasedHold !== undefined && fraud.length > 0 && fraud.every((h) => FRAUD_HOLDS.has(h.code));
+    const holds = released ? [] : fraud;
     const routed = route(contractor, input.now, config);
     if (!routed.ok) holds.push(routed.reason);
     if (holds.length > 0 || !routed.ok) {
       decisions.set(contractor.id, { contractor, status: "hold", feeMinor: 0n, holdReasons: holds });
       continue;
     }
-    candidates.push({ contractor, method: routed.method, feeMinor: routed.feeMinor });
+    candidates.push({
+      contractor,
+      method: routed.method,
+      feeMinor: routed.feeMinor,
+      cutoffMinutes: cutoffMinutes(contractor, routed.method, config),
+      ...(released ? { approvalRequired: { action: "release_hold" as const, evidence: contractor.releasedHold!.evidence } } : {}),
+    });
   }
 
   candidates.sort(byPriority(input));
@@ -133,6 +148,7 @@ export function planEmployerPayroll(input: PlanInput): EmployerPlan {
         method: candidate.method,
         feeMinor: candidate.feeMinor,
         holdReasons: [],
+        ...(candidate.approvalRequired ? { approvalRequired: candidate.approvalRequired } : {}),
       });
     } else {
       decisions.set(candidate.contractor.id, {
@@ -145,10 +161,14 @@ export function planEmployerPayroll(input: PlanInput): EmployerPlan {
     }
   }
 
-  // The platform fee never displaces wages: collect it only when nobody is waiting for funds
-  // and it still fits after payroll.
+  // The platform fee never displaces wages: collect it only when nobody is waiting for funds and it
+  // still fits after payroll AND after the wages held for other reasons (a fraud hold may be
+  // released today; a missed cut-off is still owed in the next window), which stay reserved.
   const anyoneShort = selected.length < candidates.length;
-  const collectFee = config.platformFeeMinor > 0n && !anyoneShort && fundable(computeNeed(selected, true, input), input);
+  const reserved: Candidate[] = [...decisions.values()]
+    .filter((d) => d.status === "hold" && d.holdReasons.some((r) => r.code !== "insufficient_funds"))
+    .map((d) => ({ contractor: d.contractor, method: "LOCAL", feeMinor: 0n, cutoffMinutes: 0 }));
+  const collectFee = config.platformFeeMinor > 0n && !anyoneShort && fundable(computeNeed([...selected, ...reserved], true, input), input);
   const finalNeed = computeNeed(selected, collectFee, input);
 
   const conversions: ConversionDecision[] = [...finalNeed.gaps].map(([currency, gap]) => {

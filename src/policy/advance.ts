@@ -35,6 +35,11 @@ export interface AdvanceInput {
   payday: Date;
   fraudWindowDays: number;
   config: InstantAdvanceConfig;
+  // The employer's own USD available now, after today's payouts: an advance is paid only on a
+  // payout the employer has already funded, never around a shortfall.
+  employerAvailableUsdMinor: bigint;
+  // Already advanced to this contractor this payday; the cap covers the total.
+  alreadyAdvancedMinor?: bigint;
 }
 
 const DAY_MS = 86_400_000;
@@ -50,12 +55,15 @@ export function planInstantAdvance(input: AdvanceInput): AdvanceDecision {
   if ((input.payday.getTime() - optIn.optedInAt.getTime()) / DAY_MS < input.fraudWindowDays) {
     return { status: "none", reason: `the opt-in is less than ${input.fraudWindowDays} days old` };
   }
+  const capLeft = config.maxAdvanceMinor - (input.alreadyAdvancedMinor ?? 0n);
   if (config.maxAdvanceMinor <= 0n) return { status: "none", reason: "the employer allows no instant advance" };
+  if (capLeft <= 0n) return { status: "none", reason: "the advance cap for this payday is already used" };
 
   const rate = c.currency === "USD" ? undefined : input.usdRates[c.currency];
   if (c.currency !== "USD" && !rate) return { status: "none", reason: `no USD rate for ${c.currency}` };
   const payoutUsd = rate ? sellAmountFor(c.amountMinor, c.currency, "USD", rate) : c.amountMinor;
-  const advanceMinor = payoutUsd < config.maxAdvanceMinor ? payoutUsd : config.maxAdvanceMinor;
+  if (input.employerAvailableUsdMinor < payoutUsd) return { status: "none", reason: "the employer has not funded this payout yet" };
+  const advanceMinor = payoutUsd < capLeft ? payoutUsd : capLeft;
   const advanceLocalMinor = rate ? buyAmountFor(advanceMinor, "USD", c.currency, rate) : advanceMinor;
   return {
     status: "offer",

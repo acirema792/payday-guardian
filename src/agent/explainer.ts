@@ -37,11 +37,25 @@ Use only the facts given. Do not add amounts, dates, account numbers or options 
 Do not change or second-guess the decision. Refer to people by name, never by gendered pronouns. No greeting, no sign-off, no markdown.`;
 
 const numbers = (text: string) => (text.match(/\d[\d,]*(?:\.\d+)?/g) ?? []).map((n) => n.replace(/,/g, ""));
+const currencies = (text: string) => text.match(/\b(?:USDZ|USD|EUR|GBP|MXN|PHP|INR|CAD|AUD|NZD|JPY|CNY|HKD|SGD|CHF|SEK|NOK|DKK|BRL|COP|ARS|CLP|PEN|ZAR|AED)\b/g) ?? [];
+// Words and symbols that carry an amount or a currency without a digit or an ISO code.
+const SPELLED = /\b(?:twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|million|billion|lakh|crore|dollar|euro|peso|pound|rupee)s?\b|[$€£₱₹¥]/gi;
 
-// Every number in the note must appear in the facts, so the model cannot introduce a figure.
+// Every number and currency code in the note must appear in the facts, so the model cannot
+// introduce a figure or move an amount to another currency. Look-alike digits (full-width, other
+// scripts) are normalised or refused, and amounts spelled out in words are refused.
 export function noteIsGrounded(note: string, facts: ExceptionFacts): boolean {
-  const known = new Set(numbers(JSON.stringify(facts)));
-  return numbers(note).every((n) => known.has(n));
+  const text = note.normalize("NFKC");
+  if (/[^\P{Nd}0-9]/u.test(text)) return false;
+  const factsText = JSON.stringify(facts);
+  const known = new Set(numbers(factsText));
+  const knownCurrencies = new Set(currencies(factsText));
+  const spelled = new Set((factsText.match(SPELLED) ?? []).map((w) => w.toLowerCase()));
+  return (
+    numbers(text).every((n) => known.has(n)) &&
+    currencies(text).every((c) => knownCurrencies.has(c)) &&
+    (text.match(SPELLED) ?? []).every((w) => spelled.has(w.toLowerCase()))
+  );
 }
 
 export function claudeExplainer(options: { client?: Pick<Anthropic, "messages">; model?: string } = {}): Explainer {

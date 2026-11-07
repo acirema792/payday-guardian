@@ -12,8 +12,9 @@ import {
   type Transfer,
   validateBeneficiary,
 } from "../airwallex/api.ts";
-import { type Approval, type ApprovalSubject, isApproved } from "../policy/approval.ts";
+import { type Approval, type ApprovalSubject, isApproved, payeeFingerprint } from "../policy/approval.ts";
 import { type Currency, sellAmountFor, toMajor } from "../policy/money.ts";
+import { TenantIsolationError } from "../policy/planner.ts";
 import type { ConversionDecision, EmployerPlan, HoldReason, TransferMethod } from "../policy/types.ts";
 import { beneficiaryPayload } from "../scenario/corridors.ts";
 import type { ContractorProfile } from "../scenario/seed.ts";
@@ -36,6 +37,13 @@ export interface ExecutionReport {
   payouts: PayoutOutcome[];
 }
 
+// A runId is "<pay period>:<batch>" (e.g. payday-2026-11-06:b2). Payouts, repays and the platform
+// fee are keyed by the pay period, so a later batch can never pay or charge again; conversions are
+// keyed by the batch, so a later batch can convert what it needs.
+export function payPeriodOf(runId: string): string {
+  return runId.split(":")[0];
+}
+
 export interface ExecuteInput {
   runId: string;
   plan: EmployerPlan;
@@ -43,8 +51,24 @@ export interface ExecuteInput {
   api: Api; // scoped to this employer
   store: Store;
   approvals?: Approval[];
+  now?: Date; // when approvals are checked for age; defaults to the clock
+  // The policy's approval limits, re-applied here rather than trusting the plan's flags alone.
+  limits: { autoApproveConversionMinor: bigint };
   // A locked quote may cost at most this much more than the planned conversion (fraction).
   maxRateSlippage?: number;
+}
+
+// A released fraud hold: bound to the pay period, the employer, the exact amount and the full bank
+// details the transfer will go to, as the executor is about to send it.
+export function releaseSubject(employerAccountId: string, profile: ContractorProfile, amountMinor: bigint, currency: Currency, evidence: string[]): ApprovalSubject {
+  return {
+    action: "release_hold",
+    employerAccountId,
+    amountMinor,
+    currency,
+    counterparty: `${profile.id}:${payeeFingerprint(profile.corridor.bankDetails as Record<string, unknown>)}`,
+    evidence,
+  };
 }
 
 export function conversionSubject(plan: EmployerPlan, conversion: ConversionDecision, runId: string): ApprovalSubject {
@@ -85,7 +109,8 @@ async function convert(input: ExecuteInput, conversion: ConversionDecision): Pro
   if (done?.status === "converted") return done;
 
   const subject = conversionSubject(plan, conversion, runId);
-  if (conversion.needsApproval && !input.approvals?.some((a) => isApproved(a, subject))) {
+  const needsApproval = conversion.needsApproval || conversion.sellMinor > input.limits.autoApproveConversionMinor;
+  if (needsApproval && !input.approvals?.some((a) => isApproved(a, subject, { now: input.now ?? new Date() }))) {
     return { buyCurrency: conversion.buyCurrency, status: "awaiting_approval", subject };
   }
   if (conversion.mode === "payout_linked") return { buyCurrency: conversion.buyCurrency, status: "payout_linked" };
@@ -140,33 +165,45 @@ async function sendTransfer(
   args: { beneficiaryId: string; currency: Currency; amountMinor: bigint; method: TransferMethod; reference: string },
 ): Promise<{ transfer?: Transfer; requestId: string; detail?: string }> {
   const { api, store } = input;
-  const saved = store.result<Transfer>(key);
+  const amount = `${args.currency} ${toMajor(args.amountMinor, args.currency)}`;
+  const saved = store.result<Transfer & { amount?: string }>(key);
   const requestId = store.requestIdFor(key);
-  if (saved) return { transfer: saved, requestId };
+  if (saved) {
+    // Already sent this pay period. A different amount now is a new decision for a person, not a resend.
+    if (saved.amount !== undefined && saved.amount !== amount) {
+      return { requestId, detail: `Already sent ${saved.amount} this pay period (transfer ${saved.id}); ${amount} needs a person` };
+    }
+    return { transfer: saved, requestId };
+  }
 
   const funding = await fundPayout(input, args.currency, args.amountMinor);
   if ("detail" in funding) return { requestId, detail: funding.detail };
 
   try {
     const transfer = await createTransfer(api, { requestId, ...args, ...funding, amountMajor: toMajor(args.amountMinor, args.currency) });
-    store.saveResult(key, transfer);
+    store.saveResult(key, { ...transfer, amount });
     return { transfer, requestId };
   } catch (err) {
     if (isAmbiguous(err) || isDuplicateRequest(err)) {
       // Never retry blindly: the first attempt may have gone through.
       const existing = await findTransferByRequestId(api, requestId).catch(() => undefined);
       if (existing) {
-        store.saveResult(key, existing);
+        store.saveResult(key, { ...existing, amount });
         return { transfer: existing, requestId };
       }
       return { requestId, detail: "Transfer outcome unconfirmed; will retry with the same request_id" };
     }
+    store.forget(key);
     return { requestId, detail: `Transfer rejected: ${(err as Error).message}` };
   }
 }
 
 export async function executeEmployerPlan(input: ExecuteInput): Promise<ExecutionReport> {
   const { plan, runId } = input;
+  // Defence in depth: a plan executes only on its own employer's account.
+  if (input.api.accountId !== plan.accountId) {
+    throw new TenantIsolationError(`Plan for ${plan.accountId} cannot execute on ${input.api.accountId}`);
+  }
 
   const conversions: ConversionOutcome[] = [];
   for (const conversion of plan.conversions) conversions.push(await convert(input, conversion));
@@ -195,6 +232,17 @@ export async function executeEmployerPlan(input: ExecuteInput): Promise<Executio
     if (!profile) throw new Error(`No profile for contractor ${contractorId}`);
     const method = decision.method!;
 
+    if (decision.approvalRequired) {
+      const subject = releaseSubject(plan.accountId, profile, decision.contractor.amountMinor, decision.contractor.currency, [
+        payPeriodOf(runId),
+        ...decision.approvalRequired.evidence,
+      ]);
+      if (!input.approvals?.some((a) => isApproved(a, subject, { now: input.now ?? new Date() }))) {
+        payouts.push({ contractorId, status: "awaiting_approval", detail: "Released hold: needs a person's approval for exactly this payout and account" });
+        continue;
+      }
+    }
+
     let beneficiaryId: string;
     try {
       beneficiaryId = await ensureBeneficiary(input, profile, method);
@@ -203,7 +251,7 @@ export async function executeEmployerPlan(input: ExecuteInput): Promise<Executio
       continue;
     }
 
-    const sent = await sendTransfer(input, `${runId}:${plan.employerId}:payout:${contractorId}`, {
+    const sent = await sendTransfer(input, `${payPeriodOf(runId)}:${plan.employerId}:payout:${contractorId}`, {
       beneficiaryId,
       currency: decision.contractor.currency,
       amountMinor: decision.contractor.amountMinor,
@@ -229,10 +277,10 @@ export type RepayOutcome =
 // The repay has its own operation key, so running this twice never pays twice.
 export async function repayReturnedTransfer(input: ExecuteInput, contractorId: string): Promise<RepayOutcome> {
   const { plan, runId, store, api } = input;
-  const original = store.result<Transfer>(`${runId}:${plan.employerId}:payout:${contractorId}`);
+  const original = store.result<Transfer>(`${payPeriodOf(runId)}:${plan.employerId}:payout:${contractorId}`);
   if (!original) return { status: "blocked", detail: "No original transfer recorded for this run" };
 
-  const repayKey = `${runId}:${plan.employerId}:repay:${contractorId}:${original.id}`;
+  const repayKey = `${payPeriodOf(runId)}:${plan.employerId}:repay:${contractorId}:${original.id}`;
   const done = store.result<Transfer>(repayKey);
   if (done) return { status: "repaid", transferId: done.id, requestId: store.requestIdFor(repayKey), originalTransferId: original.id };
 
@@ -301,20 +349,26 @@ export async function collectPlatformFee(
   store: Store,
   runId: string,
   mode: "connected" | "org-entity",
-  settle: SettleOptions = { attempts: 15, waitMs: 2000 },
-  approvals: Approval[] = [],
+  options: {
+    chargeLimitMinor: bigint; // the policy's limit, re-applied here rather than trusting the plan's flag alone
+    approvals?: Approval[];
+    now?: Date; // when approvals are checked for age; defaults to the clock
+    settle?: SettleOptions;
+  },
 ): Promise<FeeOutcome> {
+  const { chargeLimitMinor, approvals = [], settle = { attempts: 15, waitMs: 2000 } } = options;
   if (plan.platformFee.status === "defer") return { status: "deferred", detail: "Fee does not fit after wages; deferred" };
   const amount = toMajor(plan.platformFee.amountMinor, plan.platformFee.currency);
   // Charge authority: the agent charges a fee up to the policy limit on its own; above it, only
   // with an approval bound to this exact amount, employer and run.
   const subject = feeSubject(plan, runId);
-  if (plan.platformFee.needsApproval && !approvals.some((a) => isApproved(a, subject))) {
+  const needsApproval = plan.platformFee.needsApproval || plan.platformFee.amountMinor > chargeLimitMinor;
+  if (needsApproval && !approvals.some((a) => isApproved(a, subject, { now: options.now ?? new Date() }))) {
     return { status: "awaiting_approval", subject, detail: `Fee of ${amount} ${plan.platformFee.currency} is above the agent's charge limit; a person approves` };
   }
   if (mode === "org-entity") return { status: "accrued", detail: `${amount} ${plan.platformFee.currency} accrued to the platform ledger` };
 
-  const key = `${runId}:${plan.employerId}:fee`;
+  const key = `${payPeriodOf(runId)}:${plan.employerId}:fee`;
   let saved = store.result<{ chargeId: string; status: string }>(key);
   if (!saved) {
     try {

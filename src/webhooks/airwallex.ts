@@ -51,8 +51,11 @@ export function verifySignature(secret: string, headers: WebhookHeaders, rawBody
   const expected = Buffer.from(signWebhook(secret, headers.timestamp, rawBody), "hex");
   const given = Buffer.from(headers.signature, "hex");
   if (given.length !== expected.length || !timingSafeEqual(given, expected)) return "bad_signature";
-  // x-timestamp is Unix milliseconds.
-  if (Math.abs(nowMs - Number(headers.timestamp)) > toleranceMs) return "stale";
+  // x-timestamp is Unix milliseconds; accept seconds too, and refuse anything that is not a number.
+  const raw = Number(headers.timestamp);
+  if (!Number.isFinite(raw)) return "stale";
+  const sentMs = raw < 1e12 ? raw * 1000 : raw;
+  if (Math.abs(nowMs - sentMs) > toleranceMs) return "stale";
   return "ok";
 }
 

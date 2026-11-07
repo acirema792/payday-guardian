@@ -22,7 +22,7 @@ export interface EmployerProfile extends Employer {
 
 export const employers: EmployerProfile[] = [
   { employerId: "emp_a", name: "Northwind Labs", accountId: "", fundingCurrency: "USD", initialFundingMajor: "40000" },
-  { employerId: "emp_b", name: "Contoso Health", accountId: "", fundingCurrency: "USD", initialFundingMajor: "23000" },
+  { employerId: "emp_b", name: "Contoso Health", accountId: "", fundingCurrency: "USD", initialFundingMajor: "13000" },
   { employerId: "emp_c", name: "Fabrikam Studio", accountId: "", fundingCurrency: "USD", initialFundingMajor: "0", midRunDepositMajor: "40000" },
 ];
 

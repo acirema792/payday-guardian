@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { approve, isApproved, type ApprovalSubject } from "../src/policy/approval.ts";
+import { AGENT_ID, approve, isApproved, payeeFingerprint, type ApprovalSubject } from "../src/policy/approval.ts";
 
 const subject: ApprovalSubject = {
   action: "conversion",
@@ -33,5 +33,23 @@ describe("approval binding", () => {
 
   it("rejects execution without an approval", () => {
     expect(isApproved(undefined, subject)).toBe(false);
+  });
+
+  it("rejects an approval the agent signed itself, or one with no approver", () => {
+    expect(isApproved(approve(subject, AGENT_ID), subject)).toBe(false);
+    expect(isApproved(approve(subject, "  "), subject)).toBe(false);
+  });
+
+  it("rejects an approval older than 12 hours, or dated in the future", () => {
+    const at = new Date("2026-11-06T04:50:00Z");
+    const approval = approve(subject, "oscar", at);
+    expect(isApproved(approval, subject, { now: new Date("2026-11-06T16:50:00Z") })).toBe(true);
+    expect(isApproved(approval, subject, { now: new Date("2026-11-06T16:50:00.001Z") })).toBe(false);
+    expect(isApproved(approval, subject, { now: new Date("2026-11-06T04:49:59Z") })).toBe(false);
+  });
+
+  it("fingerprints a payee by all of its bank details, in any key order", () => {
+    expect(payeeFingerprint({ a: "1", b: "2" })).toBe(payeeFingerprint({ b: "2", a: "1" }));
+    expect(payeeFingerprint({ account_number: "012180000000007771" })).not.toBe(payeeFingerprint({ account_number: "012180001234567891" }));
   });
 });

@@ -6,6 +6,8 @@ import { AirwallexError, type AirwallexClient, type ApiCallListener } from "./cl
 export interface Api {
   get<T = unknown>(path: string, query?: Record<string, string | number | undefined>): Promise<T>;
   post<T = unknown>(path: string, body: unknown): Promise<T>;
+  // The employer account every call is scoped to, when the Api is employer-scoped.
+  readonly accountId?: string;
 }
 
 // Platform-level calls (charges, connected-account transfers) that are not scoped to an employer.
@@ -32,6 +34,7 @@ export function withAudit(api: Api, account: string, listener: ApiCallListener):
     }
   };
   return {
+    accountId: api.accountId,
     get: (path, query) => wrap("GET", path, undefined, () => api.get(path, query)),
     post: (path, body) => wrap("POST", path, (body as { request_id?: string } | undefined)?.request_id, () => api.post(path, body)),
   };

@@ -24,6 +24,10 @@ export class TenantClient {
   private readonly client: AirwallexClient;
   private readonly onBehalfOf: string | undefined;
 
+  get accountId(): string {
+    return this.tenant.accountId;
+  }
+
   constructor(platform: AirwallexClient, tenant: Tenant) {
     this.tenant = tenant;
     if (tenant.mode === "connected") {

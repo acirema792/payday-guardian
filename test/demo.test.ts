@@ -14,24 +14,24 @@ describe("demo runner (offline bank)", () => {
     ]);
     expect(summary).toMatchObject({
       contractors: 36,
-      paidOnPayday: 34,
+      paidOnPayday: 35,
       heldForFraud: 1,
       releasedAfterApproval: 1, // Maria, to her account on file, after a person approved
-      escalatedCutoff: 2,
-      instantAdvances: 1, // Andrea Cruz opted in; Paolo Mendoza did not
+      escalatedCutoff: 1, // Andrea Cruz: Contoso's own money ran out before her 06:30 cut-off, its top-up came at 06:40
+      instantAdvances: 1,
       returnsRepaid: 1,
       feesCollected: 3, // Northwind, Fabrikam, and Contoso only after its top-up
       feesDeferred: 1,
-      reconciled: { matched: 34, issues: 0 }, // every payout called paid reads back landed, for its exact amount
+      reconciled: { matched: 35, issues: 0 }, // every payout called paid reads back landed, for its exact amount
     });
     // Every employer ends non-negative in every currency: nobody was paid with someone else's money.
     for (const balances of Object.values(summary.finalBalances)) {
       for (const amount of Object.values(balances)) expect(Number(amount)).toBeGreaterThanOrEqual(0);
     }
     expect(summary.apiCalls).toBeGreaterThan(100);
-    // No payout is left in flight: each one landed, was held, or was escalated to a person.
+    // No payout is left in flight: each one landed, or was escalated to a person and advanced.
     const finalStatuses = events.at(-1)!.snapshot!.employers.flatMap((e) => e.contractors.map((c) => c.status));
-    expect(new Set(finalStatuses)).toEqual(new Set(["paid", "repaid", "escalated", "advanced"]));
+    expect(new Set(finalStatuses)).toEqual(new Set(["paid", "repaid", "advanced"]));
     expect(finalStatuses.filter((s) => s === "paid" || s === "repaid")).toHaveLength(summary.paidOnPayday);
     // Every transfer the bank received reached a terminal status.
     expect(env.webhooks!.received.filter((r) => r.transfer?.status === "PROCESSING")).toHaveLength(0);
@@ -86,7 +86,8 @@ describe("demo runner (offline bank)", () => {
       const env = await offlineEnvironment();
       const s = await runDemo(env, () => {});
       env.store.close();
-      return { ...s, apiCalls: 0 };
+      // Transfer ids are random UUIDs in the offline bank; everything else must repeat exactly.
+      return { ...s, apiCalls: 0, reconciled: { ...s.reconciled, payouts: s.reconciled.payouts.map(({ transferId: _, ...p }) => p) } };
     };
     expect(await run()).toEqual(await run());
   });
@@ -111,7 +112,7 @@ describe("rule interpreter", () => {
   });
 
   it("reads a funding notice", async () => {
-    expect(await ruleInterpreter.interpret(inbox.topUp)).toMatchObject({ kind: "funding_notice", employerName: "Contoso Health", amountMajor: "21000" });
+    expect(await ruleInterpreter.interpret(inbox.topUp)).toMatchObject({ kind: "funding_notice", employerName: "Contoso Health", amountMajor: "32000" });
   });
 });
 

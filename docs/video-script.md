@@ -19,10 +19,10 @@ Frames are the real console (`npm run console`, `?run=live`) and title cards, re
    > Policy code prices in the SWIFT fees, converts only the gap at a locked quote, and picks each rail from the local cut-off. Contoso is short, so it gets an exact funding request.
 
 5. **Console: 2026-11-06T04:10:00.000Z UTC, #1 Fabrikam's funding lands; Contoso is still short (highlighting: pooled ledger)**
-   > Now, new information. Fabrikam's deposit lands, but Contoso is still short. Add up all the wallets, and there's over a hundred thousand dollars. That's enough to pay Contoso in full... using other employers' money.
+   > Now, new information. Fabrikam's deposit lands, but Contoso is still short. Add up all the wallets, and there's over ninety thousand dollars. That's enough to pay Contoso in full... using other employers' money.
 
 6. **Console: 2026-11-06T04:10:00.000Z UTC, Revised: Fabrikam pays everyone; Contoso stays limited to its own wallet**
-   > The agent won't do that. Fabrikam pays everyone. Contoso pays only from its own wallet: legally required payments first, then the cheapest to fund. And our platform fee waits until Contoso's people are paid.
+   > The agent won't do that. Fabrikam pays everyone. Contoso pays only from its own wallet: legally required payments first, then whoever's cut-off comes soonest. And our platform fee waits until Contoso's people are paid.
 
 7. **Console: 2026-11-06T04:20:00.000Z UTC, #2 Email: "please send my pay to this new account today, urgent"**
    > Next, an email comes in. My account was closed, please send my pay to this new account today. It's urgent.
@@ -34,10 +34,10 @@ Frames are the real console (`npm run console`, `?run=live`) and title cards, re
    > The batch goes out on Airwallex. Each beneficiary is validated, then created once, and every payout gets an explicit local or SWIFT rail.
 
 10. **Console: 2026-11-06T04:50:00.000Z UTC, Approval: release Maria Garcia's pay to the account on file (highlighting: Approval requested)**
-   > Back to Maria. The ops lead calls her on the number on file; she never sent that email. The agent asks for an approval tied to the exact amount, currency, account, employer, and evidence.
+   > Back to Maria. The ops lead calls her on the number on file; she never sent that email. The agent asks for an approval tied to this payday's exact amount, account, employer, and evidence.
 
 11. **Console: 2026-11-06T04:50:00.000Z UTC, Approval: release Maria Garcia's pay to the account on file (highlighting: rejected, paid to the account)**
-   > That's the approval from the start: it fails for the email's account, and for a bigger amount. Maria is paid to the account on file. The fraudster gets nothing.
+   > That's the approval from the start: it fails for the email's account, for a bigger amount, and on any other day. Maria is paid to the account on file. The fraudster gets nothing.
 
 12. **Console: 2026-11-06T05:30:00.000Z UTC, #3 Bank return on Valeria Flores's MXN payout**
    > Then Valeria's payout in Mexico bounces back from the bank.
@@ -46,7 +46,7 @@ Frames are the real console (`npm run console`, `?run=live`) and title cards, re
    > The agent doesn't just trust the notice. It confirms the return with Airwallex, re-validates the details, and pays once. Run the repay again, and you get the same transfer back.
 
 14. **Console: 2026-11-06T06:40:00.000Z UTC, #4 Contoso's top-up arrives at 06:40 UTC (highlighting: Checked against the wallet)**
-   > Contoso's top-up finally arrives at 6:40, after the Philippine cut-offs. The agent checks that the money actually landed in Contoso's wallet before believing the email.
+   > Contoso's own money ran out before Andrea's 6:30 cut-off, and its top-up arrives at 6:40. The agent checks that the money actually landed in Contoso's wallet before believing the email.
 
 15. **Console: 2026-11-06T06:40:00.000Z UTC, Revised: pay what can still land today, escalate what cannot (highlighting: Note for the ops lead)**
    > It pays everyone who can still be paid today. Andrea's Philippine payout can't land until the next window, so Claude's note offers the ops lead a choice: wait, or send an instant advance on Metal.
@@ -64,7 +64,7 @@ Frames are the real console (`npm run console`, `?run=live`) and title cards, re
    > The design rule: the model reads, the code decides, and the API moves the money. Claude reads and explains, tested policy code decides, and money moves only on each employer's own account, on Airwallex and on Metal.
 
 20. **Title card**
-   > And you can check all of it. The repo has the live run's audit log: 335 Airwallex calls, 0 errors, nothing outside the three employer accounts, and the Metal payment on the explorer. Plus 115 tests, and an offline demo.
+   > And you can check all of it. The repo has the live run's audit log: 450 Airwallex calls, 0 errors, nothing outside the three employer accounts, and the Metal payment on the explorer. Plus 138 tests, and an offline demo.
 
 21. **Title card**
    > That's Payday Guardian, for contractor and E O R platforms on Airwallex: on time, never mixing up whose money is whose, and safe from fraud. Thanks for watching.
