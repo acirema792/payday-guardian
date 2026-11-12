@@ -1,4 +1,4 @@
-# HackerEarth Build Phase submission (Oscar submits; the saved draft predates the benchmark section until it is updated)
+# HackerEarth Build Phase submission (draft saved 2026-11-12 with this text; Oscar submits)
 
 The Build Phase needs its **own** submission. On the dashboard: Submissions > Build Phase > New Submission. The form has four fields and **no video field**, so the video link goes at the top of the description.
 
