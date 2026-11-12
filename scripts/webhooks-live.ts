@@ -151,14 +151,21 @@ const report = {
   employer: employer.name,
   accountId,
   subscription: { events: "payout.transfer.*", created: "by API, x-on-behalf-of the employer account" },
-  transfer: { id: transfer.id, amount: "USD 10.00", method: "LOCAL", transitions: ["SENT", "FAILED (BENEFICIARY_BANK_RETURNED)"] },
+  transfer: { id: transfer.id, amount: "USD 10.00", method: "LOCAL", transitions: ["requested SENT", "requested FAILED (BENEFICIARY_BANK_RETURNED)"], readsBack: finalStatus },
   mode,
   forged: { how: inboxMode ? "a real delivery with one byte of its body changed, same headers" : "a forged event with a wrong signature, through the tunnel", http: forged.status, outcome: deliveries.find((d) => d.outcome === "bad_signature")?.outcome ?? "not received" },
   events: events.filter((d) => d.outcome !== "bad_signature").map((d) => ({ at: d.at, name: d.name, eventId: d.eventId, outcome: d.outcome, status: d.transfer?.status, failureType: d.transfer?.failureType })),
   verifiedAndProcessed: processed.length,
   duplicatesIgnored: events.filter((d) => d.outcome === "duplicate").length,
   ok: failedSeen && forgedRefused,
+  note: "",
 };
+// What the sandbox actually sent, which can differ from what was requested (2026-11-12: a PAID event
+// before FAILED, and failure type INCORRECT_ROUTING).
+const sentNames = report.events.map((e) => (e.name ?? "").replace("payout.transfer.", ""));
+const listed = sentNames.length > 1 ? `${sentNames.slice(0, -1).join(", ")} and ${sentNames.at(-1)}` : sentNames.join("");
+const failureTypes = [...new Set(report.events.map((e) => e.failureType).filter(Boolean))];
+report.note = `The sandbox emitted ${listed} events${failureTypes.length ? ` and reported failure type ${failureTypes.join(", ")}` : ""}; the events are recorded as the sandbox sent them.`;
 writeFileSync("docs/evidence/webhooks-live.json", JSON.stringify(report, null, 2) + "\n");
 writeFileSync(
   "docs/evidence/webhooks-live.md",

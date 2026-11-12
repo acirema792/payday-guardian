@@ -1,5 +1,5 @@
 {
-  "ranAt": "2026-11-12T20:30:19.922Z",
+  "ranAt": "2026-11-12T20:55:35.118Z",
   "run": "live-20261107T024753.db",
   "readOnly": true,
   "clean": true,
@@ -9,10 +9,11 @@
       "accountId": "acct_y_y1JWKCP5mb-pGzOblpYg",
       "window": {
         "from": "2026-11-06T20:47:54.833Z",
-        "to": "2026-11-12T20:30:19.922Z"
+        "to": "2026-11-12T20:55:35.118Z"
       },
       "listedAtAirwallex": 12,
       "recordedByUs": 12,
+      "laterChecks": [],
       "unrecorded": [],
       "recordedButNotListed": [],
       "statuses": {
@@ -24,10 +25,11 @@
       "accountId": "acct_pgEQZnI6MvyeYgG3iRIZPA",
       "window": {
         "from": "2026-11-06T20:48:31.104Z",
-        "to": "2026-11-12T20:30:19.922Z"
+        "to": "2026-11-12T20:55:35.118Z"
       },
       "listedAtAirwallex": 11,
       "recordedByUs": 11,
+      "laterChecks": [],
       "unrecorded": [],
       "recordedButNotListed": [],
       "statuses": {
@@ -39,15 +41,22 @@
       "accountId": "acct_yNJZekd_O4mKHna4-rp6ig",
       "window": {
         "from": "2026-11-06T20:48:57.274Z",
-        "to": "2026-11-12T20:30:19.922Z"
+        "to": "2026-11-12T20:55:35.118Z"
       },
-      "listedAtAirwallex": 13,
+      "listedAtAirwallex": 14,
       "recordedByUs": 13,
+      "laterChecks": [
+        {
+          "transferId": "412d7a30-9479-4808-aff6-4effb1ed0ccc",
+          "source": "webhook check (docs/evidence/webhooks-live.json), on account acct_yNJZekd_O4mKHna4-rp6ig",
+          "status": "CANCELLED"
+        }
+      ],
       "unrecorded": [],
       "recordedButNotListed": [],
       "statuses": {
-        "PAID": 12,
-        "CANCELLED": 1
+        "CANCELLED": 2,
+        "PAID": 12
       }
     }
   ]
