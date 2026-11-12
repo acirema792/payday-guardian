@@ -3,7 +3,7 @@
 Every claim we make in the README, the video and the submission, with how you can check it.
 
 - **REPRODUCIBLE:** a command in this repo produces it on your machine.
-- **VERIFIED-LIVE:** observed on the Airwallex sandbox or Metal testnet, and committed as evidence. The Airwallex evidence is our own export of our own audit store; checking it against Airwallex itself needs access to our sandbox, which we can grant to judges on request. The Metal transaction is public on the explorer.
+- **VERIFIED-LIVE:** observed on the Airwallex sandbox or Metal testnet, and committed as evidence. The Airwallex evidence is our own export of our own audit store; checking it against Airwallex itself needs access to our sandbox, which we can grant to judges on request. The Metal transactions (the advance and the three recorded refusals) are public on the explorer.
 - **NOT-CLAIMED:** things we do not claim, said so nobody reads them in.
 
 | Claim | Tier | How to check |

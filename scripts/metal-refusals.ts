@@ -45,7 +45,7 @@ const before = await rail.status();
 if (before.reference.toLowerCase() !== committed.mandate.toLowerCase()) {
   throw new Error(`data/metal/metal.json holds mandate ${before.reference}, not the committed run's ${committed.mandate}; nothing sent`);
 }
-if (!before.bound || before.spentMinor < before.budgetMinor) {
+if (!before.bound || before.budgetMinor <= 0n || before.spentMinor < before.budgetMinor) {
   throw new Error(`The mandate must be bound with its budget spent so no probe can pay (bound ${before.bound}, spent ${before.spentMinor} of ${before.budgetMinor} minor); nothing sent`);
 }
 

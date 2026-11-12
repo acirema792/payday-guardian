@@ -128,7 +128,7 @@ In the live run, three probes bypassed our own policy code and went straight to 
 
 Our policy decides *whether* an advance is allowed (a missed cut-off only, an opt-in through the verified portal older than the fraud window, a payout the employer has already funded, the employer's cap). Metal enforces *who and how much*, even if our code were compromised.
 
-**Proof of authority from the chain alone.** Nobody has to trust our logs to see what the agent did with the employer's money on Metal. `mandate verify` checks the chain against the mandate Contoso's owner signed and lists one payment (50 USDZ to Andrea's opted-in address) and three refusals (a payee off the mandate, a cent over the cap, a payment past the budget). If the employer or the contractor questions the advance, the signed mandate and those four transactions are the record both can check.
+**What the agent did, and under whose authority.** The advance and the three refusals are four public transactions on the Metal testnet explorer, all on Contoso's account: one 50 USDZ transfer to Andrea's opted-in address, and three refusals that move nothing, each logging the mandate and its reason code. `mandate verify`, run by whoever holds the mandate Contoso's owner signed (Contoso, or a judge on request), checks each of those transactions against that signed mandate; our run of it is in [docs/evidence/metal-refusals.md](docs/evidence/metal-refusals.md). If the advance is ever questioned, those transactions are the record, and the signed mandate explains them.
 
 ## How it never pays one employer with another's money
 
