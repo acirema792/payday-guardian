@@ -33,7 +33,7 @@ Facts the build depends on, re-tested live (October 2026):
 
 ## Tests
 
-`npm test` runs the vitest suite (139 tests) in well under a minute. It covers:
+`npm test` runs the vitest suite (140 tests) in well under a minute. It covers:
 
 - money arithmetic
 - fraud and cut-off routing

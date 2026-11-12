@@ -4,7 +4,7 @@
 
 Airwallex Agentic Banking Hackathon · Starter Kit 06, Multi-Employer Payroll Executor · Metal testnet instant rail · team VALOR
 
-![live run](https://img.shields.io/badge/live%20sandbox-35%2F36%20paid%2C%2035%2F35%20reconciled-2ea44f) ![benchmark](https://img.shields.io/badge/benchmark-25%2F27%20as%20expected-2ea44f) ![naive baseline](https://img.shields.io/badge/naive%20agent-4%20money%20losses%2C%202%20stalled%20payrolls%3B%20ours%200-blue) ![tests](https://img.shields.io/badge/tests-139%20passing-2ea44f)
+![live run](https://img.shields.io/badge/live%20sandbox-35%2F36%20paid%2C%2035%2F35%20reconciled-2ea44f) ![benchmark](https://img.shields.io/badge/benchmark-25%2F27%20as%20expected-2ea44f) ![naive baseline](https://img.shields.io/badge/naive%20agent-4%20money%20losses%2C%202%20stalled%20payrolls%3B%20ours%200-blue) ![tests](https://img.shields.io/badge/tests-140%20passing-2ea44f)
 
 **Judges: [review it in five minutes](JUDGES.md)** · [claims and their evidence](CLAIMS.md) · [evidence by criterion](EVIDENCE.md) · [benchmark](docs/BENCHMARK-RESULTS.md)
 
@@ -25,7 +25,7 @@ npm run demo      # the full payday story on a deterministic offline bank
 npm run console   # http://localhost:4321
 ```
 
-The console steps through the payday and shows each employer's wallet and all 36 payouts, coloured by status. **Live sandbox** in its header switches to the committed live run. `npm test` runs 139 tests.
+The console steps through the payday and shows each employer's wallet and all 36 payouts, coloured by status. **Live sandbox** in its header switches to the committed live run. `npm test` runs 140 tests.
 
 ## The problem
 
@@ -59,7 +59,7 @@ The demo follows the builder guide's arc: goal, plan, new information, revised d
 | Bank returns re-paid once | 1 | 1 |
 | Platform fees charged, one per employer | 3 (1 deferred first, until wages were covered) | 3 (1 deferred first, until wages were covered) |
 | Payouts read back from Airwallex and reconciled to the ledger | 35 / 35 | **35 / 35** |
-| Airwallex API calls / error responses | 242 / 0 (in-memory) | **450 / 0** on the sandbox ([evidence](docs/evidence/)) |
+| Airwallex API calls / error responses | 242 / 0 (in-memory) | **450 / 0** on the sandbox ([evidence](docs/evidence/); the console's payday report shows 447, counted before its final balance reads) |
 
 Both runs follow the same policy; amounts differ slightly because the live run converts at Airwallex's quotes and the offline bank at fixed rates.
 
@@ -67,7 +67,7 @@ Both runs follow the same policy; amounts differ slightly because the live run c
 
 | Live on the Airwallex sandbox (committed run) | Simulated, because a sandbox has no real counterparty |
 |---|---|
-| Three Kit 6 connected accounts, created, submitted and activated by API | Deposits into the employers' Global Accounts (`/simulation/deposit/create`) |
+| Three Kit 6 connected accounts, created, submitted and activated by API (`npm run provision`, just before the run, so those calls are not in the run's audit log) | Deposits into the employers' Global Accounts (`/simulation/deposit/create`) |
 | Every balance read, FX quote and conversion, beneficiary validation and creation, transfer, read-back and platform-fee charge | The beneficiary banks' side of each transfer: SENT, PAID, or FAILED with a return (`/simulation/transfers/{id}/transition`) |
 | Claude Opus 5.5 reading the emails and writing the ops lead's notes | The emails themselves, and the person approving (a scripted stand-in; the approval checks are real) |
 | The instant advance, the mandate's refusals and `mandate verify` on Metal testnet | Andrea's wallet (a synthetic testnet address) |
@@ -124,7 +124,7 @@ flowchart LR
 
 One Metal account per employer, like Airwallex. The owner (the employer's admin) creates Contoso's Metal account, funds it from the faucet and binds a **mandate**: one payee (Andrea's opted-in address), a per-payment cap of 50 USDZ and a total budget of 50 USDZ. The agent holds only the mandate key, never the owner key, and can only run `mandate status`, `mandate pull --payment-id` and `mandate verify` ([`src/metal/`](src/metal/), `metal-agent` 0.3.3 pinned).
 
-In the live run, three probes bypassed our own policy code and went straight to Metal: a payee not on the mandate, 50.01 USDZ (one cent over the cap), and a second payment past the budget. Metal refused all three and nothing was sent. The approved 50 USDZ advance paid once; the same `--payment-id` again paid nothing; `mandate verify` confirmed the payment from the chain alone. Every pull is in [docs/evidence](docs/evidence/) with explorer links.
+In the live run, three probes bypassed our own policy code and went straight to Metal: a payee not on the mandate, 50.01 USDZ (one cent over the cap), and a second payment past the budget. Metal refused all three and nothing was sent. The approved 50 USDZ advance paid once; the same `--payment-id` again paid nothing; `mandate verify` confirmed the payment from the chain alone. Every pull and probe is in [docs/evidence](docs/evidence/): the payment with its explorer link; the refused probes sent nothing on chain.
 
 Our policy decides *whether* an advance is allowed (a missed cut-off only, an opt-in through the verified portal older than the fraud window, a payout the employer has already funded, the employer's cap). Metal enforces *who and how much*, even if our code were compromised.
 
@@ -151,16 +151,16 @@ Every call is load-bearing, and every employer call carries `x-on-behalf-of`. We
 | `GET /transfers`, `GET /transfers/{id}` | Recover from lost responses by `request_id`; confirm a return before re-paying; the closing reconciliation |
 | `POST /simulation/transfers/{id}/transition` | The bank's side: SENT, PAID, or FAILED with `BENEFICIARY_BANK_RETURNED`, each read back |
 | `POST /charges/create`, `GET /charges/{id}` | Platform fee from the employer's wallet, confirmed at SETTLED |
-| Webhooks (`payout.transfer.*`) | HMAC-SHA256 over `x-timestamp` + raw body, 5-minute window, event-id dedupe; subscriptions created by API for the platform and each employer account |
+| Webhooks (`payout.transfer.*`) | HMAC-SHA256 over `x-timestamp` + raw body, 5-minute window, event-id dedupe, exercised offline. Creating subscriptions by API (platform and each employer account) is implemented but was not used in the committed run |
 | Metal testnet (`metal-agent` 0.3.3) | Owner: `account create`, `fund`, mandate `bind`/`renew` (`npm run metal:setup`). Agent: `mandate status`, `pull --payment-id`, `verify` |
 
-**More:** [docs/engineering.md](docs/engineering.md) has setup for your own sandbox, the sandbox behaviour we measured, what the 139 tests cover, and the project layout.
+**More:** [docs/engineering.md](docs/engineering.md) has setup for your own sandbox, the sandbox behaviour we measured, what the 140 tests cover, and the project layout.
 
 ## Limits and next steps
 
 - **Payroll inputs are seed data.** A real deployment reads them from the platform's HRIS or payroll system.
 - **The approver is scripted in the demo.** The checks are real (hash-bound, re-checked by the executor, expiring after 12 hours, and refused when the approver is the agent's own identity; conversions above USD 15,000 and fees above USD 100 also need one), but approvers are not yet authenticated: an approver app with its own signing key is next.
-- **Live webhooks were not received in the committed run.** The receiver drives moment #3 offline; live subscriptions are created by API, but receiving them needs a public URL (`--webhook-url`).
+- **Live webhooks were not received in the committed run.** The receiver drives moment #3 offline. Creating subscriptions by API is implemented, but the committed run created none: receiving them needs a public URL (`--webhook-url`).
 - **The instant advance is capped at USD 50 and runs on testnet.** The opt-in is seed data, and the next-window remainder is reported, not yet scheduled.
 - **The closing reconciliation runs one way.** It reads back every payout the ledger has; listing each account's transfers to catch one the ledger lacks is next.
 - **Webhook secrets are not tied to one account each.** Any of our subscriptions' secrets verifies an event; the event is still routed only to the employer whose account it names.
