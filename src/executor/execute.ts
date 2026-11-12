@@ -148,9 +148,13 @@ async function convert(input: ExecuteInput, conversion: ConversionDecision): Pro
 }
 
 // Beneficiaries are per employer account and reused across runs.
+function payeeOf(profile: ContractorProfile): string {
+  return payeeFingerprint(profile.corridor.bankDetails as Record<string, unknown>);
+}
+
 // A beneficiary is keyed by the full bank details and rail, so a verified change creates a new one.
 function beneficiaryKey(accountId: string, profile: ContractorProfile, method: TransferMethod): string {
-  return `ben:${accountId}:${profile.id}:${method}:${payeeFingerprint(profile.corridor.bankDetails as Record<string, unknown>)}`;
+  return `ben:${accountId}:${profile.id}:${method}:${payeeOf(profile)}`;
 }
 
 async function ensureBeneficiary(input: ExecuteInput, profile: ContractorProfile, method: TransferMethod): Promise<string> {
@@ -167,9 +171,11 @@ async function ensureBeneficiary(input: ExecuteInput, profile: ContractorProfile
 async function sendTransfer(
   input: ExecuteInput,
   key: string,
-  args: { beneficiaryId: string; currency: Currency; amountMinor: bigint; method: TransferMethod; reference: string },
+  // payee: fingerprint of the bank details paid, saved with the transfer so a repay can prove it pays the same account.
+  args: { beneficiaryId: string; currency: Currency; amountMinor: bigint; method: TransferMethod; reference: string; payee: string },
 ): Promise<{ transfer?: Transfer; requestId: string; detail?: string }> {
   const { api, store } = input;
+  const { payee, ...transferArgs } = args;
   const amount = `${args.currency} ${toMajor(args.amountMinor, args.currency)}`;
   const saved = store.result<Transfer & { amount?: string }>(key);
   const requestId = store.requestIdFor(key);
@@ -185,15 +191,15 @@ async function sendTransfer(
   if ("detail" in funding) return { requestId, detail: funding.detail };
 
   try {
-    const transfer = await createTransfer(api, { requestId, ...args, ...funding, amountMajor: toMajor(args.amountMinor, args.currency) });
-    store.saveResult(key, { ...transfer, amount });
+    const transfer = await createTransfer(api, { requestId, ...transferArgs, ...funding, amountMajor: toMajor(args.amountMinor, args.currency) });
+    store.saveResult(key, { ...transfer, amount, payee });
     return { transfer, requestId };
   } catch (err) {
     if (isAmbiguous(err) || isDuplicateRequest(err)) {
       // Never retry blindly: the first attempt may have gone through.
       const existing = await findTransferByRequestId(api, requestId).catch(() => undefined);
       if (existing) {
-        store.saveResult(key, { ...existing, amount });
+        store.saveResult(key, { ...existing, amount, payee });
         return { transfer: existing, requestId };
       }
       return { requestId, detail: "Transfer outcome unconfirmed; will retry with the same request_id" };
@@ -262,6 +268,7 @@ export async function executeEmployerPlan(input: ExecuteInput): Promise<Executio
       amountMinor: decision.contractor.amountMinor,
       method,
       reference: `Payroll ${runId}`,
+      payee: payeeOf(profile),
     });
     payouts.push(
       sent.transfer
@@ -282,7 +289,7 @@ export type RepayOutcome =
 // The repay has its own operation key, so running this twice never pays twice.
 export async function repayReturnedTransfer(input: ExecuteInput, contractorId: string): Promise<RepayOutcome> {
   const { plan, runId, store, api } = input;
-  const original = store.result<Transfer>(`${payPeriodOf(runId)}:${plan.employerId}:payout:${contractorId}`);
+  const original = store.result<Transfer & { payee?: string }>(`${payPeriodOf(runId)}:${plan.employerId}:payout:${contractorId}`);
   if (!original) return { status: "blocked", detail: "No original transfer recorded for this run" };
 
   const repayKey = `${payPeriodOf(runId)}:${plan.employerId}:repay:${contractorId}:${original.id}`;
@@ -302,17 +309,24 @@ export async function repayReturnedTransfer(input: ExecuteInput, contractorId: s
     return { status: "escalated", detail: `Returned with ${current.failureType}; new bank details needed from the contractor` };
   }
 
+  // Repay only to the exact bank details the original payout went to. A change since then is a person's call:
+  // a return followed by new bank details is how a diversion looks. Only the rail may differ.
+  if (original.payee === undefined || original.payee !== payeeOf(profile)) {
+    return { status: "escalated", detail: "Bank details differ from the ones the original payout went to; a person decides where the repay goes" };
+  }
+
   try {
     await validateBeneficiary(api, beneficiaryPayload(profile.corridor, profile.firstName, profile.lastName), decision.method);
   } catch (err) {
     return { status: "escalated", detail: `Beneficiary no longer validates: ${(err as Error).message}` };
   }
 
-  // Repay only to the bank details the original payout went to. A change since then is a person's call:
-  // a return followed by new bank details is how a diversion looks. Only the rail may differ.
-  const sameDetails = (["LOCAL", "SWIFT"] as const).some((m) => store.result(beneficiaryKey(plan.accountId, profile, m)));
-  if (!sameDetails) return { status: "escalated", detail: "Bank details changed since the original payout; a person decides where the repay goes" };
-  const beneficiaryId = await ensureBeneficiary(input, profile, decision.method);
+  let beneficiaryId: string;
+  try {
+    beneficiaryId = await ensureBeneficiary(input, profile, decision.method);
+  } catch (err) {
+    return { status: "blocked", detail: `Beneficiary invalid: ${(err as Error).message}` };
+  }
 
   const sent = await sendTransfer(input, repayKey, {
     beneficiaryId,
@@ -320,6 +334,7 @@ export async function repayReturnedTransfer(input: ExecuteInput, contractorId: s
     amountMinor: decision.contractor.amountMinor,
     method: decision.method,
     reference: `Payroll ${runId} repay`,
+    payee: payeeOf(profile),
   });
   return sent.transfer
     ? { status: "repaid", transferId: sent.transfer.id, requestId: sent.requestId, originalTransferId: original.id }

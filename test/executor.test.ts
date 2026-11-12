@@ -314,7 +314,7 @@ describe("returned transfers", () => {
     const maria = input.profiles.get("maria")!;
     const moved = { ...maria, corridor: { ...maria.corridor, bankDetails: { ...maria.corridor.bankDetails, account_number: "012180001234567891" } } };
     const outcome = await repayReturnedTransfer({ ...input, profiles: new Map([["maria", moved]]) }, "maria");
-    expect(outcome).toMatchObject({ status: "escalated", detail: expect.stringMatching(/Bank details changed/) });
+    expect(outcome).toMatchObject({ status: "escalated", detail: expect.stringMatching(/Bank details differ/) });
     expect(fake.transfers).toHaveLength(1);
     expect(fake.creates("/beneficiaries/create")).toHaveLength(1);
   });
@@ -333,6 +333,33 @@ describe("returned transfers", () => {
     expect(repay).toMatchObject({ transfer_method: other });
     expect(repay.beneficiary_id).not.toBe(first.beneficiary_id);
     expect(fake.transfers).toHaveLength(2);
+  });
+
+  it("escalates a repay to details the payee used before, not the ones the returned payout went to", async () => {
+    const ana = profile("Ana", "US_USD", "1000");
+    await executeEmployerPlan(setup([ana], "5000", { runId: "payday-2026-10-06:b1" }).input);
+    const moved = { ...ana, corridor: { ...ana.corridor, bankDetails: { ...ana.corridor.bankDetails, account_number: "999999999" } }, bankDetailsChangedAt: new Date("2026-10-01T00:00:00Z"), bankDetailsChangeChannel: "verified_portal" as const };
+    const { input } = setup([moved], "5000", { runId: "payday-2026-11-06:b1" });
+    await executeEmployerPlan(input);
+    fake.transfers.at(-1)!.status = "CANCELLED";
+    fake.transfers.at(-1)!.failure_type = "BENEFICIARY_BANK_RETURNED";
+    const outcome = await repayReturnedTransfer({ ...input, profiles: new Map([["ana", ana]]) }, "ana");
+    expect(outcome).toMatchObject({ status: "escalated", detail: expect.stringMatching(/Bank details differ/) });
+    expect(fake.transfers).toHaveLength(2);
+  });
+
+  it("reports a beneficiary that cannot be created for the new rail instead of throwing", async () => {
+    const input = await sentThenReturned("BENEFICIARY_BANK_RETURNED");
+    const original = input.plan.payouts[0].method!;
+    const plan = { ...input.plan, payouts: input.plan.payouts.map((p) => ({ ...p, method: (original === "LOCAL" ? "SWIFT" : "LOCAL") as typeof original })) };
+    const post = fake.post.bind(fake);
+    fake.post = (async (path: string, body: unknown) => {
+      if (path === "/beneficiaries/create") throw new Error("boom");
+      return post(path, body);
+    }) as typeof fake.post;
+    const outcome = await repayReturnedTransfer({ ...input, plan }, "maria");
+    expect(outcome).toMatchObject({ status: "blocked", detail: expect.stringMatching(/Beneficiary invalid: boom/) });
+    expect(fake.transfers).toHaveLength(1);
   });
 
   it("does nothing for a transfer that did not fail", async () => {
