@@ -56,7 +56,8 @@
   .chip { display: grid; grid-template-columns: 22px 1fr; gap: 8px; align-items: center; background: var(--chip-bg); border-radius: 8px; padding: 6px 8px; border-left: 4px solid var(--pending); transition: border-color .4s, background .4s; }
   .chip .who { font-size: 13px; overflow: hidden; text-overflow: ellipsis; }
   .chip .amt { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
-  .chip .st { display: inline-block; white-space: nowrap; font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; margin-left: 6px; }
+  .chip .meta { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 6px; }
+  .chip .st { min-width: 0; font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
   .step .lines li.code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; color: var(--muted); }
   .chip.changed { animation: pulse 1.2s ease-out; }
   @keyframes pulse { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 60%, transparent); } 100% { box-shadow: 0 0 0 10px transparent; } }
@@ -161,7 +162,7 @@
         const changed = previous.has(c.id) && previous.get(c.id) !== c.status ? " changed" : "";
         return `<div class="chip${changed}" style="border-left-color: var(${color})" title="${esc(c.note ?? label)}">
           <span>${flag(c.country)}</span>
-          <span class="who">${esc(c.name)}<br><span class="amt">${fmt(c.amount, c.currency)}</span><span class="st" style="color: var(${color})">${label}</span></span></div>`;
+          <span class="who">${esc(c.name)}<span class="meta"><span class="amt">${fmt(c.amount, c.currency)}</span><span class="st" style="color: var(${color})">${label}</span></span></span></div>`;
       }).join("");
       return `<div class="employer"><h3>${esc(emp.name)}</h3><div class="wallet">Own wallet: ${wallet}</div><div class="chips">${chips}</div></div>`;
     }).join("");
