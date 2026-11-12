@@ -130,6 +130,19 @@ describe("executor", () => {
     expect(fake.creates("/transfers/create")).toHaveLength(1);
   });
 
+  it("pays the new account after a verified bank-detail change, not the beneficiary cached from the old one", async () => {
+    const ana = profile("Ana", "US_USD", "1000");
+    await executeEmployerPlan(setup([ana], "5000", { runId: "payday-2026-10-06:b1" }).input);
+    const moved = { ...ana, corridor: { ...ana.corridor, bankDetails: { ...ana.corridor.bankDetails, account_number: "999999999" } }, bankDetailsChangedAt: new Date("2026-10-01T00:00:00Z"), bankDetailsChangeChannel: "verified_portal" as const };
+    const report = await executeEmployerPlan(setup([moved], "5000", { runId: "payday-2026-11-06:b1" }).input);
+    expect(report.payouts[0].status).toBe("sent");
+    const created = fake.creates("/beneficiaries/create").map((c) => c.body.beneficiary.bank_details.account_number);
+    expect(created).toHaveLength(2);
+    expect(created.at(-1)).toBe("999999999");
+    const paidTo = fake.creates("/transfers/create").at(-1)!.body.beneficiary_id;
+    expect(paidTo).not.toBe(fake.creates("/transfers/create")[0].body.beneficiary_id);
+  });
+
   it("recovers a transfer whose response was lost instead of paying again", async () => {
     const { input } = setup([profile("Ana", "US_USD", "1000")], "5000");
     fake.loseNextTransferResponse = true;

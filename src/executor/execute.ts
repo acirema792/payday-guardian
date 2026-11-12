@@ -148,8 +148,13 @@ async function convert(input: ExecuteInput, conversion: ConversionDecision): Pro
 }
 
 // Beneficiaries are per employer account and reused across runs.
+// A beneficiary is keyed by the full bank details and rail, so a verified change creates a new one.
+function beneficiaryKey(accountId: string, profile: ContractorProfile, method: TransferMethod): string {
+  return `ben:${accountId}:${profile.id}:${method}:${payeeFingerprint(profile.corridor.bankDetails as Record<string, unknown>)}`;
+}
+
 async function ensureBeneficiary(input: ExecuteInput, profile: ContractorProfile, method: TransferMethod): Promise<string> {
-  const key = `ben:${input.plan.accountId}:${profile.id}`;
+  const key = beneficiaryKey(input.plan.accountId, profile, method);
   const saved = input.store.result<{ beneficiaryId: string }>(key);
   if (saved) return saved.beneficiaryId;
   const payload = beneficiaryPayload(profile.corridor, profile.firstName, profile.lastName);
@@ -303,7 +308,7 @@ export async function repayReturnedTransfer(input: ExecuteInput, contractorId: s
     return { status: "escalated", detail: `Beneficiary no longer validates: ${(err as Error).message}` };
   }
 
-  const beneficiaryId = store.result<{ beneficiaryId: string }>(`ben:${plan.accountId}:${contractorId}`)?.beneficiaryId;
+  const beneficiaryId = store.result<{ beneficiaryId: string }>(beneficiaryKey(plan.accountId, profile, decision.method!))?.beneficiaryId;
   if (!beneficiaryId) return { status: "blocked", detail: "Beneficiary id missing" };
 
   const sent = await sendTransfer(input, repayKey, {
