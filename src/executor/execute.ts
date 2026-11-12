@@ -308,8 +308,11 @@ export async function repayReturnedTransfer(input: ExecuteInput, contractorId: s
     return { status: "escalated", detail: `Beneficiary no longer validates: ${(err as Error).message}` };
   }
 
-  const beneficiaryId = store.result<{ beneficiaryId: string }>(beneficiaryKey(plan.accountId, profile, decision.method!))?.beneficiaryId;
-  if (!beneficiaryId) return { status: "blocked", detail: "Beneficiary id missing" };
+  // Repay only to the bank details the original payout went to. A change since then is a person's call:
+  // a return followed by new bank details is how a diversion looks. Only the rail may differ.
+  const sameDetails = (["LOCAL", "SWIFT"] as const).some((m) => store.result(beneficiaryKey(plan.accountId, profile, m)));
+  if (!sameDetails) return { status: "escalated", detail: "Bank details changed since the original payout; a person decides where the repay goes" };
+  const beneficiaryId = await ensureBeneficiary(input, profile, decision.method);
 
   const sent = await sendTransfer(input, repayKey, {
     beneficiaryId,

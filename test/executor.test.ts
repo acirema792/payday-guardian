@@ -309,6 +309,32 @@ describe("returned transfers", () => {
     expect(fake.transfers).toHaveLength(1);
   });
 
+  it("escalates a repay when the bank details changed after the payout, and sends nothing", async () => {
+    const input = await sentThenReturned("BENEFICIARY_BANK_RETURNED");
+    const maria = input.profiles.get("maria")!;
+    const moved = { ...maria, corridor: { ...maria.corridor, bankDetails: { ...maria.corridor.bankDetails, account_number: "012180001234567891" } } };
+    const outcome = await repayReturnedTransfer({ ...input, profiles: new Map([["maria", moved]]) }, "maria");
+    expect(outcome).toMatchObject({ status: "escalated", detail: expect.stringMatching(/Bank details changed/) });
+    expect(fake.transfers).toHaveLength(1);
+    expect(fake.creates("/beneficiaries/create")).toHaveLength(1);
+  });
+
+  it("re-pays on a new rail to the same bank details with a beneficiary for that rail", async () => {
+    const input = await sentThenReturned("BENEFICIARY_BANK_RETURNED");
+    const original = input.plan.payouts[0].method!;
+    const other = original === "LOCAL" ? "SWIFT" : "LOCAL";
+    const plan = { ...input.plan, payouts: input.plan.payouts.map((p) => ({ ...p, method: other as typeof original })) };
+    const outcome = await repayReturnedTransfer({ ...input, plan }, "maria");
+    expect(outcome.status).toBe("repaid");
+    const bens = fake.creates("/beneficiaries/create");
+    expect(bens).toHaveLength(2);
+    expect(bens[1].body.beneficiary.bank_details.account_number).toBe(bens[0].body.beneficiary.bank_details.account_number);
+    const [first, repay] = fake.creates("/transfers/create").map((c) => c.body);
+    expect(repay).toMatchObject({ transfer_method: other });
+    expect(repay.beneficiary_id).not.toBe(first.beneficiary_id);
+    expect(fake.transfers).toHaveLength(2);
+  });
+
   it("does nothing for a transfer that did not fail", async () => {
     const { input } = setup([profile("Ana", "US_USD", "1000")], "5000");
     await executeEmployerPlan(input);
