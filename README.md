@@ -59,7 +59,7 @@ The demo follows the builder guide's arc: goal, plan, new information, revised d
 | Bank returns re-paid once | 1 | 1 |
 | Platform fees charged, one per employer | 3 (1 deferred first, until wages were covered) | 3 (1 deferred first, until wages were covered) |
 | Payouts read back from Airwallex and reconciled to the ledger | 35 / 35 | **35 / 35** |
-| Airwallex API calls / error responses | 242 / 0 (in-memory) | **450 / 0** on the sandbox ([evidence](docs/evidence/); the console's payday report shows 447, counted before its final balance reads) |
+| Airwallex API calls / error responses | 242 / 0 (in-memory) | **450 / 0** on the sandbox ([evidence](docs/evidence/); the console's payday report shows 447, counted before the console's final snapshot reads each employer's balance) |
 
 Both runs follow the same policy; amounts differ slightly because the live run converts at Airwallex's quotes and the offline bank at fixed rates.
 
