@@ -23,7 +23,8 @@
     "site": "node scripts/build-site.ts",
     "metal:setup": "node --env-file=.env scripts/metal-setup.ts",
     "benchmark": "node scripts/benchmark.ts",
-    "mutation": "node scripts/mutation.ts"
+    "mutation": "node scripts/mutation.ts",
+    "metal:refusals": "node --env-file=.env scripts/metal-refusals.ts"
   },
   "devDependencies": {
     "@types/node": "^24.19.2",

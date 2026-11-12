@@ -55,7 +55,7 @@ export function parsePull(stdout: string): PullResult {
     return { outcome: "paid", transaction: out.get("transaction") ?? "", explorer: out.get("explorer"), spentMinor: spent ? usdzMinor(spent) : undefined, again };
   }
   if (outcome === "refused, not sent") return { outcome: "refused", reason: out.get("reason") ?? "refused", sent: false };
-  if (outcome === "refused") return { outcome: "refused", reason: out.get("reason") ?? "refused", sent: true };
+  if (outcome === "refused") return { outcome: "refused", reason: out.get("reason") ?? "refused", sent: true, transaction: out.get("transaction"), explorer: out.get("explorer") };
   if (outcome === "held" || outcome === "pending") return { outcome, transaction: out.get("transaction"), reason: out.get("reason") };
   const error = out.lines.find((l) => l.startsWith("error"));
   throw new Error(`metal-agent pull: ${error ?? "no outcome printed"}`);
@@ -120,15 +120,19 @@ export class MetalCliRail implements InstantRail {
     };
   }
 
-  async pull(to: string, amountMinor: bigint, paymentId: string): Promise<PullResult> {
+  // recordRefusalWith: a funded key that only submits the pull and pays its gas, so a refusal is
+  // recorded on chain (metal-agent --record-refusal). It holds no authority over the account; the
+  // mandate key still signs. Used only for probes the mandate must refuse.
+  async pull(to: string, amountMinor: bigint, paymentId: string, recordRefusalWith?: string): Promise<PullResult> {
     const amount = toMajor(amountMinor, "USD");
-    const { stdout } = await this.run(["mandate", "pull", "--credential", this.setup.credential, "--to", to, "--amount", amount, "--payment-id", paymentId]);
+    const record = recordRefusalWith ? ["--key", recordRefusalWith, "--record-refusal"] : [];
+    const { stdout } = await this.run(["mandate", "pull", "--credential", this.setup.credential, "--to", to, "--amount", amount, "--payment-id", paymentId, ...record]);
     const result = parsePull(stdout);
     this.log.push({
-      command: `mandate pull --to ${to} --amount ${amount} --payment-id ${paymentId}`,
+      command: `mandate pull --to ${to} --amount ${amount} --payment-id ${paymentId}${recordRefusalWith ? " --record-refusal" : ""}`,
       outcome: result.outcome === "refused" ? `refused${result.sent ? "" : ", not sent"}: ${result.reason}` : result.outcome === "paid" && result.again ? "already paid, nothing sent" : result.outcome,
       transaction: "transaction" in result ? result.transaction : undefined,
-      explorer: result.outcome === "paid" ? result.explorer : undefined,
+      explorer: result.outcome === "paid" || result.outcome === "refused" ? result.explorer : undefined,
     });
     return result;
   }

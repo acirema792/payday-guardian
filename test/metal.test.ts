@@ -42,6 +42,11 @@ describe("metal-agent output parsing", () => {
     expect(parsePull(out)).toEqual({ outcome: "refused", sent: false, reason: "mandate_cap_exceeded (the amount is above the mandate's per-payment cap)" });
   });
 
+  it("reads a refusal recorded on chain, with its transaction", () => {
+    const out = "transaction 0xdef\noutcome refused\nreason mandate_payee_not_listed (the payee is not one the mandate allows)\npayer 0xd97e\npayee 0xdead\namount 50 *USDZ\nexplorer https://testnet.metalntwx.com/tx/0xdef\ngas 61234\n";
+    expect(parsePull(out)).toEqual({ outcome: "refused", sent: true, reason: "mandate_payee_not_listed (the payee is not one the mandate allows)", transaction: "0xdef", explorer: "https://testnet.metalntwx.com/tx/0xdef" });
+  });
+
   it("fails loudly when no outcome is printed", () => {
     expect(() => parsePull("error: the facilitator did not answer\n")).toThrow(/facilitator did not answer/);
   });

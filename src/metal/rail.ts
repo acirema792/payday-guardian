@@ -18,7 +18,8 @@ export interface MandateState {
 
 export type PullResult =
   | { outcome: "paid"; transaction: string; explorer?: string; spentMinor?: bigint; again: boolean }
-  | { outcome: "refused"; reason: string; sent: boolean }
+  // sent: the refused pull went on chain (metal-agent --record-refusal), in a transaction that moves nothing.
+  | { outcome: "refused"; reason: string; sent: boolean; transaction?: string; explorer?: string }
   | { outcome: "held" | "pending"; transaction?: string; reason?: string };
 
 export interface MandateVerification {
