@@ -33,7 +33,7 @@ Facts the build depends on, measured live between 2026-10-27 and 2026-11-07:
 
 ## Tests
 
-`npm test` runs the vitest suite (142 tests) in well under a minute. It covers:
+`npm test` runs the vitest suite (144 tests) in well under a minute. It covers:
 
 - money arithmetic
 - fraud and cut-off routing
@@ -41,7 +41,7 @@ Facts the build depends on, measured live between 2026-10-27 and 2026-11-07:
 - approval hashing, expiry after 12 hours, no self-approval, and the payee fingerprint
 - tenant isolation
 - the seed scenario
-- the executor against an in-memory Airwallex: idempotency within a batch and across batches of one pay period, lost responses, returns (a repay escalates if the bank details changed since the payout; a new rail gets its own beneficiary), a verified bank-detail change paying the new account, slippage, charges, the charge and conversion limits re-applied in the executor, a plan refused on another employer's account, and a released fraud hold paid only under an approval for that payday, amount and bank account
+- the executor against an in-memory Airwallex: idempotency within a batch and across batches of one pay period, lost responses, returns (each payout records the bank details it paid, and a repay goes only to exactly those; a new rail gets its own beneficiary), a verified bank-detail change paying the new account, slippage, charges, the charge and conversion limits re-applied in the executor, a plan refused on another employer's account, and a released fraud hold paid only under an approval for that payday, amount and bank account
 - client retry rules
 - the Claude reader's schema mapping and fallback
 - the exception explainer: a note with a number or currency not in the facts, look-alike digits, or an amount in words is discarded

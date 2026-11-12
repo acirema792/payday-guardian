@@ -10,7 +10,7 @@ No account, key or install needed for steps 1 to 4.
 | 4 (1 min) | Open [docs/BENCHMARK-RESULTS.md](docs/BENCHMARK-RESULTS.md) | 25 of 27 cases as expected, each outcome written before the run; the two misses are the offline fallback reader, explained. Against a naive agent on the same bank: money lost or misdirected in 4 cases, payroll stalled in 2; Payday Guardian neither. `npm run mutation` removes each protection in turn and shows which benchmark cases fail and how many unit tests fail |
 | 5 (1 min, optional) | `npm ci && npm run benchmark && npm run demo && npm run console` (Node 24) | The benchmark and the whole payday on a deterministic offline bank, no credentials. Then http://localhost:4321 |
 
-Prefer video? [4:44 walkthrough](https://youtu.be/IvPSarvIO9g) recorded from the same live run (it shows 138 tests; the suite has 142 now).
+Prefer video? [4:44 walkthrough](https://youtu.be/IvPSarvIO9g) recorded from the same live run (it shows 138 tests; the suite has 144 now).
 
 ## Check a claim yourself
 
