@@ -18,4 +18,4 @@ The criteria from the build-phase shortlist email, with what we did and where to
 | Working demo | Click-through console of the live run (GitHub Pages), the offline demo (`npm run demo`), and the live demo on your own sandbox (`npm run demo:live`) |
 | Video under five minutes | [4:44, recorded from the live run](https://youtu.be/IvPSarvIO9g) |
 | Repository with setup steps | This repo; [docs/engineering.md](docs/engineering.md) has setup for your own sandbox |
-| Uses Airwallex APIs | Every money movement goes through Airwallex; see [docs/evidence/live-audit.csv](docs/evidence/live-audit.csv) |
+| Uses Airwallex APIs | Every payroll payout, conversion and fee goes through Airwallex (the one instant advance went on Metal testnet); see [docs/evidence/live-audit.csv](docs/evidence/live-audit.csv) |
