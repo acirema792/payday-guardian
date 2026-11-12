@@ -83,7 +83,7 @@ The model reads, the code decides, the API moves the money.
 
 ## Open setup items
 
-Live webhooks are optional: subscriptions are created by API, but receiving them needs a public URL that the user opens (`--webhook-url`). The committed live run has none.
+Live webhooks: the committed payday run had no public URL. Proven separately on 2026-11-12 with `npm run webhooks:live -- --inbox` (webhook.site inbox read back and verified by our receiver; 5 signed events, tampered copy refused) -> docs/evidence/webhooks-live.md. The test subscription on Fabrikam's account still points at the deleted inbox (sandbox, harmless).
 
 ## Commands
 
@@ -103,6 +103,7 @@ Live webhooks are optional: subscriptions are created by API, but receiving them
 - `npm run demo:live -- --reader claude --webhook-url https://<tunnel>`: also verifies live payout.transfer webhooks (the tunnel is the user's to open; the classifier blocks Claude from opening ingress tunnels)
 - `npm run metal:refusals`: records the committed mandate's three refusals on chain (`--record-refusal`, a gas-only recorder key); refuses to run unless the mandate's budget is spent -> docs/evidence/metal-refusals.{json,md}
 - `npm run reconcile:two-way`: read-only; lists every transfer on the live run's three employer accounts and requires each to be in the run's store, and the reverse -> docs/evidence/two-way-reconciliation.{json,md} (36/36 on 2026-11-12)
+- `npm run webhooks:live -- --inbox` (or `--url https://<tunnel>`): subscribes one employer account, sends a 10 USD sandbox payout to FAILED, verifies every signed event -> docs/evidence/webhooks-live.{json,md}
 - `npm run mutation`: removes each of 16 protections in a scratch copy and records which benchmark case and unit tests catch it -> docs/evidence/mutation.json (a few minutes)
 - `npm run benchmark`: the 27-case benchmark (src/eval/benchmark.ts; expected outcomes written first, naive-agent baseline) -> docs/BENCHMARK-RESULTS.md and docs/evidence/benchmark.json. `loop/fill-readme.mjs <video url> <length> <tests>` rebuilds README.md from loop/README.tmpl.md and the evidence (loop/ is not committed)
 - `npm run typecheck`, `npm test`

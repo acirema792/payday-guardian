@@ -153,7 +153,7 @@ Every call is load-bearing, and every employer call carries `x-on-behalf-of`. We
 | `GET /transfers`, `GET /transfers/{id}` | Recover from lost responses by `request_id`; confirm a return before re-paying; the closing reconciliation; the two-way reconciliation (`npm run reconcile:two-way`) |
 | `POST /simulation/transfers/{id}/transition` | The bank's side: SENT, PAID, or FAILED with `BENEFICIARY_BANK_RETURNED`, each read back |
 | `POST /charges/create`, `GET /charges/{id}` | Platform fee from the employer's wallet, confirmed at SETTLED |
-| Webhooks (`payout.transfer.*`) | HMAC-SHA256 over `x-timestamp` + raw body, 5-minute window, event-id dedupe, exercised offline. Creating subscriptions by API (platform and each employer account) is implemented but was not used in the committed run |
+| Webhooks (`payout.transfer.*`) | HMAC-SHA256 over `x-timestamp` + raw body, 5-minute window, event-id dedupe. Subscriptions created by API on an employer's connected account; five live signed events verified ([webhooks-live.md](docs/evidence/webhooks-live.md), `npm run webhooks:live`); the payday run itself exercised them offline |
 | Metal testnet (`metal-agent` 0.3.3) | Owner: `account create`, `fund`, mandate `bind`/`renew` (`npm run metal:setup`). Agent: `mandate status`, `pull --payment-id`, `verify`; `pull --record-refusal` with a gas-only key (`npm run metal:refusals`) |
 
 **More:** [docs/engineering.md](docs/engineering.md) has setup for your own sandbox, the sandbox behaviour we measured, what the 146 tests cover, and the project layout.
@@ -162,7 +162,7 @@ Every call is load-bearing, and every employer call carries `x-on-behalf-of`. We
 
 - **Payroll inputs are seed data.** A real deployment reads them from the platform's HRIS or payroll system.
 - **The approver is scripted in the demo.** The checks are real (hash-bound, re-checked by the executor, expiring after 12 hours, and refused when the approver is the agent's own identity; conversions above USD 15,000 and fees above USD 100 also need one), but approvers are not yet authenticated: an approver app with its own signing key is next.
-- **Live webhooks were not received in the committed run.** The receiver drives moment #3 offline. Creating subscriptions by API is implemented, but the committed run created none: receiving them needs a public URL (`--webhook-url`).
+- **The payday run's webhooks were offline.** The committed run had no public URL, so the receiver drives moment #3 offline. Live delivery was proven separately: Airwallex's signed events for an employer account, delivered to a public inbox (webhook.site) and verified by our receiver code ([webhooks-live.md](docs/evidence/webhooks-live.md)), not received by our own server in real time.
 - **The instant advance is capped at USD 50 and runs on testnet.** The opt-in is seed data, and the next-window remainder is reported, not yet scheduled.
 - **The two-way reconciliation is a separate step.** The run's closing reconciliation reads back every payout the ledger has; the other direction (`npm run reconcile:two-way`, every transfer on each account must be one we recorded) ran afterwards on the live run's accounts, not inside the run.
 - **Webhook secrets are not tied to one account each.** Any of our subscriptions' secrets verifies an event; the event is still routed only to the employer whose account it names.
