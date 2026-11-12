@@ -33,8 +33,8 @@ for (const r of rows) {
 // (npm run webhooks:live) sends one small test payout. Known, but reported apart from the payday.
 const checks = new Map<string, { transferId: string; source: string }>();
 if (existsSync("docs/evidence/webhooks-live.json")) {
-  const w = JSON.parse(readFileSync("docs/evidence/webhooks-live.json", "utf8")) as { accountId: string; transfer: { id: string } };
-  checks.set(w.transfer.id, { transferId: w.transfer.id, source: `webhook check (docs/evidence/webhooks-live.json), on account ${w.accountId}` });
+  const w = JSON.parse(readFileSync("docs/evidence/webhooks-live.json", "utf8")) as { accountId: string; transfer: { id: string }; earlierTransfers?: string[] };
+  for (const id of [w.transfer.id, ...(w.earlierTransfers ?? [])]) checks.set(id, { transferId: id, source: "webhook check (docs/evidence/webhooks-live.json)" });
 }
 
 // The run's accounts and when it first touched each one.

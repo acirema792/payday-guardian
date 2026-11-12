@@ -11,7 +11,7 @@
 //        receiver code; the signing secret never leaves this machine)
 // Writes docs/evidence/webhooks-live.{json,md}. Secrets stay in data/ and are never printed.
 import { randomUUID } from "node:crypto";
-import { mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { createBeneficiary, createTransfer, readBalances, validateBeneficiary } from "../src/airwallex/api.ts";
 import { AirwallexClient } from "../src/airwallex/client.ts";
 import { Store } from "../src/executor/store.ts";
@@ -146,6 +146,10 @@ const finalStatus = (await api.get<{ status: string }>(`/transfers/${transfer.id
 const processed = events.filter((d) => d.outcome === "processed");
 const forgedRefused = forged.status === 400 && deliveries.some((d) => d.outcome === "bad_signature");
 const failedSeen = processed.some((d) => d.name === "payout.transfer.failed" || d.name === "payout.transfer.cancelled");
+// Earlier runs' test transfers stay listed, so the two-way reconciliation can still account for them.
+const EVIDENCE_JSON = "docs/evidence/webhooks-live.json";
+const previous = existsSync(EVIDENCE_JSON) ? (JSON.parse(readFileSync(EVIDENCE_JSON, "utf8")) as { transfer?: { id: string }; earlierTransfers?: string[] }) : undefined;
+const earlierTransfers = [...(previous?.earlierTransfers ?? []), ...(previous?.transfer?.id && previous.transfer.id !== transfer.id ? [previous.transfer.id] : [])];
 const report = {
   ranAt: new Date().toISOString(),
   employer: employer.name,
@@ -159,6 +163,7 @@ const report = {
   duplicatesIgnored: events.filter((d) => d.outcome === "duplicate").length,
   ok: failedSeen && forgedRefused,
   note: "",
+  ...(earlierTransfers.length ? { earlierTransfers } : {}),
 };
 // What the sandbox actually sent, which can differ from what was requested (2026-11-12: a PAID event
 // before FAILED, and failure type INCORRECT_ROUTING).
@@ -166,7 +171,7 @@ const sentNames = report.events.map((e) => (e.name ?? "").replace("payout.transf
 const listed = sentNames.length > 1 ? `${sentNames.slice(0, -1).join(", ")} and ${sentNames.at(-1)}` : sentNames.join("");
 const failureTypes = [...new Set(report.events.map((e) => e.failureType).filter(Boolean))];
 report.note = `The sandbox emitted ${listed} events${failureTypes.length ? ` and reported failure type ${failureTypes.join(", ")}` : ""}; the events are recorded as the sandbox sent them.`;
-writeFileSync("docs/evidence/webhooks-live.json", JSON.stringify(report, null, 2) + "\n");
+writeFileSync(EVIDENCE_JSON, JSON.stringify(report, null, 2) + "\n");
 writeFileSync(
   "docs/evidence/webhooks-live.md",
   `# Live Airwallex webhooks
