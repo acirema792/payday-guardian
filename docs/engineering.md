@@ -33,7 +33,7 @@ Facts the build depends on, re-tested live (October 2026):
 
 ## Tests
 
-`npm test` runs the vitest suite (138 tests) in well under a minute. It covers:
+`npm test` runs the vitest suite (139 tests) in well under a minute. It covers:
 
 - money arithmetic
 - fraud and cut-off routing
@@ -48,9 +48,10 @@ Facts the build depends on, re-tested live (October 2026):
 - webhook verification (several subscription secrets, a non-numeric or seconds timestamp) and the HTTP endpoint
 - the instant advance policy (opt-in channel and age, never for fraud or shortfall holds, only on a payout the employer has funded, the cap across a payday, the remainder) and the Metal rail: the offline mandate's refusals and once-per-payment-id, and parsing of `metal-agent` output
 - the closing reconciliation (a payout missing at the bank, a different or unreported amount, or one not PAID is flagged)
+- the benchmark (`npm run benchmark`, also run by `npm test`): every case as expected, and the naive agent losing money in every baseline case; the rule-based reader on the held-out messages
 - the full demo, which must end with every payout landed, held or escalated, and reconciled, and must release the held payout only to the account on file under a matching approval
 
-Mutation checks confirmed that the tests fail when the fee rule, the tenant guard, idempotency (including the pay-period key) or terminal transfer states are broken.
+`npm run mutation` removes each of 16 protections in turn in a scratch copy and checks that the benchmark or the unit tests fail: all 16 are caught ([docs/evidence/mutation.json](evidence/mutation.json)).
 
 ## Project layout
 

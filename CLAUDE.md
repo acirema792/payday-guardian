@@ -101,4 +101,6 @@ Live webhooks are optional: subscriptions are created by API, but receiving them
 - `npm run reader:eval`: live check of the Claude reader on labelled messages (costs a few cents)
 - `npm run metal:setup`: the owner's step for the Metal rail (needs METAL_RPC_URL from https://console-testnet.metalntwx.com): Contoso's Metal account, faucet USDZ, Andrea's synthetic wallet, a fresh mandate (renews the previous). Writes `data/metal/` (keys, not committed). Run before each live demo
 - `npm run demo:live -- --reader claude --webhook-url https://<tunnel>`: also verifies live payout.transfer webhooks (the tunnel is the user's to open; the classifier blocks Claude from opening ingress tunnels)
+- `npm run mutation`: removes each of 16 protections in a scratch copy and records which benchmark case and unit tests catch it -> docs/evidence/mutation.json (a few minutes)
+- `npm run benchmark`: the 27-case benchmark (src/eval/benchmark.ts; expected outcomes written first, naive-agent baseline) -> docs/BENCHMARK-RESULTS.md and docs/evidence/benchmark.json. `loop/fill-readme.mjs <video url> <length> <tests>` rebuilds README.md from loop/README.tmpl.md and the evidence (loop/ is not committed)
 - `npm run typecheck`, `npm test`

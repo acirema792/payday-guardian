@@ -2,7 +2,9 @@
 // Makes one Claude API call per case (a few cents in total). Run: npm run reader:eval
 import { claudeInterpreter } from "../src/agent/claude-interpreter.ts";
 import type { InboundMessage, Interpretation } from "../src/agent/messages.ts";
+import { writeFileSync } from "node:fs";
 import { inbox } from "../src/demo/runner.ts";
+import { development, heldOut } from "../src/eval/reader-holdout.ts";
 
 const msg = (id: string, channel: InboundMessage["channel"], from: string, subject: string, body: string): InboundMessage => ({
   id,
@@ -42,13 +44,20 @@ const cases: { message: InboundMessage; expect: Partial<Interpretation> & { kind
 const notes: string[] = [];
 const reader = claudeInterpreter({ onReading: (m, r, note) => notes.push(`${m.id}: ${note}${r?.red_flags.length ? ` | red flags: ${r.red_flags.join("; ")}` : ""}`) });
 
+// The labelled cases, then the reviewer's held-out messages and our development messages (the sets
+// the rule-based fallback is also measured on).
+const tagged = (set: string, rs: typeof heldOut) => rs.map((h) => ({ set, message: h.message, expect: { kind: h.expect } as Partial<Interpretation> & { kind: Interpretation["kind"] } }));
+const all = [...cases.map((c) => ({ set: "labelled", ...c })), ...tagged("held-out", heldOut), ...tagged("development", development)];
 let passed = 0;
-for (const c of cases) {
+const results: { id: string; set: string; expected: unknown; got: unknown; pass: boolean }[] = [];
+for (const c of all) {
   const got = (await reader.interpret(c.message)) as Record<string, unknown>;
   const misses = Object.entries(c.expect).filter(([k, v]) => got[k] !== v);
   if (misses.length === 0) passed += 1;
+  results.push({ id: c.message.id, set: c.set, expected: c.expect, got, pass: misses.length === 0 });
   console.log(`${misses.length === 0 ? "PASS" : "FAIL"}  ${c.message.id.padEnd(12)} ${JSON.stringify(got)}${misses.length ? `  expected ${JSON.stringify(Object.fromEntries(misses))}` : ""}`);
 }
-console.log(`\n${passed}/${cases.length} passed with ${reader.name}`);
+console.log(`\n${passed}/${all.length} passed with ${reader.name}`);
 for (const n of notes) console.log(`  ${n}`);
-process.exitCode = passed === cases.length ? 0 : 1;
+writeFileSync("docs/evidence/reader-eval.json", JSON.stringify({ reader: reader.name, ranAt: new Date().toISOString(), passed, total: all.length, results, notes }, null, 2) + "\n");
+process.exitCode = passed === all.length ? 0 : 1;

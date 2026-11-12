@@ -4,10 +4,15 @@
 
 Airwallex Agentic Banking Hackathon · Starter Kit 06, Multi-Employer Payroll Executor · Metal testnet instant rail · team VALOR
 
+![live run](https://img.shields.io/badge/live%20sandbox-35%2F36%20paid%2C%2035%2F35%20reconciled-2ea44f) ![benchmark](https://img.shields.io/badge/benchmark-25%2F27%20as%20expected-2ea44f) ![naive baseline](https://img.shields.io/badge/naive%20agent-4%20money%20losses%2C%202%20stalled%20payrolls%3B%20ours%200-blue) ![tests](https://img.shields.io/badge/tests-139%20passing-2ea44f)
+
+**Judges: [review it in five minutes](JUDGES.md)** · [claims and their evidence](CLAIMS.md) · [evidence by criterion](EVIDENCE.md) · [benchmark](docs/BENCHMARK-RESULTS.md)
+
 ![The console replaying the live sandbox run: the pooled-deposit trap, the diversion hold, the rejected approval, the bank return, the Metal advance and the payday report](docs/media/hero.gif)
 
 - **Demo video (4:44):** https://youtu.be/IvPSarvIO9g, recorded from the live sandbox run
 - **Click-through demo, no install:** https://acirema792.github.io/payday-guardian/ replays the live run (the offline rehearsal is one click away in its header)
+- **Measured, not asserted** ([docs/BENCHMARK-RESULTS.md](docs/BENCHMARK-RESULTS.md)): 25/27 benchmark cases as expected, each outcome written before the run; the two misses are the offline fallback reader, explained there. On the same bank, a naive agent diverted MXN 45,000 to a fraudster, spent other employers' money on Contoso's payroll and paid a contractor twice: money lost or misdirected in 4 cases and payroll stalled in 2; Payday Guardian in none. Claude read 16 of 17 labelled and held-out messages correctly, including a prompt injection; `npm run mutation` shows which case or test catches each protection when it is removed.
 - **Proof it ran live** ([docs/evidence](docs/evidence/)): on three Kit 6 connected accounts, 35 of 36 contractors were paid on payday and 35 / 35 payouts read back from Airwallex matched the ledger to the cent. The audit log has 450 API calls, 0 error responses, and no employer call outside the three employer accounts. The one payout that missed its cut-off got a USD 50 advance on Metal testnet ([transaction](https://testnet.metalntwx.com/tx/0x265f023a9aeebf2913ec893ab92c085b892dcafab53058a69b8632dd22210265)) after Metal itself refused a payee off the mandate, one cent over the cap and a payment past the budget.
 
 ## Try it in 60 seconds (no credentials needed)
@@ -20,7 +25,7 @@ npm run demo      # the full payday story on a deterministic offline bank
 npm run console   # http://localhost:4321
 ```
 
-The console steps through the payday and shows each employer's wallet and all 36 payouts, coloured by status. **Live sandbox** in its header switches to the committed live run. `npm test` runs 138 tests.
+The console steps through the payday and shows each employer's wallet and all 36 payouts, coloured by status. **Live sandbox** in its header switches to the committed live run. `npm test` runs 139 tests.
 
 ## The problem
 
@@ -149,7 +154,7 @@ Every call is load-bearing, and every employer call carries `x-on-behalf-of`. We
 | Webhooks (`payout.transfer.*`) | HMAC-SHA256 over `x-timestamp` + raw body, 5-minute window, event-id dedupe; subscriptions created by API for the platform and each employer account |
 | Metal testnet (`metal-agent` 0.3.3) | Owner: `account create`, `fund`, mandate `bind`/`renew` (`npm run metal:setup`). Agent: `mandate status`, `pull --payment-id`, `verify` |
 
-**More:** [docs/engineering.md](docs/engineering.md) has setup for your own sandbox, the sandbox behaviour we measured, what the 138 tests cover, and the project layout.
+**More:** [docs/engineering.md](docs/engineering.md) has setup for your own sandbox, the sandbox behaviour we measured, what the 139 tests cover, and the project layout.
 
 ## Limits and next steps
 

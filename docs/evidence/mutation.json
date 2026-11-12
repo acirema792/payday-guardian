@@ -1,0 +1,172 @@
+{
+  "ranAt": "2026-11-12T05:04:10.847Z",
+  "summary": {
+    "mutations": 16,
+    "caught": 16,
+    "caughtByBenchmark": 15,
+    "caughtByUnitTests": 16
+  },
+  "results": [
+    {
+      "id": "M01",
+      "protection": "Approval bound to a hash of what executes",
+      "file": "src/policy/approval.ts",
+      "benchmarkCasesThatCatchIt": [
+        "A05",
+        "A06",
+        "A07"
+      ],
+      "failingUnitTests": 12,
+      "caught": true
+    },
+    {
+      "id": "M02",
+      "protection": "The agent cannot approve its own actions",
+      "file": "src/policy/approval.ts",
+      "benchmarkCasesThatCatchIt": [
+        "A08"
+      ],
+      "failingUnitTests": 3,
+      "caught": true
+    },
+    {
+      "id": "M03",
+      "protection": "Approvals expire after 12 hours",
+      "file": "src/policy/approval.ts",
+      "benchmarkCasesThatCatchIt": [
+        "A09"
+      ],
+      "failingUnitTests": 3,
+      "caught": true
+    },
+    {
+      "id": "M04",
+      "protection": "A release approval names the payee's full bank details",
+      "file": "src/executor/execute.ts",
+      "benchmarkCasesThatCatchIt": [
+        "A05"
+      ],
+      "failingUnitTests": 4,
+      "caught": true
+    },
+    {
+      "id": "M05",
+      "protection": "Payouts and the fee are once per pay period, across batches",
+      "file": "src/executor/execute.ts",
+      "benchmarkCasesThatCatchIt": [
+        "A11",
+        "C03"
+      ],
+      "failingUnitTests": 5,
+      "caught": true
+    },
+    {
+      "id": "M06",
+      "protection": "The planner refuses another account's balance",
+      "file": "src/policy/planner.ts",
+      "benchmarkCasesThatCatchIt": [
+        "A01"
+      ],
+      "failingUnitTests": 2,
+      "caught": true
+    },
+    {
+      "id": "M07",
+      "protection": "The executor refuses a plan on another employer's account",
+      "file": "src/executor/execute.ts",
+      "benchmarkCasesThatCatchIt": [
+        "A15"
+      ],
+      "failingUnitTests": 2,
+      "caught": true
+    },
+    {
+      "id": "M08",
+      "protection": "The platform fee reserves fraud- and cut-off-held wages",
+      "file": "src/policy/planner.ts",
+      "benchmarkCasesThatCatchIt": [
+        "A14"
+      ],
+      "failingUnitTests": 2,
+      "caught": true
+    },
+    {
+      "id": "M09",
+      "protection": "A note with a number not in the facts is discarded",
+      "file": "src/agent/explainer.ts",
+      "benchmarkCasesThatCatchIt": [
+        "A18"
+      ],
+      "failingUnitTests": 4,
+      "caught": true
+    },
+    {
+      "id": "M10",
+      "protection": "Fraud holds on emailed or recent bank-detail changes",
+      "file": "src/policy/planner.ts",
+      "benchmarkCasesThatCatchIt": [
+        "A02"
+      ],
+      "failingUnitTests": 5,
+      "caught": true
+    },
+    {
+      "id": "M11",
+      "protection": "A lost response is recovered by request_id, not retried blindly",
+      "file": "src/executor/execute.ts",
+      "benchmarkCasesThatCatchIt": [
+        "A10"
+      ],
+      "failingUnitTests": 2,
+      "caught": true
+    },
+    {
+      "id": "M12",
+      "protection": "SWIFT fees are priced before converting",
+      "file": "src/policy/routing.ts",
+      "benchmarkCasesThatCatchIt": [
+        "A13"
+      ],
+      "failingUnitTests": 8,
+      "caught": true
+    },
+    {
+      "id": "M13",
+      "protection": "A payout past its cut-off is escalated, not sent late",
+      "file": "src/policy/routing.ts",
+      "benchmarkCasesThatCatchIt": [
+        "A19"
+      ],
+      "failingUnitTests": 5,
+      "caught": true
+    },
+    {
+      "id": "M14",
+      "protection": "Advances only to an opt-in through the verified portal",
+      "file": "src/policy/advance.ts",
+      "benchmarkCasesThatCatchIt": [
+        "A16"
+      ],
+      "failingUnitTests": 2,
+      "caught": true
+    },
+    {
+      "id": "M15",
+      "protection": "No advance on a payout the employer has not funded",
+      "file": "src/policy/advance.ts",
+      "benchmarkCasesThatCatchIt": [
+        "A17"
+      ],
+      "failingUnitTests": 2,
+      "caught": true
+    },
+    {
+      "id": "M16",
+      "protection": "Reconciliation counts only PAID as landed",
+      "file": "src/policy/reconcile.ts",
+      "benchmarkCasesThatCatchIt": [],
+      "failingUnitTests": 2,
+      "caught": true
+    }
+  ]
+}
