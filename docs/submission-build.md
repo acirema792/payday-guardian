@@ -45,7 +45,7 @@ Connected accounts (create, submit, activate), Global Accounts and deposit simul
 One Metal account per employer, like Airwallex. `metal-agent` (pinned 0.3.3): the owner creates the account, funds it from the faucet and binds a mandate (payee, per-payment cap, budget); the agent only runs `mandate status`, `pull --payment-id` and `verify`. Every pull and probe of the live run is in the evidence; the payment links to the explorer, and the refused probes sent nothing on chain.
 
 ### What our own checks caught on the live sandbox
-The closing reconciliation found a transfer the sandbox had acknowledged as PAID but left at SENT, and one transition answered with a 500; transitions are now read back and retried. A top-up that stayed PENDING was never trusted: the agent planned with what the wallet held and refused an advance on an unfunded payout. The redacted logs of those runs are in [docs/evidence/incidents](https://github.com/acirema792/payday-guardian/tree/main/docs/evidence/incidents).
+The closing reconciliation found a transfer the sandbox had acknowledged as PAID but left at SENT, and another run stopped when a transition answered with a 500; transitions are now read back and retried. A top-up that stayed PENDING was never trusted: the agent planned with what the wallet held and refused an advance on an unfunded payout. The redacted logs of those runs are in [docs/evidence/incidents](https://github.com/acirema792/payday-guardian/tree/main/docs/evidence/incidents).
 
 ### Try it in 60 seconds
 `npm ci && npm run benchmark && npm run demo && npm run console` runs the benchmark and the whole payday on a deterministic offline bank, no credentials. Setup for your own sandbox is in the README.
