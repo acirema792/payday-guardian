@@ -48,7 +48,7 @@ Facts the build depends on, re-tested live (October 2026):
 - webhook verification (several subscription secrets, a non-numeric or seconds timestamp) and the HTTP endpoint
 - the instant advance policy (opt-in channel and age, never for fraud or shortfall holds, only on a payout the employer has funded, the cap across a payday, the remainder) and the Metal rail: the offline mandate's refusals and once-per-payment-id, and parsing of `metal-agent` output
 - the closing reconciliation (a payout missing at the bank, a different or unreported amount, or one not PAID is flagged)
-- the benchmark (`npm run benchmark`, also run by `npm test`): every case as expected, and the naive agent losing money in every baseline case; the rule-based reader on the held-out messages
+- the benchmark (`npm run benchmark`, also run by `npm test`): exactly the documented outcome (25 of 27 as expected; the two misses are the rule-based fallback reader), and the naive agent losing money or stalling payroll in every baseline case
 - the full demo, which must end with every payout landed, held or escalated, and reconciled, and must release the held payout only to the account on file under a matching approval
 
 `npm run mutation` removes each of 16 protections in turn in a scratch copy and checks that the benchmark or the unit tests fail: all 16 are caught ([docs/evidence/mutation.json](evidence/mutation.json)).
