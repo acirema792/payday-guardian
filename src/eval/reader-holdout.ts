@@ -1,6 +1,6 @@
 // Messages for checking the rule-based fallback reader beyond the benchmark.
 //
-// heldOut: written on 2026-11-12 by a separate reviewer (the third audit), never used to change any
+// heldOut: written on 2026-11-12 by a separate AI review agent (the third audit; a Claude model, not a person), never used to change any
 // reader code. This is the held-out set we report.
 //
 // development: written by the builder on 2026-11-11. They were meant as a held-out set, but a fix to
