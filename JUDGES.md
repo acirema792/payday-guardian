@@ -25,7 +25,7 @@ Prefer video? [4:44 walkthrough](https://youtu.be/IvPSarvIO9g) recorded from the
 | Claim | Code | Test |
 |---|---|---|
 | One employer's money never pays another's people | [`src/tenant/adapter.ts`](src/tenant/adapter.ts), [`src/policy/planner.ts`](src/policy/planner.ts), [`src/executor/execute.ts`](src/executor/execute.ts) | [`test/tenant.test.ts`](test/tenant.test.ts), [`test/executor.test.ts`](test/executor.test.ts), benchmark A01, A15 |
-| An email can hold a payout but never redirect it | [`src/policy/fraud.ts`](src/policy/fraud.ts), [`src/agent/messages.ts`](src/agent/messages.ts) | benchmark A02, A03 |
+| An email can hold a payout but never redirect it | [`src/policy/fraud.ts`](src/policy/fraud.ts), [`src/agent/messages.ts`](src/agent/messages.ts) | benchmark A02 (A03, a documented miss of the offline fallback reader, still pays only the account on file) |
 | An approval pays exactly what was approved, once | [`src/policy/approval.ts`](src/policy/approval.ts), `releaseSubject` in [`src/executor/execute.ts`](src/executor/execute.ts) | [`test/approval.test.ts`](test/approval.test.ts), benchmark A05 to A09, C03 |
 | Nobody is paid twice | `sendTransfer` and `payPeriodOf` in [`src/executor/execute.ts`](src/executor/execute.ts) | benchmark A10 to A12 |
 | Fees are priced before converting, and never displace wages | [`src/policy/planner.ts`](src/policy/planner.ts) | benchmark A13, A14 |
