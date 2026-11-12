@@ -25,7 +25,8 @@
     "benchmark": "node scripts/benchmark.ts",
     "mutation": "node scripts/mutation.ts",
     "metal:refusals": "node --env-file=.env scripts/metal-refusals.ts",
-    "reconcile:two-way": "node --env-file=.env scripts/reconcile-two-way.ts"
+    "reconcile:two-way": "node --env-file=.env scripts/reconcile-two-way.ts",
+    "webhooks:live": "node --env-file=.env scripts/webhooks-live.ts"
   },
   "devDependencies": {
     "@types/node": "^24.19.2",

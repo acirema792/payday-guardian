@@ -1,0 +1,68 @@
+{
+  "ranAt": "2026-11-12T20:48:47.683Z",
+  "employer": "Fabrikam Studio",
+  "accountId": "acct_yNJZekd_O4mKHna4-rp6ig",
+  "subscription": {
+    "events": "payout.transfer.*",
+    "created": "by API, x-on-behalf-of the employer account"
+  },
+  "transfer": {
+    "id": "412d7a30-9479-4808-aff6-4effb1ed0ccc",
+    "amount": "USD 10.00",
+    "method": "LOCAL",
+    "transitions": [
+      "requested SENT",
+      "requested FAILED (BENEFICIARY_BANK_RETURNED)"
+    ],
+    "readsBack": "CANCELLED"
+  },
+  "mode": "inbox",
+  "forged": {
+    "how": "a real delivery with one byte of its body changed, same headers",
+    "http": 400,
+    "outcome": "bad_signature"
+  },
+  "events": [
+    {
+      "at": "2026-11-12T20:48:33.893Z",
+      "name": "payout.transfer.processing",
+      "eventId": "1d91512c-0423-4216-b573-9fd5e74d3f1d",
+      "outcome": "processed",
+      "status": "PROCESSING"
+    },
+    {
+      "at": "2026-11-12T20:48:33.896Z",
+      "name": "payout.transfer.sent",
+      "eventId": "a0f6aa6b-a92c-4eb1-b177-580e04d0c580",
+      "outcome": "processed",
+      "status": "SENT"
+    },
+    {
+      "at": "2026-11-12T20:48:33.899Z",
+      "name": "payout.transfer.paid",
+      "eventId": "9b42fbd1-b141-429e-992a-2556224d5727",
+      "outcome": "processed",
+      "status": "PAID"
+    },
+    {
+      "at": "2026-11-12T20:48:33.901Z",
+      "name": "payout.transfer.failed",
+      "eventId": "b6cbe673-47bc-413a-90da-3d26f6e60eaa",
+      "outcome": "processed",
+      "status": "FAILED",
+      "failureType": "INCORRECT_ROUTING"
+    },
+    {
+      "at": "2026-11-12T20:48:33.909Z",
+      "name": "payout.transfer.cancelled",
+      "eventId": "bbf6cdaf-38b3-4d1f-9c3b-b02b27c23f6a",
+      "outcome": "processed",
+      "status": "CANCELLED",
+      "failureType": "INCORRECT_ROUTING"
+    }
+  ],
+  "verifiedAndProcessed": 5,
+  "duplicatesIgnored": 0,
+  "ok": true,
+  "note": "The sandbox emitted processing, sent, paid, failed and cancelled events and reported failure type INCORRECT_ROUTING; the events are recorded as the sandbox sent them."
+}
