@@ -28,6 +28,27 @@ export interface Reconciliation {
   issues: ReconcileIssue[];
 }
 
+// The other direction: every transfer the bank lists on an employer's account must be one our
+// store recorded sending (a payout or a repay). One we have no record of is money we cannot explain.
+export interface ListedTransfer {
+  transferId: string;
+  status: string;
+  amountMinor?: bigint;
+  currency?: Currency;
+}
+
+export interface UnrecordedTransfer {
+  transferId: string;
+  status: string;
+  amount: string;
+}
+
+export function findUnrecorded(recorded: ReadonlySet<string>, listed: ListedTransfer[]): UnrecordedTransfer[] {
+  return listed
+    .filter((t) => !recorded.has(t.transferId))
+    .map((t) => ({ transferId: t.transferId, status: t.status, amount: t.currency && t.amountMinor !== undefined ? `${t.currency} ${t.amountMinor}` : "unreported" }));
+}
+
 // Only PAID counts: SENT has left Airwallex but not reached the beneficiary bank.
 const LANDED = new Set(["PAID"]);
 

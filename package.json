@@ -24,7 +24,8 @@
     "metal:setup": "node --env-file=.env scripts/metal-setup.ts",
     "benchmark": "node scripts/benchmark.ts",
     "mutation": "node scripts/mutation.ts",
-    "metal:refusals": "node --env-file=.env scripts/metal-refusals.ts"
+    "metal:refusals": "node --env-file=.env scripts/metal-refusals.ts",
+    "reconcile:two-way": "node --env-file=.env scripts/reconcile-two-way.ts"
   },
   "devDependencies": {
     "@types/node": "^24.19.2",

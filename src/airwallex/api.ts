@@ -178,6 +178,20 @@ export async function readTransferBack(api: Api, id: string): Promise<Transfer &
   return { ...toTransfer(r), ...amount };
 }
 
+// Every transfer created on this account in a window, page by page, for the two-way reconciliation.
+export async function listTransfers(api: Api, fromIso: string, toIso: string, pageSize = 200): Promise<(Transfer & { amountMinor?: bigint; currency?: Currency; createdAt?: string })[]> {
+  const all: (Transfer & { amountMinor?: bigint; currency?: Currency; createdAt?: string })[] = [];
+  for (let page = 0; ; page += 1) {
+    const res = await api.get<{ items?: (TransferResponse & { created_at?: string })[] }>("/transfers", { from_created_at: fromIso, to_created_at: toIso, page_num: page, page_size: pageSize });
+    const items = res.items ?? [];
+    for (const r of items) {
+      const amount = r.transfer_amount !== undefined && r.transfer_currency ? { amountMinor: toMinor(String(r.transfer_amount), r.transfer_currency), currency: r.transfer_currency } : {};
+      all.push({ ...toTransfer(r), ...amount, createdAt: r.created_at });
+    }
+    if (items.length < pageSize) return all;
+  }
+}
+
 // Before retrying an ambiguous create, look for the first attempt by its request_id.
 export async function findTransferByRequestId(api: Api, requestId: string): Promise<Transfer | undefined> {
   const res = await api.get<{ items?: TransferResponse[] }>("/transfers", { request_id: requestId, page_num: 0, page_size: 10 });
