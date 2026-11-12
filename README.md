@@ -4,16 +4,16 @@
 
 Airwallex Agentic Banking Hackathon · Starter Kit 06, Multi-Employer Payroll Executor · Metal testnet instant rail · team VALOR
 
-![live run](https://img.shields.io/badge/live%20sandbox-35%2F36%20paid%2C%2035%2F35%20reconciled-2ea44f) ![benchmark](https://img.shields.io/badge/benchmark-25%2F27%20as%20expected-2ea44f) ![naive baseline](https://img.shields.io/badge/naive%20agent-4%20money%20losses%2C%202%20stalled%20payrolls%3B%20ours%200-blue) ![tests](https://img.shields.io/badge/tests-144%20passing-2ea44f)
+![live run](https://img.shields.io/badge/live%20sandbox-35%2F36%20paid%2C%2035%2F35%20reconciled-2ea44f) ![benchmark](https://img.shields.io/badge/benchmark-25%2F27%20as%20expected-2ea44f) ![naive baseline](https://img.shields.io/badge/naive%20agent-4%20money%20losses%2C%202%20stalled%20payrolls%3B%20ours%200-blue) ![tests](https://img.shields.io/badge/tests-145%20passing-2ea44f)
 
 **Judges: [review it in five minutes](JUDGES.md)** · [claims and their evidence](CLAIMS.md) · [evidence by criterion](EVIDENCE.md) · [benchmark](docs/BENCHMARK-RESULTS.md)
 
 ![The console replaying the live sandbox run: the pooled-deposit trap, the diversion hold, the rejected approval, the bank return, the Metal advance and the payday report](docs/media/hero.gif)
 
-- **Demo video (4:44):** https://youtu.be/IvPSarvIO9g, recorded from the live sandbox run (it shows 138 tests; the suite has grown to 144 since)
+- **Demo video (4:44):** https://youtu.be/IvPSarvIO9g, recorded from the live sandbox run (it shows 138 tests; the suite has grown to 145 since)
 - **Click-through demo, no install:** https://acirema792.github.io/payday-guardian/ replays the live run (the offline rehearsal is one click away in its header)
 - **Measured, not asserted** ([docs/BENCHMARK-RESULTS.md](docs/BENCHMARK-RESULTS.md)): 25/27 benchmark cases as expected, each outcome written before the run; the two misses are the offline fallback reader, explained there. On the same bank, a naive agent diverted MXN 45,000 to a fraudster, spent other employers' money on Contoso's payroll and paid a contractor twice: money lost or misdirected in 4 cases and payroll stalled in 2; Payday Guardian in none. Claude read 16 of 17 labelled and held-out messages correctly, including a prompt injection; `npm run mutation` removes each protection in turn and shows which benchmark cases fail and how many unit tests fail.
-- **Proof it ran live** ([docs/evidence](docs/evidence/)): on three Kit 6 connected accounts, 35 of 36 contractors were paid on payday and 35 / 35 payouts read back from Airwallex matched the ledger to the cent. The audit log has 450 API calls, 0 error responses, and no employer call outside the three employer accounts. The one payout that missed its cut-off got a USD 50 advance on Metal testnet ([transaction](https://testnet.metalntwx.com/tx/0x265f023a9aeebf2913ec893ab92c085b892dcafab53058a69b8632dd22210265)) after Metal itself refused a payee off the mandate, one cent over the cap and a payment past the budget.
+- **Proof it ran live** ([docs/evidence](docs/evidence/)): on three Kit 6 connected accounts, 35 of 36 contractors were paid on payday and 35 / 35 payouts read back from Airwallex matched the ledger to the cent. The audit log has 450 API calls, 0 error responses, and no employer call outside the three employer accounts. The one payout that missed its cut-off got a USD 50 advance on Metal testnet ([transaction](https://testnet.metalntwx.com/tx/0x265f023a9aeebf2913ec893ab92c085b892dcafab53058a69b8632dd22210265)) after Metal itself refused a payee off the mandate, one cent over the cap and a payment past the budget ([refusals on chain](docs/evidence/metal-refusals.md)).
 
 ## Try it in 60 seconds (no credentials needed)
 
@@ -25,7 +25,7 @@ npm run demo      # the full payday story on a deterministic offline bank
 npm run console   # http://localhost:4321
 ```
 
-The console steps through the payday and shows each employer's wallet and all 36 payouts, coloured by status. **Live sandbox** in its header switches to the committed live run. `npm test` runs 144 tests.
+The console steps through the payday and shows each employer's wallet and all 36 payouts, coloured by status. **Live sandbox** in its header switches to the committed live run. `npm test` runs 145 tests.
 
 ## The problem
 
@@ -124,9 +124,11 @@ flowchart LR
 
 One Metal account per employer, like Airwallex. The owner (the employer's admin) creates Contoso's Metal account, funds it from the faucet and binds a **mandate**: one payee (Andrea's opted-in address), a per-payment cap of 50 USDZ and a total budget of 50 USDZ. The agent holds only the mandate key, never the owner key, and can only run `mandate status`, `mandate pull --payment-id` and `mandate verify` ([`src/metal/`](src/metal/), `metal-agent` 0.3.3 pinned).
 
-In the live run, three probes bypassed our own policy code and went straight to Metal: a payee not on the mandate, 50.01 USDZ (one cent over the cap), and a second payment past the budget. Metal refused all three and nothing was sent. The approved 50 USDZ advance paid once; the same `--payment-id` again paid nothing; `mandate verify` confirmed the payment from the chain alone. Every pull and probe is in [docs/evidence](docs/evidence/): the payment with its explorer link; the refused probes sent nothing on chain.
+In the live run, three probes bypassed our own policy code and went straight to Metal: a payee not on the mandate, 50.01 USDZ (one cent over the cap), and a second payment past the budget. Metal refused all three and nothing was sent. The approved 50 USDZ advance paid once; the same `--payment-id` again paid nothing; `mandate verify` confirmed the payment from the chain alone. Afterwards we re-sent the same three pulls under the same mandate with `--record-refusal` (`npm run metal:refusals`), so Metal's refusals are on chain too, in transactions that move nothing ([docs/evidence/metal-refusals.md](docs/evidence/metal-refusals.md)). Every pull and probe is in [docs/evidence](docs/evidence/).
 
 Our policy decides *whether* an advance is allowed (a missed cut-off only, an opt-in through the verified portal older than the fraud window, a payout the employer has already funded, the employer's cap). Metal enforces *who and how much*, even if our code were compromised.
+
+**Proof of authority from the chain alone.** Nobody has to trust our logs to see what the agent did with the employer's money on Metal. `mandate verify` checks the chain against the mandate Contoso's owner signed and lists one payment (50 USDZ to Andrea's opted-in address) and three refusals (a payee off the mandate, a cent over the cap, a payment past the budget). If the employer or the contractor questions the advance, the signed mandate and those four transactions are the record both can check.
 
 ## How it never pays one employer with another's money
 
@@ -152,9 +154,9 @@ Every call is load-bearing, and every employer call carries `x-on-behalf-of`. We
 | `POST /simulation/transfers/{id}/transition` | The bank's side: SENT, PAID, or FAILED with `BENEFICIARY_BANK_RETURNED`, each read back |
 | `POST /charges/create`, `GET /charges/{id}` | Platform fee from the employer's wallet, confirmed at SETTLED |
 | Webhooks (`payout.transfer.*`) | HMAC-SHA256 over `x-timestamp` + raw body, 5-minute window, event-id dedupe, exercised offline. Creating subscriptions by API (platform and each employer account) is implemented but was not used in the committed run |
-| Metal testnet (`metal-agent` 0.3.3) | Owner: `account create`, `fund`, mandate `bind`/`renew` (`npm run metal:setup`). Agent: `mandate status`, `pull --payment-id`, `verify` |
+| Metal testnet (`metal-agent` 0.3.3) | Owner: `account create`, `fund`, mandate `bind`/`renew` (`npm run metal:setup`). Agent: `mandate status`, `pull --payment-id`, `verify`; `pull --record-refusal` with a gas-only key (`npm run metal:refusals`) |
 
-**More:** [docs/engineering.md](docs/engineering.md) has setup for your own sandbox, the sandbox behaviour we measured, what the 144 tests cover, and the project layout.
+**More:** [docs/engineering.md](docs/engineering.md) has setup for your own sandbox, the sandbox behaviour we measured, what the 145 tests cover, and the project layout.
 
 ## Limits and next steps
 

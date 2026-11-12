@@ -11,13 +11,13 @@ Every claim we make in the README, the video and the submission, with how you ca
 | The full demo ran live on three Kit 6 connected accounts: 35 of 36 contractors paid on payday | VERIFIED-LIVE | [docs/evidence/live-run.json](docs/evidence/live-run.json), [live-audit.csv](docs/evidence/live-audit.csv) |
 | 450 Airwallex API calls, 0 error responses, no employer call outside the three employer accounts | VERIFIED-LIVE | [live-audit.csv](docs/evidence/live-audit.csv) (`status` and `account` columns) |
 | All 35 payouts read back from Airwallex as PAID, for exactly the ledger's amount and currency | VERIFIED-LIVE | Reconciliation table in [docs/evidence/README.md](docs/evidence/README.md) |
-| A USD 50 instant advance paid on Metal testnet; the mandate refused a payee off it, one cent over the cap and a payment past the budget; `mandate verify` confirmed the payment | VERIFIED-LIVE (the payment on chain; the refusals sent nothing, so they are in our evidence, not on chain) | Explorer link and pull table in [docs/evidence/README.md](docs/evidence/README.md) |
+| A USD 50 instant advance paid on Metal testnet; the mandate refused a payee off it, one cent over the cap and a payment past the budget; `mandate verify` confirmed the payment | VERIFIED-LIVE (the payment on chain; in the live run the refusals sent nothing, and on 2026-11-12 the same three pulls were re-sent under the same mandate with `--record-refusal`, so they are on chain too) | Explorer link and pull table in [docs/evidence/README.md](docs/evidence/README.md); the on-chain refusals in [docs/evidence/metal-refusals.md](docs/evidence/metal-refusals.md) |
 | The three platform fees read back SETTLED | VERIFIED-LIVE | Fee table in [docs/evidence/README.md](docs/evidence/README.md) |
 | 25 of 27 benchmark cases as expected, each outcome written before the run; the two misses are the offline fallback reader | REPRODUCIBLE | `npm run benchmark`; [docs/BENCHMARK-RESULTS.md](docs/BENCHMARK-RESULTS.md) |
 | On the same bank, a naive agent lost or misdirected money in 4 cases and stalled payroll in 2; Payday Guardian did neither in any of the 6 | REPRODUCIBLE | `npm run benchmark` ("Against a naive agent") |
 | Claude reads 7/7 labelled messages (incl. a prompt injection) and 9/10 held-out messages written by a separate AI review agent (itself a Claude model, so not a human-written test) | REPRODUCIBLE with an Anthropic key (`npm run reader:eval`, a few cents); our run is committed | [docs/evidence/reader-eval.json](docs/evidence/reader-eval.json) |
 | The rule-based fallback reads 5/10 of the same held-out messages | REPRODUCIBLE | `npm run benchmark`; the sets are in [src/eval/reader-holdout.ts](src/eval/reader-holdout.ts) |
-| 144 tests pass | REPRODUCIBLE | `npm test` |
+| 145 tests pass | REPRODUCIBLE | `npm test` |
 | The offline demo pays 35 of 36 and reconciles 35 of 35 | REPRODUCIBLE | `npm run demo` |
 | Removing any one of 16 protections makes the benchmark or the unit tests fail (16 of 16 caught) | REPRODUCIBLE | `npm run mutation`; [docs/evidence/mutation.json](docs/evidence/mutation.json) |
 

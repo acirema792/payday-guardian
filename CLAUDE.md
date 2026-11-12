@@ -1,6 +1,6 @@
 # Payday Guardian
 
-Multi-employer contractor payroll agent on Airwallex. Airwallex Agentic Banking Hackathon, Starter Kit 06 (Multi-Employer Payroll Executor), plus an optional Metal testnet fallback rail. Build submissions are due 2026-11-13 and need a working demo, a video under 5 minutes, and this repo with setup steps.
+Multi-employer contractor payroll agent on Airwallex. Airwallex Agentic Banking Hackathon, Starter Kit 06 (Multi-Employer Payroll Executor), plus an optional Metal testnet fallback rail. Build submissions are due 2026-11-15 18:29 UTC (HackerEarth; extended from 11-13) and need a working demo, a video under 5 minutes, and this repo with setup steps.
 
 ## Airwallex context
 
@@ -64,7 +64,7 @@ The model reads, the code decides, the API moves the money.
 - Faucet grants 100 USDZ per address (`metal-agent fund <address> --network testnet`); the console Faucet page grants per signed-in user. USDZ pays gas; `mandate pull` is submitted by Metal's facilitator, which pays its gas
 - `account create`, `mandate bind/renew/status/verify/pull` need the user's own RPC endpoint; `key create`, `fund`, `credential create` do not
 - `METAL_RPC_URL` is the endpoint's URL (`https://rpc-testnet.metalntwx.com/v1/<endpoint id>`), not its `mrpc_secret_...`; leave "Require a credential" off (the CLI sends no header). `account create` funds the owner address from the faucet; the faucet then rate-limits the next `fund` for ~30 s, so fund the account itself again if the setup only warned
-- Live run 2026-11-07 (`data/live-20261107T024753.db`, the committed evidence): 35/36 paid, 35/35 reconciled (PAID, exact amounts), 450 Airwallex calls, 0 error responses; Andrea's 50 USDZ advance paid on testnet (tx 0x265f023a…), all three probes refused before sending, `mandate verify` yes. Earlier attempts that night hit a PENDING deposit, an unapplied PAID transition and a transition 500 (now handled)
+- Live run 2026-11-07 (`data/live-20261107T024753.db`, the committed evidence): 35/36 paid, 35/35 reconciled (PAID, exact amounts), 450 Airwallex calls, 0 error responses; Andrea's 50 USDZ advance paid on testnet (tx 0x265f023a…), all three probes refused before sending, `mandate verify` yes. On 2026-11-12 `npm run metal:refusals` re-sent the three probes under the same mandate with `--record-refusal` (recorder key `data/metal/recorder-key.json` pays gas): all three refused on chain, nothing moved, `mandate verify` lists 1 payment + 3 refusals (docs/evidence/metal-refusals.md). Earlier attempts that night hit a PENDING deposit, an unapplied PAID transition and a transition 500 (now handled)
 - A mandate budget never resets: `mandate renew --replaces` starts a new one. Pull records live under `~/.metal-agent/pulls/<mandate>/`, so a new mandate per run makes the same payment id pay again on the next run
 
 ## Sandbox facts measured live (2026-10-27)
@@ -101,6 +101,7 @@ Live webhooks are optional: subscriptions are created by API, but receiving them
 - `npm run reader:eval`: live check of the Claude reader on labelled messages (costs a few cents)
 - `npm run metal:setup`: the owner's step for the Metal rail (needs METAL_RPC_URL from https://console-testnet.metalntwx.com): Contoso's Metal account, faucet USDZ, Andrea's synthetic wallet, a fresh mandate (renews the previous). Writes `data/metal/` (keys, not committed). Run before each live demo
 - `npm run demo:live -- --reader claude --webhook-url https://<tunnel>`: also verifies live payout.transfer webhooks (the tunnel is the user's to open; the classifier blocks Claude from opening ingress tunnels)
+- `npm run metal:refusals`: records the committed mandate's three refusals on chain (`--record-refusal`, a gas-only recorder key); refuses to run unless the mandate's budget is spent -> docs/evidence/metal-refusals.{json,md}
 - `npm run mutation`: removes each of 16 protections in a scratch copy and records which benchmark case and unit tests catch it -> docs/evidence/mutation.json (a few minutes)
 - `npm run benchmark`: the 27-case benchmark (src/eval/benchmark.ts; expected outcomes written first, naive-agent baseline) -> docs/BENCHMARK-RESULTS.md and docs/evidence/benchmark.json. `loop/fill-readme.mjs <video url> <length> <tests>` rebuilds README.md from loop/README.tmpl.md and the evidence (loop/ is not committed)
 - `npm run typecheck`, `npm test`

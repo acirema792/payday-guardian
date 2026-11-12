@@ -10,13 +10,13 @@ No account, key or install needed for steps 1 to 4.
 | 4 (1 min) | Open [docs/BENCHMARK-RESULTS.md](docs/BENCHMARK-RESULTS.md) | 25 of 27 cases as expected, each outcome written before the run; the two misses are the offline fallback reader, explained. Against a naive agent on the same bank: money lost or misdirected in 4 cases, payroll stalled in 2; Payday Guardian neither. `npm run mutation` removes each protection in turn and shows which benchmark cases fail and how many unit tests fail |
 | 5 (1 min, optional) | `npm ci && npm run benchmark && npm run demo && npm run console` (Node 24) | The benchmark and the whole payday on a deterministic offline bank, no credentials. Then http://localhost:4321 |
 
-Prefer video? [4:44 walkthrough](https://youtu.be/IvPSarvIO9g) recorded from the same live run (it shows 138 tests; the suite has 144 now).
+Prefer video? [4:44 walkthrough](https://youtu.be/IvPSarvIO9g) recorded from the same live run (it shows 138 tests; the suite has 145 now).
 
 ## Check a claim yourself
 
 - **It ran live on Kit 6 connected accounts:** [docs/evidence/live-audit.csv](docs/evidence/live-audit.csv) has every Airwallex call, in order, with the account it was made on behalf of. Filter the `account` column: three employer accounts, and blank for the platform's own calls (the fee charges), nothing else.
 - **Every payout reconciled to the cent:** the reconciliation table in [docs/evidence/README.md](docs/evidence/README.md) lists each payout's amount in our ledger and as Airwallex read it back.
-- **The Metal advance:** the transaction link in [docs/evidence/README.md](docs/evidence/README.md) opens on the Metal testnet explorer.
+- **The Metal advance:** the transaction link in [docs/evidence/README.md](docs/evidence/README.md) opens on the Metal testnet explorer. The mandate's three refusals are on chain too: [docs/evidence/metal-refusals.md](docs/evidence/metal-refusals.md) links each one, with `mandate verify` listing the payment and the refusals.
 - **What went wrong on the way:** [docs/evidence/incidents](docs/evidence/incidents/) has the raw logs of three live attempts that hit sandbox problems, and what each changed.
 - **Every claim and how strong its evidence is:** [CLAIMS.md](CLAIMS.md). **Each judging criterion and where to look:** [EVIDENCE.md](EVIDENCE.md).
 

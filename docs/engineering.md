@@ -12,7 +12,7 @@ Setup for your own sandbox, what we measured there, what the tests cover, and wh
 6. **Employers:** `npm run provision` creates, submits and activates one connected account per employer with synthetic data, and gives each a USD Global Account. The accounts are recorded in `data/tenants.json`. Wait about 5 minutes before the first FX call (`unconfigured_client_fee`).
 7. **Prove money movement:** `npm run smoke:connected` pays one employer's contractors and charges the fee, and shows the other employers untouched.
 8. **Run the demo live:** `npm run demo:live -- --reader claude`, then `npm run console` and open http://localhost:4321/?run=live. `npm run evidence` regenerates `docs/evidence` from that run. A second live run needs fresh employers first: `npm run provision -- --fresh`.
-9. **Optional, Metal instant rail:** sign in at https://console-testnet.metalntwx.com, create an RPC endpoint and put its URL (`https://rpc-testnet.metalntwx.com/v1/<endpoint id>`, not its secret) in `METAL_RPC_URL`. `npm run metal:setup` creates Contoso's Metal account, funds it from the faucet, creates the contractor's synthetic wallet and binds a fresh mandate (keys stay in `data/metal/`). The next `npm run demo:live` pays the advance on testnet. Run `metal:setup` again before each live run.
+9. **Optional, Metal instant rail:** sign in at https://console-testnet.metalntwx.com, create an RPC endpoint and put its URL (`https://rpc-testnet.metalntwx.com/v1/<endpoint id>`, not its secret) in `METAL_RPC_URL`. `npm run metal:setup` creates Contoso's Metal account, funds it from the faucet, creates the contractor's synthetic wallet and binds a fresh mandate (keys stay in `data/metal/`). The next `npm run demo:live` pays the advance on testnet. Run `metal:setup` again before each live run. `npm run metal:refusals` re-sends the committed run's three out-of-mandate pulls with `--record-refusal`, so the mandate's refusals are recorded on chain (it runs only while that mandate's budget is spent, so nothing can pay; a separate faucet-funded key pays the gas).
 10. **Optional, live webhooks:** expose port 4322 with your own tunnel and pass its https URL: `npm run demo:live -- --reader claude --webhook-url https://<tunnel>`. The run creates (or re-points) a `payout.transfer.*` subscription for the platform and each employer account by API, keeps the secrets in `data/webhook-subscriptions.json`, and waits for the returned transfer's signed `payout.transfer.failed` event. `npm run webhooks -- --url https://<tunnel>` serves the same subscriptions on their own.
 
 ## What we measured on the sandbox
@@ -33,7 +33,7 @@ Facts the build depends on, measured live between 2026-10-27 and 2026-11-07:
 
 ## Tests
 
-`npm test` runs the vitest suite (144 tests) in well under a minute. It covers:
+`npm test` runs the vitest suite (145 tests) in well under a minute. It covers:
 
 - money arithmetic
 - fraud and cut-off routing
