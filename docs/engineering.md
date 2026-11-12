@@ -17,7 +17,7 @@ Setup for your own sandbox, what we measured there, what the tests cover, and wh
 
 ## What we measured on the sandbox
 
-Facts the build depends on, re-tested live (October 2026):
+Facts the build depends on, measured live between 2026-10-27 and 2026-11-07:
 
 - Deposits into connected accounts can become available a few seconds after the simulation call returns (25 seconds in the committed run; one top-up stayed PENDING for more than 13 minutes on 2026-11-07). The agent polls the wallet until the funds have cleared and reports how long it took.
 - Wallet conversions into PHP and INR fail with `unable_to_resolve_valid_value_date`; a USD-funded transfer with a locked `quote_id` works. MXN, GBP and EUR conversions work.
