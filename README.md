@@ -4,16 +4,16 @@
 
 Airwallex Agentic Banking Hackathon · Starter Kit 06, Multi-Employer Payroll Executor · Metal testnet instant rail · team VALOR
 
-![live run](https://img.shields.io/badge/live%20sandbox-35%2F36%20paid%2C%2035%2F35%20reconciled-2ea44f) ![benchmark](https://img.shields.io/badge/benchmark-25%2F27%20as%20expected-2ea44f) ![naive baseline](https://img.shields.io/badge/naive%20agent-4%20money%20losses%2C%202%20stalled%20payrolls%3B%20ours%200-blue) ![tests](https://img.shields.io/badge/tests-145%20passing-2ea44f)
+![live run](https://img.shields.io/badge/live%20sandbox-35%2F36%20paid%2C%2035%2F35%20reconciled-2ea44f) ![benchmark](https://img.shields.io/badge/benchmark-25%2F27%20as%20expected-2ea44f) ![naive baseline](https://img.shields.io/badge/naive%20agent-4%20money%20losses%2C%202%20stalled%20payrolls%3B%20ours%200-blue) ![tests](https://img.shields.io/badge/tests-146%20passing-2ea44f)
 
 **Judges: [review it in five minutes](JUDGES.md)** · [claims and their evidence](CLAIMS.md) · [evidence by criterion](EVIDENCE.md) · [benchmark](docs/BENCHMARK-RESULTS.md)
 
 ![The console replaying the live sandbox run: the pooled-deposit trap, the diversion hold, the rejected approval, the bank return, the Metal advance and the payday report](docs/media/hero.gif)
 
-- **Demo video (4:44):** https://youtu.be/IvPSarvIO9g, recorded from the live sandbox run (it shows 138 tests; the suite has grown to 145 since)
+- **Demo video (4:44):** https://youtu.be/IvPSarvIO9g, recorded from the live sandbox run (it shows 138 tests; the suite has grown to 146 since)
 - **Click-through demo, no install:** https://acirema792.github.io/payday-guardian/ replays the live run (the offline rehearsal is one click away in its header)
 - **Measured, not asserted** ([docs/BENCHMARK-RESULTS.md](docs/BENCHMARK-RESULTS.md)): 25/27 benchmark cases as expected, each outcome written before the run; the two misses are the offline fallback reader, explained there. On the same bank, a naive agent diverted MXN 45,000 to a fraudster, spent other employers' money on Contoso's payroll and paid a contractor twice: money lost or misdirected in 4 cases and payroll stalled in 2; Payday Guardian in none. Claude read 16 of 17 labelled and held-out messages correctly, including a prompt injection; `npm run mutation` removes each protection in turn and shows which benchmark cases fail and how many unit tests fail.
-- **Proof it ran live** ([docs/evidence](docs/evidence/)): on three Kit 6 connected accounts, 35 of 36 contractors were paid on payday and 35 / 35 payouts read back from Airwallex matched the ledger to the cent. The audit log has 450 API calls, 0 error responses, and no employer call outside the three employer accounts. The one payout that missed its cut-off got a USD 50 advance on Metal testnet ([transaction](https://testnet.metalntwx.com/tx/0x265f023a9aeebf2913ec893ab92c085b892dcafab53058a69b8632dd22210265)) after Metal itself refused a payee off the mandate, one cent over the cap and a payment past the budget ([refusals on chain](docs/evidence/metal-refusals.md)).
+- **Proof it ran live** ([docs/evidence](docs/evidence/)): on three Kit 6 connected accounts, 35 of 36 contractors were paid on payday and 35 / 35 payouts read back from Airwallex matched the ledger to the cent. The audit log has 450 API calls, 0 error responses, and no employer call outside the three employer accounts. Listing every transfer on those three accounts afterwards found none we had not recorded, and none of ours missing ([two-way reconciliation](docs/evidence/two-way-reconciliation.md), 36/36). The one payout that missed its cut-off got a USD 50 advance on Metal testnet ([transaction](https://testnet.metalntwx.com/tx/0x265f023a9aeebf2913ec893ab92c085b892dcafab53058a69b8632dd22210265)) after Metal itself refused a payee off the mandate, one cent over the cap and a payment past the budget ([refusals on chain](docs/evidence/metal-refusals.md)).
 
 ## Try it in 60 seconds (no credentials needed)
 
@@ -25,7 +25,7 @@ npm run demo      # the full payday story on a deterministic offline bank
 npm run console   # http://localhost:4321
 ```
 
-The console steps through the payday and shows each employer's wallet and all 36 payouts, coloured by status. **Live sandbox** in its header switches to the committed live run. `npm test` runs 145 tests.
+The console steps through the payday and shows each employer's wallet and all 36 payouts, coloured by status. **Live sandbox** in its header switches to the committed live run. `npm test` runs 146 tests.
 
 ## The problem
 
@@ -150,13 +150,13 @@ Every call is load-bearing, and every employer call carries `x-on-behalf-of`. We
 | `POST /fx/quotes/create`, `/fx/conversions/create` | Locked-rate conversion of the net gap only |
 | `POST /beneficiaries/validate`, `/beneficiaries/create` | Validate then create each contractor once (US ABA, GB sort code, DE IBAN, MX CLABE, MX USD SWIFT, PH SWIFT code, IN IFSC) |
 | `POST /transfers/create` | Payouts with explicit LOCAL/SWIFT and, for PHP/INR, `source_currency` + `quote_id` |
-| `GET /transfers`, `GET /transfers/{id}` | Recover from lost responses by `request_id`; confirm a return before re-paying; the closing reconciliation |
+| `GET /transfers`, `GET /transfers/{id}` | Recover from lost responses by `request_id`; confirm a return before re-paying; the closing reconciliation; the two-way reconciliation (`npm run reconcile:two-way`) |
 | `POST /simulation/transfers/{id}/transition` | The bank's side: SENT, PAID, or FAILED with `BENEFICIARY_BANK_RETURNED`, each read back |
 | `POST /charges/create`, `GET /charges/{id}` | Platform fee from the employer's wallet, confirmed at SETTLED |
 | Webhooks (`payout.transfer.*`) | HMAC-SHA256 over `x-timestamp` + raw body, 5-minute window, event-id dedupe, exercised offline. Creating subscriptions by API (platform and each employer account) is implemented but was not used in the committed run |
 | Metal testnet (`metal-agent` 0.3.3) | Owner: `account create`, `fund`, mandate `bind`/`renew` (`npm run metal:setup`). Agent: `mandate status`, `pull --payment-id`, `verify`; `pull --record-refusal` with a gas-only key (`npm run metal:refusals`) |
 
-**More:** [docs/engineering.md](docs/engineering.md) has setup for your own sandbox, the sandbox behaviour we measured, what the 145 tests cover, and the project layout.
+**More:** [docs/engineering.md](docs/engineering.md) has setup for your own sandbox, the sandbox behaviour we measured, what the 146 tests cover, and the project layout.
 
 ## Limits and next steps
 
@@ -164,7 +164,7 @@ Every call is load-bearing, and every employer call carries `x-on-behalf-of`. We
 - **The approver is scripted in the demo.** The checks are real (hash-bound, re-checked by the executor, expiring after 12 hours, and refused when the approver is the agent's own identity; conversions above USD 15,000 and fees above USD 100 also need one), but approvers are not yet authenticated: an approver app with its own signing key is next.
 - **Live webhooks were not received in the committed run.** The receiver drives moment #3 offline. Creating subscriptions by API is implemented, but the committed run created none: receiving them needs a public URL (`--webhook-url`).
 - **The instant advance is capped at USD 50 and runs on testnet.** The opt-in is seed data, and the next-window remainder is reported, not yet scheduled.
-- **The closing reconciliation runs one way.** It reads back every payout the ledger has; listing each account's transfers to catch one the ledger lacks is next.
+- **The two-way reconciliation is a separate step.** The run's closing reconciliation reads back every payout the ledger has; the other direction (`npm run reconcile:two-way`, every transfer on each account must be one we recorded) ran afterwards on the live run's accounts, not inside the run.
 - **Webhook secrets are not tied to one account each.** Any of our subscriptions' secrets verifies an event; the event is still routed only to the employer whose account it names.
 
 ## License
