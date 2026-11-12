@@ -102,7 +102,7 @@
   const STATUS = {
     pending: ["Pending", "--pending"], planned: ["Will pay", "--planned"], short: ["Short of funds", "--short"],
     held_fraud: ["Held: fraud check", "--fraud"], sent: ["Sent", "--sent"], paid: ["Paid", "--paid"],
-    returned: ["Returned", "--returned"], repaid: ["Re-paid", "--repaid"], escalated: ["Escalated", "--escalated"], advanced: ["Part advanced on Metal", "--advanced"], blocked: ["Blocked", "--blocked"],
+    returned: ["Returned", "--returned"], repaid: ["Re-paid", "--repaid"], escalated: ["Escalated", "--escalated"], advanced: ["Part advanced", "--advanced"], blocked: ["Blocked", "--blocked"],
   };
   const flag = (cc) => String.fromCodePoint(...[...cc].map((c) => 0x1f1e6 + c.charCodeAt(0) - 65));
   const fmt = (n, c, cents = false) => `${c} ${Number(n).toLocaleString("en-US", { minimumFractionDigits: cents ? 2 : 0, maximumFractionDigits: 2 })}`;
